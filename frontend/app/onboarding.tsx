@@ -10,8 +10,8 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useUserStore } from '../store/userStore';
-import { INTENTIONS, Intention } from '../constants/intentions';
+import { useUserStore } from '@/store/userStore';
+import { INTENTIONS, Intention } from '@/constants/intentions';
 import * as Haptics from 'expo-haptics';
 
 const { width } = Dimensions.get('window');
