@@ -18,19 +18,17 @@ export default function Index() {
     const initApp = async () => {
       await loadUser();
       
-      // Play ambient sound
+      // Optional: Play ambient sound if available
+      // (gracefully skips if file doesn't exist)
       try {
-        const { sound } = await Audio.Sound.createAsync(
-          require('../assets/sounds/splash.mp3'),
-          { shouldPlay: true, volume: 0.3 }
-        );
-        
-        // Unload after playing
-        setTimeout(() => {
-          sound.unloadAsync();
-        }, 2000);
+        // Uncomment when splash.mp3 is added to assets/sounds/
+        // const { sound } = await Audio.Sound.createAsync(
+        //   require('../assets/sounds/splash.mp3'),
+        //   { shouldPlay: true, volume: 0.3 }
+        // );
+        // setTimeout(() => sound.unloadAsync(), 2000);
       } catch (error) {
-        console.log('Audio not loaded:', error);
+        // Silent fail - no audio needed
       }
 
       // Start animations
