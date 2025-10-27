@@ -139,7 +139,7 @@ const SAMPLE_STORIES: Story[] = [
     thumbnailUrl: 'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400',
     resonanceCount: 6789,
     reflectionPrompts: {
-      before: 'What are three things you're grateful for today?',
+      before: 'What are three things you are grateful for today?',
       after: 'How did focusing on gratitude shift your mood?',
     },
     tags: ['gratitude', 'morning', 'joy', 'positivity'],
