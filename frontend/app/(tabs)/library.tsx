@@ -10,8 +10,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useContentStore } from '../../store/contentStore';
-import { INTENTIONS } from '../../constants/intentions';
+import { useContentStore } from '@/store/contentStore';
+import { INTENTIONS } from '@/constants/intentions';
 
 export default function Library() {
   const router = useRouter();

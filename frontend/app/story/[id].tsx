@@ -17,8 +17,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Video, ResizeMode } from 'expo-av';
 import { Audio } from 'expo-av';
-import { useContentStore, Story } from '../../store/contentStore';
-import { INTENTIONS } from '../../constants/intentions';
+import { useContentStore, Story } from '@/store/contentStore';
+import { INTENTIONS } from '@/constants/intentions';
 import * as Haptics from 'expo-haptics';
 
 const { width, height } = Dimensions.get('window');
