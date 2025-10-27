@@ -44,9 +44,11 @@ export default function Index() {
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.logoContainer, animatedStyle]}>
-        <View style={styles.logoCircle}>
-          <View style={styles.logoInner} />
-        </View>
+        <Image 
+          source={require('../assets/images/ariome-logo.png')} 
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
       </Animated.View>
     </View>
   );
