@@ -171,6 +171,11 @@ export default function StoryPlayer() {
                   />
                 </TouchableOpacity>
               </View>
+              <Image
+                source={require('../../assets/images/ariome-logo.png')}
+                style={styles.watermark}
+                resizeMode="contain"
+              />
             </View>
           )}
         </View>
