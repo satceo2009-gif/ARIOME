@@ -60,9 +60,11 @@ export default function Onboarding() {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.header}>
-              <View style={styles.logoCircle}>
-                <View style={styles.logoInner} />
-              </View>
+              <Image 
+                source={require('../assets/images/ariome-logo.png')} 
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
               <Text style={styles.welcomeTitle}>Welcome to ARIOME</Text>
               <Text style={styles.welcomeSubtitle}>
                 Your conscious journey begins here
