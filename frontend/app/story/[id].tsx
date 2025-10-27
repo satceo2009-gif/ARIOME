@@ -139,24 +139,26 @@ export default function StoryPlayer() {
         {/* Media Player */}
         <View style={styles.mediaContainer}>
           {story.format === 'video' ? (
-            <Video
-              ref={videoRef}
-              source={{ uri: story.mediaUrl }}
-              style={styles.video}
-              resizeMode={ResizeMode.CONTAIN}
-              isLooping={false}
-              onPlaybackStatusUpdate={(status: any) => {
-                if (status.isLoaded) {
-                  setIsPlaying(status.isPlaying);
-                }
-              }}
-              useNativeControls
-            />
-            <Image
-              source={require('../../assets/images/ariome-logo.png')}
-              style={styles.watermark}
-              resizeMode="contain"
-            />
+            <>
+              <Video
+                ref={videoRef}
+                source={{ uri: story.mediaUrl }}
+                style={styles.video}
+                resizeMode={ResizeMode.CONTAIN}
+                isLooping={false}
+                onPlaybackStatusUpdate={(status: any) => {
+                  if (status.isLoaded) {
+                    setIsPlaying(status.isPlaying);
+                  }
+                }}
+                useNativeControls
+              />
+              <Image
+                source={require('../../assets/images/ariome-logo.png')}
+                style={styles.watermark}
+                resizeMode="contain"
+              />
+            </>
           ) : (
             <View style={styles.audioPlayer}>
               <Image
