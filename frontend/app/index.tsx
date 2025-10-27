@@ -65,20 +65,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logoCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(157, 78, 221, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#14B8A6',
-  },
-  logoInner: {
-    width: 80,
+  logoImage: {
+    width: 200,
     height: 80,
-    borderRadius: 40,
-    backgroundColor: '#14B8A6',
   },
 });
