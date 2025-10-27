@@ -459,6 +459,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  watermark: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    width: 100,
+    height: 40,
+    opacity: 0.7,
+  },
   infoContainer: {
     padding: 20,
   },
