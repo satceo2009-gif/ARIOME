@@ -71,12 +71,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
-    borderColor: '#9D4EDD',
+    borderColor: '#14B8A6',
   },
   logoInner: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#9D4EDD',
+    backgroundColor: '#14B8A6',
   },
 });

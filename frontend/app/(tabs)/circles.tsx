@@ -16,7 +16,7 @@ export default function Circles() {
             <MaterialCommunityIcons
               name="account-group"
               size={48}
-              color="#9D4EDD"
+              color="#14B8A6"
             />
           </View>
           <Text style={styles.comingSoonTitle}>Community Circles</Text>
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   launchText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#9D4EDD',
+    color: '#14B8A6',
     paddingVertical: 12,
     paddingHorizontal: 32,
     backgroundColor: 'rgba(157, 78, 221, 0.15)',

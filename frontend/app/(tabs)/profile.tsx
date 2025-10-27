@@ -83,17 +83,17 @@ export default function Profile() {
         {/* Stats */}
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
-            <MaterialCommunityIcons name="play-circle" size={32} color="#9D4EDD" />
+            <MaterialCommunityIcons name="play-circle" size={32} color="#14B8A6" />
             <Text style={styles.statValue}>0</Text>
             <Text style={styles.statLabel}>Stories Played</Text>
           </View>
           <View style={styles.statCard}>
-            <MaterialCommunityIcons name="notebook" size={32} color="#9D4EDD" />
+            <MaterialCommunityIcons name="notebook" size={32} color="#14B8A6" />
             <Text style={styles.statValue}>0</Text>
             <Text style={styles.statLabel}>Reflections</Text>
           </View>
           <View style={styles.statCard}>
-            <MaterialCommunityIcons name="heart" size={32} color="#9D4EDD" />
+            <MaterialCommunityIcons name="heart" size={32} color="#14B8A6" />
             <Text style={styles.statValue}>0</Text>
             <Text style={styles.statLabel}>Resonance Given</Text>
           </View>
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#9D4EDD',
+    backgroundColor: '#14B8A6',
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -48,7 +48,7 @@ export default function CreatorProfile() {
               <MaterialCommunityIcons
                 name="check-decagram"
                 size={24}
-                color="#9D4EDD"
+                color="#14B8A6"
               />
             )}
           </View>
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     marginBottom: 16,
     borderWidth: 3,
-    borderColor: '#9D4EDD',
+    borderColor: '#14B8A6',
   },
   nameRow: {
     flexDirection: 'row',
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#9D4EDD',
+    backgroundColor: '#14B8A6',
     paddingVertical: 14,
     borderRadius: 12,
   },

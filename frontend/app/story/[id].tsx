@@ -110,7 +110,7 @@ export default function StoryPlayer() {
   }
 
   const isSaved = savedStories.includes(story.id);
-  const intentionColor = INTENTIONS.find((i) => i.id === story.intentions[0])?.color || '#9D4EDD';
+  const intentionColor = INTENTIONS.find((i) => i.id === story.intentions[0])?.color || '#14B8A6';
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -126,7 +126,7 @@ export default function StoryPlayer() {
           <MaterialCommunityIcons
             name={isSaved ? 'bookmark' : 'bookmark-outline'}
             size={24}
-            color={isSaved ? '#9D4EDD' : '#FFF'}
+            color={isSaved ? '#14B8A6' : '#FFF'}
           />
         </TouchableOpacity>
       </View>
@@ -195,7 +195,7 @@ export default function StoryPlayer() {
                   <MaterialCommunityIcons
                     name="check-decagram"
                     size={16}
-                    color="#9D4EDD"
+                    color="#14B8A6"
                   />
                 )}
               </View>
@@ -278,7 +278,7 @@ export default function StoryPlayer() {
               style={styles.journalButton}
               onPress={() => router.push('/(tabs)/journal')}
             >
-              <MaterialCommunityIcons name="notebook" size={20} color="#9D4EDD" />
+              <MaterialCommunityIcons name="notebook" size={20} color="#14B8A6" />
               <Text style={styles.journalButtonText}>Journal Your Thoughts</Text>
             </TouchableOpacity>
           </View>
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
   reflectionLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#9D4EDD',
+    color: '#14B8A6',
     marginBottom: 8,
   },
   reflectionPrompt: {
@@ -572,12 +572,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: 'rgba(157, 78, 221, 0.15)',
     borderWidth: 1,
-    borderColor: '#9D4EDD',
+    borderColor: '#14B8A6',
   },
   journalButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#9D4EDD',
+    color: '#14B8A6',
   },
   modalContainer: {
     flex: 1,
@@ -625,7 +625,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   continueButton: {
-    backgroundColor: '#9D4EDD',
+    backgroundColor: '#14B8A6',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -656,24 +656,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#9D4EDD',
+    borderColor: '#14B8A6',
   },
   tipAmount: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#9D4EDD',
+    color: '#14B8A6',
   },
   customTipButton: {
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#9D4EDD',
+    borderColor: '#14B8A6',
   },
   customTipText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#9D4EDD',
+    color: '#14B8A6',
   },
   errorText: {
     fontSize: 18,

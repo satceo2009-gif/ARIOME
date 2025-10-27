@@ -148,7 +148,7 @@ function FeatureItem({
   return (
     <View style={styles.featureItem}>
       <View style={styles.featureIconContainer}>
-        <MaterialCommunityIcons name={icon as any} size={28} color="#9D4EDD" />
+        <MaterialCommunityIcons name={icon as any} size={28} color="#14B8A6" />
       </View>
       <View style={styles.featureContent}>
         <Text style={styles.featureTitle}>{title}</Text>
@@ -219,14 +219,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
-    borderColor: '#9D4EDD',
+    borderColor: '#14B8A6',
     marginBottom: 24,
   },
   logoInner: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#9D4EDD',
+    backgroundColor: '#14B8A6',
   },
   welcomeTitle: {
     fontSize: 32,
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   primaryButton: {
-    backgroundColor: '#9D4EDD',
+    backgroundColor: '#14B8A6',
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 16,

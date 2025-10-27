@@ -227,7 +227,7 @@ export default function Discover() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor="#9D4EDD"
+            tintColor="#14B8A6"
           />
         }
       >
@@ -365,7 +365,7 @@ function FeaturedStoryCard({
             <MaterialCommunityIcons
               name="check-decagram"
               size={14}
-              color="#9D4EDD"
+              color="#14B8A6"
             />
           )}
         </View>
@@ -375,7 +375,7 @@ function FeaturedStoryCard({
 }
 
 function StoryCard({ story, onPress }: { story: Story; onPress: () => void }) {
-  const intentionColor = INTENTIONS.find((i) => i.id === story.intentions[0])?.color || '#9D4EDD';
+  const intentionColor = INTENTIONS.find((i) => i.id === story.intentions[0])?.color || '#14B8A6';
 
   return (
     <TouchableOpacity
@@ -409,7 +409,7 @@ function StoryCard({ story, onPress }: { story: Story; onPress: () => void }) {
               <MaterialCommunityIcons
                 name="check-decagram"
                 size={12}
-                color="#9D4EDD"
+                color="#14B8A6"
               />
             )}
           </View>
@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
   },
   filterChipActive: {
     backgroundColor: 'rgba(157, 78, 221, 0.2)',
-    borderColor: '#9D4EDD',
+    borderColor: '#14B8A6',
   },
   filterText: {
     fontSize: 14,
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   filterTextActive: {
-    color: '#9D4EDD',
+    color: '#14B8A6',
     fontWeight: '700',
   },
   section: {

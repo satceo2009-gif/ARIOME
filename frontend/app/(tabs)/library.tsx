@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   tabActive: {
-    borderBottomColor: '#9D4EDD',
+    borderBottomColor: '#14B8A6',
   },
   tabText: {
     fontSize: 14,
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
   },
   tabTextActive: {
-    color: '#9D4EDD',
+    color: '#14B8A6',
     fontWeight: '700',
   },
   scrollView: {
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   exploreButton: {
-    backgroundColor: '#9D4EDD',
+    backgroundColor: '#14B8A6',
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 12,
