@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useUserStore } from '../store/userStore';
+import { useUserStore } from '@/store/userStore';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
