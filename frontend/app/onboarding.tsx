@@ -51,50 +51,58 @@ export default function Onboarding() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {step === 0 ? (
-        <View style={styles.welcomeContainer}>
-          <View style={styles.header}>
-            <View style={styles.logoCircle}>
-              <View style={styles.logoInner} />
-            </View>
-            <Text style={styles.welcomeTitle}>Welcome to ARIOME</Text>
-            <Text style={styles.welcomeSubtitle}>
-              Your conscious journey begins here
-            </Text>
-          </View>
-
-          <View style={styles.featuresContainer}>
-            <FeatureItem
-              icon="compass-outline"
-              title="Intention-Based Discovery"
-              description="Find stories that resonate with your current journey"
-            />
-            <FeatureItem
-              icon="notebook-outline"
-              title="Reflection & Growth"
-              description="Journal your thoughts and track your transformation"
-            />
-            <FeatureItem
-              icon="account-group-outline"
-              title="Community Circles"
-              description="Connect with others on similar paths"
-            />
-            <FeatureItem
-              icon="heart-outline"
-              title="Support Creators"
-              description="Empower conscious storytellers through direct support"
-            />
-          </View>
-
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={handleContinue}
-            activeOpacity={0.8}
+        <View style={styles.welcomeWrapper}>
+          <ScrollView 
+            style={styles.welcomeScroll}
+            contentContainerStyle={styles.welcomeScrollContent}
+            showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.primaryButtonText}>Begin Your Journey</Text>
-            <MaterialCommunityIcons name="arrow-right" size={24} color="#FFF" />
-          </TouchableOpacity>
+            <View style={styles.header}>
+              <View style={styles.logoCircle}>
+                <View style={styles.logoInner} />
+              </View>
+              <Text style={styles.welcomeTitle}>Welcome to ARIOME</Text>
+              <Text style={styles.welcomeSubtitle}>
+                Your conscious journey begins here
+              </Text>
+            </View>
+
+            <View style={styles.featuresContainer}>
+              <FeatureItem
+                icon="compass-outline"
+                title="Intention-Based Discovery"
+                description="Find stories that resonate with your current journey"
+              />
+              <FeatureItem
+                icon="notebook-outline"
+                title="Reflection & Growth"
+                description="Journal your thoughts and track your transformation"
+              />
+              <FeatureItem
+                icon="account-group-outline"
+                title="Community Circles"
+                description="Connect with others on similar paths"
+              />
+              <FeatureItem
+                icon="heart-outline"
+                title="Support Creators"
+                description="Empower conscious storytellers through direct support"
+              />
+            </View>
+          </ScrollView>
+
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={handleContinue}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.primaryButtonText}>Begin Your Journey</Text>
+              <MaterialCommunityIcons name="arrow-right" size={24} color="#FFF" />
+            </TouchableOpacity>
+          </View>
         </View>
       ) : (
         <ScrollView
