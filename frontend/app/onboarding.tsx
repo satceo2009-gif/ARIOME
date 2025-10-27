@@ -235,22 +235,10 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20,
   },
-  logoCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(20, 184, 166, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#14B8A6',
+  logoImage: {
+    width: 180,
+    height: 70,
     marginBottom: 24,
-  },
-  logoInner: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#14B8A6',
   },
   welcomeTitle: {
     fontSize: 32,
