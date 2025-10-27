@@ -152,6 +152,11 @@ export default function StoryPlayer() {
               }}
               useNativeControls
             />
+            <Image
+              source={require('../../assets/images/ariome-logo.png')}
+              style={styles.watermark}
+              resizeMode="contain"
+            />
           ) : (
             <View style={styles.audioPlayer}>
               <Image
