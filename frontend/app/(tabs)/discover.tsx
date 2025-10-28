@@ -192,12 +192,18 @@ export default function Discover() {
   const loadStories = async () => {
     try {
       setLoading(true);
+      // Try to load from API
       const data = await storiesAPI.getAll();
-      setStories(data);
+      if (data && data.length > 0) {
+        setStories(data);
+      } else {
+        // Fallback to sample data if API returns empty
+        setStories(SAMPLE_STORIES);
+      }
     } catch (error) {
       console.error('Error loading stories:', error);
-      // Fallback to empty array
-      setStories([]);
+      // Fallback to sample data if API fails
+      setStories(SAMPLE_STORIES);
     } finally {
       setLoading(false);
     }
