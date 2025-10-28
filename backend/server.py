@@ -142,6 +142,9 @@ async def get_stories(
             "verified": formatted_story.get("creator_verified", False),
             "bio": formatted_story.get("creator_bio", "")
         }
+        # Add camelCase version of reflection_prompts for frontend compatibility
+        if "reflection_prompts" in formatted_story:
+            formatted_story["reflectionPrompts"] = formatted_story["reflection_prompts"]
         # Remove flat creator fields
         for key in ["creator_id", "creator_name", "creator_avatar", "creator_verified", "creator_bio"]:
             formatted_story.pop(key, None)
