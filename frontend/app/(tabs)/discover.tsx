@@ -182,16 +182,30 @@ export default function Discover() {
   const { stories, setStories } = useContentStore();
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
+  // Load stories from API
   useEffect(() => {
-    if (stories.length === 0) {
-      setStories(SAMPLE_STORIES);
-    }
+    loadStories();
   }, []);
+
+  const loadStories = async () => {
+    try {
+      setLoading(true);
+      const data = await storiesAPI.getAll();
+      setStories(data);
+    } catch (error) {
+      console.error('Error loading stories:', error);
+      // Fallback to empty array
+      setStories([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await loadStories();
     setRefreshing(false);
   };
 
