@@ -161,7 +161,20 @@ async def get_story(story_id: str):
             {"$inc": {"play_count": 1}}
         )
         
-        return serialize_doc(story)
+        formatted_story = serialize_doc(story)
+        # Transform flat creator fields to nested object
+        formatted_story["creator"] = {
+            "id": formatted_story.get("creator_id", ""),
+            "name": formatted_story.get("creator_name", "Unknown"),
+            "avatar": formatted_story.get("creator_avatar", "https://i.pravatar.cc/150?img=1"),
+            "verified": formatted_story.get("creator_verified", False),
+            "bio": formatted_story.get("creator_bio", "")
+        }
+        # Remove flat creator fields
+        for key in ["creator_id", "creator_name", "creator_avatar", "creator_verified", "creator_bio"]:
+            formatted_story.pop(key, None)
+            
+        return formatted_story
     except:
         raise HTTPException(status_code=400, detail="Invalid ID")
 
