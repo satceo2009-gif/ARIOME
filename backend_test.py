@@ -18,15 +18,23 @@ from collections import Counter
 BACKEND_URL = os.getenv('EXPO_PUBLIC_BACKEND_URL', 'https://wellness-hub-227.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
-class ARIOMEAPITester:
+class ARIOMEComprehensiveTester:
     def __init__(self):
         self.session = None
         self.test_results = {
-            "stories_api": {"passed": False, "details": {}},
-            "story_details": {"passed": False, "details": {}},
-            "data_quality": {"passed": False, "details": {}},
-            "media_urls": {"passed": False, "details": {}},
-            "youtube_validation": {"passed": False, "details": {}}
+            'total_stories': 0,
+            'video_stories': 0,
+            'audio_stories': 0,
+            'video_samples': [],
+            'audio_samples': [],
+            'broken_links': [],
+            'intentions_count': {},
+            'premium_count': 0,
+            'free_count': 0,
+            'api_errors': [],
+            'youtube_id_errors': [],
+            'creator_format_valid': False,
+            'reflection_prompts_valid': False
         }
         
     async def __aenter__(self):
