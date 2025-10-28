@@ -44,6 +44,21 @@ export default function StoryPlayer() {
       setShowReflection(true);
     }
 
+    // Configure audio mode for Android compatibility
+    const configureAudio = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,
+          shouldDuckAndroid: false,
+        });
+      } catch (error) {
+        console.log('Audio mode config error:', error);
+      }
+    };
+    
+    configureAudio();
+
     return () => {
       if (sound) {
         sound.unloadAsync();
