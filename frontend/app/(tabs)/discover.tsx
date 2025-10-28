@@ -468,6 +468,23 @@ const styles = StyleSheet.create({
     width: 120,
     height: 160,
   },
+  formatBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  formatBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFF',
+    letterSpacing: 0.5,
+  },
   storyContent: {
     flex: 1,
     padding: 16,
