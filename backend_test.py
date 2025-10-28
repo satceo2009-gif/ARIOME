@@ -36,390 +36,393 @@ class ARIOMEComprehensiveTester:
             'creator_format_valid': False,
             'reflection_prompts_valid': False
         }
-        
+    
     async def __aenter__(self):
         self.session = aiohttp.ClientSession()
         return self
-        
+    
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self.session:
             await self.session.close()
     
-    def extract_youtube_id(self, url: str) -> str:
+    def extract_youtube_id(self, url):
         """Extract YouTube video ID from URL"""
-        patterns = [
-            r'(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)',
-            r'youtube\.com\/watch\?.*v=([^&\n?#]+)'
-        ]
+        if not url or 'youtube.com' not in url:
+            return None
         
-        for pattern in patterns:
-            match = re.search(pattern, url)
-            if match:
-                return match.group(1)
+        # Parse URL and extract video ID
+        parsed = urlparse(url)
+        if parsed.hostname in ['www.youtube.com', 'youtube.com']:
+            query_params = parse_qs(parsed.query)
+            video_id = query_params.get('v', [None])[0]
+            if video_id and len(video_id) == 11:
+                return video_id
+        
         return None
+    
+    def is_compatible_media_url(self, url, format_type):
+        """Check if media URL is compatible with Android/iOS"""
+        if not url:
+            return False, "Empty URL"
+        
+        if format_type == "video":
+            if "youtube.com" in url:
+                youtube_id = self.extract_youtube_id(url)
+                if youtube_id:
+                    return True, f"YouTube compatible (ID: {youtube_id})"
+                else:
+                    return False, "Invalid YouTube URL format"
+            elif url.endswith(('.mp4', '.mov', '.avi')):
+                return True, "Direct video file"
+            else:
+                return False, "Unsupported video format"
+        
+        elif format_type == "audio":
+            if "youtube.com" in url:
+                youtube_id = self.extract_youtube_id(url)
+                if youtube_id:
+                    return True, f"YouTube audio compatible (ID: {youtube_id})"
+                else:
+                    return False, "Invalid YouTube URL format"
+            elif url.endswith(('.mp3', '.wav', '.m4a', '.aac')):
+                return True, "Direct audio file"
+            else:
+                return False, "Unsupported audio format"
+        
+        return False, "Unknown format"
     
     async def test_health_endpoint(self):
         """Test if backend is running"""
+        print("🔍 Testing backend health...")
         try:
             async with self.session.get(f"{API_BASE}/health") as response:
                 if response.status == 200:
-                    data = await response.json()
-                    print("✅ Backend health check passed")
+                    print("✅ Backend is healthy")
                     return True
                 else:
                     print(f"❌ Backend health check failed: {response.status}")
                     return False
         except Exception as e:
-            print(f"❌ Backend connection failed: {str(e)}")
+            print(f"❌ Backend connection failed: {e}")
             return False
     
     async def test_stories_api(self):
         """Test GET /api/stories endpoint"""
         print("\n🔍 Testing Stories API...")
-        
         try:
             async with self.session.get(f"{API_BASE}/stories") as response:
                 if response.status != 200:
-                    self.test_results["stories_api"]["details"]["error"] = f"HTTP {response.status}"
-                    print(f"❌ Stories API failed: HTTP {response.status}")
-                    return False
+                    error_msg = f"Stories API returned status {response.status}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return []
                 
                 stories = await response.json()
-                
-                # Check if we got stories
-                if not stories:
-                    self.test_results["stories_api"]["details"]["error"] = "No stories returned"
-                    print("❌ No stories returned from API")
-                    return False
-                
-                story_count = len(stories)
-                self.test_results["stories_api"]["details"]["count"] = story_count
-                self.test_results["stories_api"]["details"]["stories"] = stories
-                
-                print(f"✅ Stories API returned {story_count} stories")
-                
-                # Check if we have at least 12 stories as requested
-                if story_count >= 12:
-                    print(f"✅ Found {story_count} stories (≥12 required)")
-                else:
-                    print(f"⚠️  Only {story_count} stories found (12 expected)")
-                
-                self.test_results["stories_api"]["passed"] = True
-                return True
-                
+                print(f"✅ Stories API returned {len(stories)} stories")
+                return stories
+        
         except Exception as e:
-            self.test_results["stories_api"]["details"]["error"] = str(e)
-            print(f"❌ Stories API test failed: {str(e)}")
-            return False
+            error_msg = f"Stories API request failed: {e}"
+            self.test_results['api_errors'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return []
     
-    async def test_story_details(self, story_id: str):
-        """Test GET /api/stories/{id} endpoint"""
-        print(f"\n🔍 Testing Story Details API for ID: {story_id}")
+    async def analyze_database_content(self, stories):
+        """Analyze database content mix"""
+        print("\n📊 Analyzing Database Content...")
         
-        try:
-            async with self.session.get(f"{API_BASE}/stories/{story_id}") as response:
-                if response.status != 200:
-                    self.test_results["story_details"]["details"]["error"] = f"HTTP {response.status}"
-                    print(f"❌ Story details failed: HTTP {response.status}")
-                    return False
-                
-                story = await response.json()
-                self.test_results["story_details"]["details"]["story"] = story
-                
-                print(f"✅ Story details retrieved successfully")
-                print(f"   Title: {story.get('title', 'N/A')}")
-                print(f"   Creator: {story.get('creator_name', 'N/A')}")
-                print(f"   Duration: {story.get('duration', 0)} seconds")
-                
-                self.test_results["story_details"]["passed"] = True
-                return story
-                
-        except Exception as e:
-            self.test_results["story_details"]["details"]["error"] = str(e)
-            print(f"❌ Story details test failed: {str(e)}")
-            return None
+        self.test_results['total_stories'] = len(stories)
+        print(f"Total Stories: {len(stories)}")
+        
+        # Count by format
+        video_count = sum(1 for story in stories if story.get('format') == 'video')
+        audio_count = sum(1 for story in stories if story.get('format') == 'audio')
+        
+        self.test_results['video_stories'] = video_count
+        self.test_results['audio_stories'] = audio_count
+        
+        print(f"Video Stories: {video_count}")
+        print(f"Audio Stories: {audio_count}")
+        
+        # Count by intention
+        intention_counter = Counter()
+        for story in stories:
+            intentions = story.get('intentions', [])
+            for intention in intentions:
+                intention_counter[intention] += 1
+        
+        self.test_results['intentions_count'] = dict(intention_counter)
+        print(f"Stories by Intention: {dict(intention_counter)}")
+        
+        # Count premium vs free
+        premium_count = sum(1 for story in stories if story.get('is_premium', False))
+        free_count = len(stories) - premium_count
+        
+        self.test_results['premium_count'] = premium_count
+        self.test_results['free_count'] = free_count
+        
+        print(f"Premium Stories: {premium_count}")
+        print(f"Free Stories: {free_count}")
     
-    def validate_story_data_quality(self, stories: List[Dict[Any, Any]]):
-        """Validate story data quality"""
-        print("\n🔍 Validating Story Data Quality...")
+    async def test_youtube_extraction(self, stories):
+        """Test YouTube ID extraction for video stories"""
+        print("\n🎥 Testing YouTube Video ID Extraction...")
         
-        quality_issues = []
-        sample_stories = []
+        video_stories = [s for s in stories if s.get('format') == 'video']
         
-        for i, story in enumerate(stories[:3]):  # Check first 3 stories
-            story_info = {
-                "title": story.get("title", ""),
-                "description": story.get("description", ""),
-                "media_url": story.get("media_url", ""),
-                "thumbnail_url": story.get("thumbnail_url", ""),
-                "intentions": story.get("intentions", []),
-                "creator_name": story.get("creator_name", ""),
-                "creator_verified": story.get("creator_verified", False)
+        for story in video_stories[:3]:  # Sample first 3 video stories
+            media_url = story.get('media_url', '')
+            youtube_id = self.extract_youtube_id(media_url)
+            
+            story_sample = {
+                'title': story.get('title', 'Unknown'),
+                'media_url': media_url,
+                'youtube_id': youtube_id,
+                'valid': youtube_id is not None and len(youtube_id) == 11
             }
-            sample_stories.append(story_info)
             
-            # Check title
-            if not story.get("title") or len(story.get("title", "")) < 10:
-                quality_issues.append(f"Story {i+1}: Title too short or missing")
+            self.test_results['video_samples'].append(story_sample)
             
-            # Check description
-            if not story.get("description") or len(story.get("description", "")) < 20:
-                quality_issues.append(f"Story {i+1}: Description too short or missing")
-            
-            # Check media URL
-            if not story.get("media_url"):
-                quality_issues.append(f"Story {i+1}: Media URL missing")
-            
-            # Check intentions
-            if not story.get("intentions") or len(story.get("intentions", [])) == 0:
-                quality_issues.append(f"Story {i+1}: No intentions tagged")
-            
-            # Check creator info
-            if not story.get("creator_name"):
-                quality_issues.append(f"Story {i+1}: Creator name missing")
-        
-        self.test_results["data_quality"]["details"]["sample_stories"] = sample_stories
-        self.test_results["data_quality"]["details"]["quality_issues"] = quality_issues
-        
-        if quality_issues:
-            print(f"⚠️  Found {len(quality_issues)} data quality issues:")
-            for issue in quality_issues:
-                print(f"   - {issue}")
-        else:
-            print("✅ All stories have good data quality")
-            self.test_results["data_quality"]["passed"] = True
-        
-        return len(quality_issues) == 0
-    
-    def validate_media_urls(self, stories: List[Dict[Any, Any]]):
-        """Validate media URLs and check for YouTube links"""
-        print("\n🔍 Validating Media URLs...")
-        
-        youtube_urls = []
-        other_urls = []
-        broken_urls = []
-        
-        for story in stories:
-            media_url = story.get("media_url", "")
-            title = story.get("title", "Unknown")
-            
-            if not media_url:
-                broken_urls.append({"title": title, "issue": "Missing media URL"})
-                continue
-            
-            # Check if it's a YouTube URL
-            if "youtube.com" in media_url or "youtu.be" in media_url:
-                youtube_id = self.extract_youtube_id(media_url)
-                youtube_urls.append({
-                    "title": title,
-                    "url": media_url,
-                    "youtube_id": youtube_id,
-                    "valid_id": youtube_id is not None
-                })
+            if story_sample['valid']:
+                print(f"✅ {story['title'][:50]}... - YouTube ID: {youtube_id}")
             else:
-                other_urls.append({
-                    "title": title,
-                    "url": media_url
-                })
-        
-        self.test_results["media_urls"]["details"] = {
-            "youtube_count": len(youtube_urls),
-            "other_count": len(other_urls),
-            "broken_count": len(broken_urls),
-            "youtube_urls": youtube_urls,
-            "other_urls": other_urls,
-            "broken_urls": broken_urls
-        }
-        
-        print(f"📊 Media URL Analysis:")
-        print(f"   YouTube URLs: {len(youtube_urls)}")
-        print(f"   Other URLs: {len(other_urls)}")
-        print(f"   Broken/Missing: {len(broken_urls)}")
-        
-        if youtube_urls:
-            print(f"\n📺 YouTube URLs found:")
-            for yt in youtube_urls[:3]:  # Show first 3
-                print(f"   - {yt['title']}: {yt['url']}")
-                if yt['youtube_id']:
-                    print(f"     YouTube ID: {yt['youtube_id']}")
-        
-        if other_urls:
-            print(f"\n🎥 Other media URLs:")
-            for other in other_urls[:3]:  # Show first 3
-                print(f"   - {other['title']}: {other['url']}")
-        
-        if broken_urls:
-            print(f"\n❌ Broken/Missing URLs:")
-            for broken in broken_urls:
-                print(f"   - {broken['title']}: {broken['issue']}")
-        
-        # Consider test passed if we have valid media URLs
-        has_valid_urls = len(youtube_urls) > 0 or len(other_urls) > 0
-        self.test_results["media_urls"]["passed"] = has_valid_urls and len(broken_urls) == 0
-        
-        return has_valid_urls
+                print(f"❌ {story['title'][:50]}... - Invalid YouTube URL: {media_url}")
+                self.test_results['youtube_id_errors'].append(f"Story '{story['title']}' has invalid YouTube URL")
     
-    def validate_youtube_playback(self, stories: List[Dict[Any, Any]]):
-        """Validate YouTube video IDs for Android playback"""
-        print("\n🔍 Validating YouTube Playback Compatibility...")
+    async def test_audio_samples(self, stories):
+        """Sample audio stories"""
+        print("\n🎵 Sampling Audio Stories...")
         
-        youtube_stories = []
-        valid_ids = []
-        invalid_ids = []
+        audio_stories = [s for s in stories if s.get('format') == 'audio']
+        
+        for story in audio_stories[:3]:  # Sample first 3 audio stories
+            media_url = story.get('media_url', '')
+            is_compatible, reason = self.is_compatible_media_url(media_url, 'audio')
+            
+            story_sample = {
+                'title': story.get('title', 'Unknown'),
+                'media_url': media_url,
+                'compatible': is_compatible,
+                'reason': reason
+            }
+            
+            self.test_results['audio_samples'].append(story_sample)
+            
+            if is_compatible:
+                print(f"✅ {story['title'][:50]}... - {reason}")
+            else:
+                print(f"❌ {story['title'][:50]}... - {reason}")
+    
+    async def test_api_response_format(self, stories):
+        """Test API response format for creator objects"""
+        print("\n🔍 Testing API Response Format...")
+        
+        if not stories:
+            print("❌ No stories to test response format")
+            return
+        
+        sample_story = stories[0]
+        
+        # Check creator object structure
+        creator = sample_story.get('creator', {})
+        required_creator_fields = ['name', 'avatar', 'bio']
+        
+        missing_fields = []
+        for field in required_creator_fields:
+            if field not in creator:
+                missing_fields.append(field)
+        
+        if missing_fields:
+            error_msg = f"Creator object missing fields: {missing_fields}"
+            self.test_results['api_errors'].append(error_msg)
+            print(f"❌ {error_msg}")
+        else:
+            print("✅ Creator object has all required fields (name, avatar, bio)")
+            self.test_results['creator_format_valid'] = True
+        
+        # Check media_url field
+        if 'media_url' not in sample_story:
+            error_msg = "Stories missing media_url field"
+            self.test_results['api_errors'].append(error_msg)
+            print(f"❌ {error_msg}")
+        else:
+            print("✅ Stories have media_url field")
+        
+        # Check format field
+        if 'format' not in sample_story:
+            error_msg = "Stories missing format field"
+            self.test_results['api_errors'].append(error_msg)
+            print(f"❌ {error_msg}")
+        else:
+            format_value = sample_story['format']
+            if format_value in ['video', 'audio']:
+                print(f"✅ Stories have valid format field: {format_value}")
+            else:
+                error_msg = f"Invalid format value: {format_value}"
+                self.test_results['api_errors'].append(error_msg)
+                print(f"❌ {error_msg}")
+    
+    async def test_content_quality(self, stories):
+        """Test content quality - reflection prompts"""
+        print("\n📝 Testing Content Quality...")
+        
+        stories_with_prompts = 0
+        stories_without_prompts = 0
         
         for story in stories:
-            media_url = story.get("media_url", "")
-            if "youtube.com" in media_url or "youtu.be" in media_url:
-                youtube_id = self.extract_youtube_id(media_url)
-                youtube_stories.append({
-                    "title": story.get("title", ""),
-                    "url": media_url,
-                    "youtube_id": youtube_id
-                })
-                
-                if youtube_id and len(youtube_id) == 11:  # YouTube IDs are 11 characters
-                    valid_ids.append(youtube_id)
-                else:
-                    invalid_ids.append(media_url)
+            reflection_prompts = story.get('reflection_prompts', {})
+            if reflection_prompts and 'before' in reflection_prompts and 'after' in reflection_prompts:
+                stories_with_prompts += 1
+            else:
+                stories_without_prompts += 1
         
-        self.test_results["youtube_validation"]["details"] = {
-            "total_youtube": len(youtube_stories),
-            "valid_ids": len(valid_ids),
-            "invalid_ids": len(invalid_ids),
-            "sample_ids": valid_ids[:5]  # First 5 valid IDs
-        }
+        print(f"Stories with reflection prompts: {stories_with_prompts}")
+        print(f"Stories without reflection prompts: {stories_without_prompts}")
         
-        print(f"📊 YouTube Validation:")
-        print(f"   Total YouTube videos: {len(youtube_stories)}")
-        print(f"   Valid YouTube IDs: {len(valid_ids)}")
-        print(f"   Invalid YouTube IDs: {len(invalid_ids)}")
-        
-        if valid_ids:
-            print(f"\n✅ Sample valid YouTube IDs:")
-            for vid_id in valid_ids[:3]:
-                print(f"   - {vid_id}")
-                print(f"     Android URL: https://www.youtube.com/watch?v={vid_id}")
-        
-        if invalid_ids:
-            print(f"\n❌ Invalid YouTube URLs:")
-            for url in invalid_ids:
-                print(f"   - {url}")
-        
-        self.test_results["youtube_validation"]["passed"] = len(valid_ids) > 0 and len(invalid_ids) == 0
-        
-        return len(valid_ids) > 0
+        if stories_without_prompts == 0:
+            self.test_results['reflection_prompts_valid'] = True
+            print("✅ All stories have reflection prompts")
+        else:
+            self.test_results['api_errors'].append(f"{stories_without_prompts} stories missing reflection prompts")
     
-    async def run_all_tests(self):
-        """Run all API tests"""
-        print("🚀 Starting ARIOME Backend API Tests...")
-        print(f"🔗 Backend URL: {BACKEND_URL}")
+    async def test_compatibility(self, stories):
+        """Test Android/iOS compatibility"""
+        print("\n📱 Testing Android/iOS Compatibility...")
+        
+        incompatible_count = 0
+        
+        for story in stories:
+            media_url = story.get('media_url', '')
+            format_type = story.get('format', '')
+            is_compatible, reason = self.is_compatible_media_url(media_url, format_type)
+            
+            if not is_compatible:
+                incompatible_count += 1
+                self.test_results['broken_links'].append({
+                    'title': story.get('title', 'Unknown'),
+                    'url': media_url,
+                    'format': format_type,
+                    'issue': reason
+                })
+        
+        compatible_count = len(stories) - incompatible_count
+        print(f"Compatible media URLs: {compatible_count}")
+        print(f"Incompatible media URLs: {incompatible_count}")
+        
+        if incompatible_count == 0:
+            print("✅ All media URLs are Android/iOS compatible")
+        else:
+            print(f"❌ {incompatible_count} media URLs have compatibility issues")
+    
+    async def run_comprehensive_test(self):
+        """Run all tests"""
+        print("🚀 Starting ARIOME Backend Comprehensive Testing\n")
         
         # Test backend health
         if not await self.test_health_endpoint():
-            print("❌ Backend is not accessible. Stopping tests.")
-            return False
+            return
         
-        # Test stories API
-        if not await self.test_stories_api():
-            print("❌ Stories API failed. Stopping tests.")
-            return False
-        
-        stories = self.test_results["stories_api"]["details"].get("stories", [])
-        
+        # Get stories from API
+        stories = await self.test_stories_api()
         if not stories:
-            print("❌ No stories to test. Stopping tests.")
-            return False
+            print("❌ Cannot proceed without stories data")
+            return
         
-        # Test story details with first story
-        first_story = stories[0]
-        story_id = first_story.get("id")
+        # Run all analysis
+        await self.analyze_database_content(stories)
+        await self.test_youtube_extraction(stories)
+        await self.test_audio_samples(stories)
+        await self.test_api_response_format(stories)
+        await self.test_content_quality(stories)
+        await self.test_compatibility(stories)
         
-        if story_id:
-            await self.test_story_details(story_id)
-        
-        # Validate data quality
-        self.validate_story_data_quality(stories)
-        
-        # Validate media URLs
-        self.validate_media_urls(stories)
-        
-        # Validate YouTube playback
-        self.validate_youtube_playback(stories)
-        
-        return True
+        # Print final report
+        await self.print_final_report()
     
-    def print_summary(self):
-        """Print test summary"""
+    async def print_final_report(self):
+        """Print comprehensive test report"""
         print("\n" + "="*60)
-        print("📊 ARIOME API TEST SUMMARY")
+        print("📋 COMPREHENSIVE TEST REPORT")
         print("="*60)
         
-        total_stories = self.test_results["stories_api"]["details"].get("count", 0)
-        print(f"📚 Total Stories Found: {total_stories}")
+        # Summary Stats
+        print(f"\n📊 SUMMARY STATS:")
+        print(f"Total Stories: {self.test_results['total_stories']}")
+        print(f"Video Stories: {self.test_results['video_stories']}")
+        print(f"Audio Stories: {self.test_results['audio_stories']}")
+        print(f"Premium Stories: {self.test_results['premium_count']}")
+        print(f"Free Stories: {self.test_results['free_count']}")
         
-        # Sample stories
-        sample_stories = self.test_results["data_quality"]["details"].get("sample_stories", [])
-        if sample_stories:
-            print(f"\n📖 Sample Stories:")
-            for i, story in enumerate(sample_stories[:3], 1):
-                print(f"   {i}. {story['title']}")
-                print(f"      Media: {story['media_url']}")
-                print(f"      Creator: {story['creator_name']}")
+        # Expected vs Actual
+        expected_total = 49
+        expected_video = 14
+        expected_audio = 35
         
-        # Media URL analysis
-        media_details = self.test_results["media_urls"]["details"]
-        youtube_count = media_details.get("youtube_count", 0)
-        other_count = media_details.get("other_count", 0)
+        print(f"\n⚠️  EXPECTED vs ACTUAL:")
+        print(f"Expected Total: {expected_total}, Actual: {self.test_results['total_stories']}")
+        print(f"Expected Video: {expected_video}, Actual: {self.test_results['video_stories']}")
+        print(f"Expected Audio: {expected_audio}, Actual: {self.test_results['audio_stories']}")
         
-        print(f"\n🎥 Media URL Analysis:")
-        print(f"   YouTube Videos: {youtube_count}")
-        print(f"   Other Media: {other_count}")
+        # Video Samples
+        if self.test_results['video_samples']:
+            print(f"\n🎥 VIDEO SAMPLES:")
+            for sample in self.test_results['video_samples']:
+                status = "✅" if sample['valid'] else "❌"
+                print(f"{status} {sample['title'][:40]}...")
+                print(f"   URL: {sample['media_url']}")
+                if sample['youtube_id']:
+                    print(f"   YouTube ID: {sample['youtube_id']}")
         
-        # YouTube validation
-        yt_details = self.test_results["youtube_validation"]["details"]
-        valid_yt_ids = yt_details.get("valid_ids", 0)
+        # Audio Samples
+        if self.test_results['audio_samples']:
+            print(f"\n🎵 AUDIO SAMPLES:")
+            for sample in self.test_results['audio_samples']:
+                status = "✅" if sample['compatible'] else "❌"
+                print(f"{status} {sample['title'][:40]}...")
+                print(f"   URL: {sample['media_url']}")
+                print(f"   Status: {sample['reason']}")
         
-        print(f"\n📺 YouTube Validation:")
-        print(f"   Valid YouTube IDs: {valid_yt_ids}")
-        if yt_details.get("sample_ids"):
-            print(f"   Sample IDs: {', '.join(yt_details['sample_ids'][:3])}")
+        # Intentions Breakdown
+        if self.test_results['intentions_count']:
+            print(f"\n🎯 STORIES BY INTENTION:")
+            for intention, count in self.test_results['intentions_count'].items():
+                print(f"  {intention}: {count}")
         
-        # Test results
-        print(f"\n✅ Test Results:")
-        for test_name, result in self.test_results.items():
-            status = "✅ PASS" if result["passed"] else "❌ FAIL"
-            print(f"   {test_name.replace('_', ' ').title()}: {status}")
+        # Errors and Issues
+        if self.test_results['api_errors']:
+            print(f"\n❌ API ERRORS:")
+            for error in self.test_results['api_errors']:
+                print(f"  • {error}")
         
-        # Data source verification
-        print(f"\n🔍 Data Source Verification:")
-        if total_stories >= 12:
-            print("   ✅ Using REAL database data (12+ stories found)")
-        elif total_stories > 0:
-            print(f"   ⚠️  Limited data found ({total_stories} stories)")
+        if self.test_results['youtube_id_errors']:
+            print(f"\n❌ YOUTUBE ID ERRORS:")
+            for error in self.test_results['youtube_id_errors']:
+                print(f"  • {error}")
+        
+        if self.test_results['broken_links']:
+            print(f"\n❌ COMPATIBILITY ISSUES:")
+            for issue in self.test_results['broken_links']:
+                print(f"  • {issue['title'][:40]}... - {issue['issue']}")
+        
+        # Final Recommendation
+        print(f"\n🏁 FINAL RECOMMENDATION:")
+        
+        critical_issues = len(self.test_results['api_errors']) + len(self.test_results['broken_links'])
+        data_mismatch = abs(self.test_results['total_stories'] - expected_total) > 5
+        
+        if critical_issues == 0 and not data_mismatch:
+            print("✅ READY - Backend is production ready")
         else:
-            print("   ❌ No data found - may be using sample/fallback data")
-        
-        # Issues found
-        quality_issues = self.test_results["data_quality"]["details"].get("quality_issues", [])
-        if quality_issues:
-            print(f"\n⚠️  Issues Found:")
-            for issue in quality_issues:
-                print(f"   - {issue}")
-        
-        print("\n" + "="*60)
+            print("❌ NEEDS FIX - Critical issues found:")
+            if data_mismatch:
+                print(f"  • Data count mismatch (expected {expected_total}, got {self.test_results['total_stories']})")
+            if critical_issues > 0:
+                print(f"  • {critical_issues} critical API/compatibility issues")
 
 async def main():
     """Main test runner"""
-    async with ARIOMEAPITester() as tester:
-        success = await tester.run_all_tests()
-        tester.print_summary()
-        
-        if success:
-            print("\n🎉 All tests completed!")
-        else:
-            print("\n❌ Some tests failed!")
-        
-        return success
+    async with ARIOMEComprehensiveTester() as tester:
+        await tester.run_comprehensive_test()
 
 if __name__ == "__main__":
     asyncio.run(main())
