@@ -1,0 +1,100 @@
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
+
+// Get backend URL from environment
+const API_URL = Constants.expoConfig?.extra?.EXPO_BACKEND_URL || 'http://localhost:8001';
+
+// Create axios instance
+const api = axios.create({
+  baseURL: API_URL,
+  timeout: 15000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add auth token to requests
+api.interceptors.request.use(
+  async (config) => {
+    const token = await AsyncStorage.getItem('auth_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Auth API
+export const authAPI = {
+  signup: async (email: string, name: string, password: string, intentions: string[]) => {
+    const { data } = await api.post('/api/auth/signup', {
+      email,
+      name,
+      password,
+      intentions,
+    });
+    await AsyncStorage.setItem('auth_token', data.access_token);
+    return data;
+  },
+
+  login: async (email: string, password: string) => {
+    const { data } = await api.post('/api/auth/login', { email, password });
+    await AsyncStorage.setItem('auth_token', data.access_token);
+    return data;
+  },
+
+  getMe: async () => {
+    const { data } = await api.get('/api/auth/me');
+    return data;
+  },
+
+  logout: async () => {
+    await AsyncStorage.removeItem('auth_token');
+  },
+};
+
+// Stories API
+export const storiesAPI = {
+  getAll: async (intention?: string, format?: string) => {
+    const params: any = {};
+    if (intention) params.intention = intention;
+    if (format) params.format = format;
+    
+    const { data } = await api.get('/api/stories', { params });
+    return data;
+  },
+
+  getById: async (id: string) => {
+    const { data } = await api.get(`/api/stories/${id}`);
+    return data;
+  },
+
+  addResonance: async (id: string) => {
+    const { data } = await api.post(`/api/stories/${id}/resonance`);
+    return data;
+  },
+};
+
+// Reflections API
+export const reflectionsAPI = {
+  create: async (reflection: {
+    story_id: string;
+    mood: string;
+    before_reflection?: string;
+    after_reflection?: string;
+  }) => {
+    const { data } = await api.post('/api/reflections', reflection);
+    return data;
+  },
+
+  getMyReflections: async () => {
+    const { data } = await api.get('/api/reflections/my-reflections');
+    return data;
+  },
+};
+
+export default api;
