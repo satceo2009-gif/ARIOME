@@ -170,20 +170,24 @@ async def get_story(story_id: str):
         )
         
         formatted_story = serialize_doc(story)
+        
+        # Transform snake_case to camelCase for frontend
+        formatted_story["mediaUrl"] = formatted_story.pop("media_url", "")
+        formatted_story["thumbnailUrl"] = formatted_story.pop("thumbnail_url", "")
+        formatted_story["isPremium"] = formatted_story.pop("is_premium", False)
+        formatted_story["reflectionPrompts"] = formatted_story.pop("reflection_prompts", {})
+        formatted_story["resonanceCount"] = formatted_story.pop("resonance_count", 0)
+        formatted_story["createdAt"] = formatted_story.pop("created_at", "")
+        formatted_story["playCount"] = formatted_story.pop("play_count", 0)
+        
         # Transform flat creator fields to nested object
         formatted_story["creator"] = {
-            "id": formatted_story.get("creator_id", ""),
-            "name": formatted_story.get("creator_name", "Unknown"),
-            "avatar": formatted_story.get("creator_avatar", "https://i.pravatar.cc/150?img=1"),
-            "verified": formatted_story.get("creator_verified", False),
-            "bio": formatted_story.get("creator_bio", "")
+            "id": formatted_story.pop("creator_id", ""),
+            "name": formatted_story.pop("creator_name", "Unknown"),
+            "avatar": formatted_story.pop("creator_avatar", "https://i.pravatar.cc/150?img=1"),
+            "verified": formatted_story.pop("creator_verified", False),
+            "bio": formatted_story.pop("creator_bio", "")
         }
-        # Add camelCase version for frontend
-        if "reflection_prompts" in formatted_story:
-            formatted_story["reflectionPrompts"] = formatted_story["reflection_prompts"]
-        # Remove flat creator fields
-        for key in ["creator_id", "creator_name", "creator_avatar", "creator_verified", "creator_bio"]:
-            formatted_story.pop(key, None)
             
         return formatted_story
     except:
