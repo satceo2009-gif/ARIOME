@@ -8,6 +8,7 @@ import {
   Dimensions,
   Image,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -15,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
 import { useContentStore, Story } from '@/store/contentStore';
 import { INTENTIONS } from '@/constants/intentions';
+import { storiesAPI } from '../../services/api';
 import * as Haptics from 'expo-haptics';
 
 const { width } = Dimensions.get('window');
