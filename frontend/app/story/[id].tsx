@@ -11,17 +11,26 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Video, ResizeMode } from 'expo-av';
 import { Audio } from 'expo-av';
+import YoutubePlayer from 'react-native-youtube-iframe';
 import { useContentStore, Story } from '@/store/contentStore';
 import { INTENTIONS } from '@/constants/intentions';
 import * as Haptics from 'expo-haptics';
 
 const { width, height } = Dimensions.get('window');
+
+// Helper to extract YouTube video ID from URL
+function getYouTubeVideoId(url: string): string | null {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
 
 export default function StoryPlayer() {
   const router = useRouter();
