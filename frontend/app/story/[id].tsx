@@ -67,29 +67,46 @@ export default function StoryPlayer() {
   }, [id, stories]);
 
   const handlePlayPause = async () => {
-    if (story?.format === 'video' && videoRef.current) {
-      if (isPlaying) {
-        await videoRef.current.pauseAsync();
-      } else {
-        await videoRef.current.playAsync();
-      }
-      setIsPlaying(!isPlaying);
-    } else if (story?.format === 'audio') {
-      if (!sound) {
-        const { sound: newSound } = await Audio.Sound.createAsync(
-          { uri: story.mediaUrl },
-          { shouldPlay: true }
-        );
-        setSound(newSound);
-        setIsPlaying(true);
-      } else {
+    try {
+      if (story?.format === 'video' && videoRef.current) {
         if (isPlaying) {
-          await sound.pauseAsync();
+          await videoRef.current.pauseAsync();
         } else {
-          await sound.playAsync();
+          await videoRef.current.playAsync();
         }
         setIsPlaying(!isPlaying);
+      } else if (story?.format === 'audio') {
+        if (!sound) {
+          // Set audio mode before playing (Android compatibility)
+          await Audio.setAudioModeAsync({
+            playsInSilentModeIOS: true,
+            staysActiveInBackground: false,
+            shouldDuckAndroid: false,
+          });
+          
+          const { sound: newSound } = await Audio.Sound.createAsync(
+            { uri: story.mediaUrl },
+            { shouldPlay: true, volume: 1.0 },
+            (status) => {
+              if (status.isLoaded) {
+                setIsPlaying(status.isPlaying);
+              }
+            }
+          );
+          setSound(newSound);
+          setIsPlaying(true);
+        } else {
+          if (isPlaying) {
+            await sound.pauseAsync();
+          } else {
+            await sound.playAsync();
+          }
+          setIsPlaying(!isPlaying);
+        }
       }
+    } catch (error) {
+      console.error('Playback error:', error);
+      alert('Unable to play media. Please check your connection.');
     }
   };
 
