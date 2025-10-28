@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 """
-ARIOME Backend API Testing Suite
-Tests the Stories API and verifies data quality
+ARIOME Backend Comprehensive Testing Suite
+Tests database content mix, YouTube extraction, API format, and compatibility
+Based on review request requirements
 """
 
 import asyncio
 import aiohttp
 import json
 import re
+import os
 from typing import List, Dict, Any
 from urllib.parse import urlparse, parse_qs
+from collections import Counter
 
-# Backend URL from frontend environment
-BACKEND_URL = "https://wellness-hub-227.preview.emergentagent.com"
+# Get backend URL from environment
+BACKEND_URL = os.getenv('EXPO_PUBLIC_BACKEND_URL', 'https://wellness-hub-227.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class ARIOMEAPITester:
