@@ -89,12 +89,12 @@ export const reflectionsAPI = {
     before_reflection?: string;
     after_reflection?: string;
   }) => {
-    const { data } = await api.post('/api/reflections', reflection);
+    const { data } = await api.post('/reflections', reflection);
     return data;
   },
 
   getMyReflections: async () => {
-    const { data } = await api.get('/api/reflections/my-reflections');
+    const { data } = await api.get('/reflections/my-reflections');
     return data;
   },
 };
