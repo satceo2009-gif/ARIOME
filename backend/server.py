@@ -130,7 +130,24 @@ async def get_stories(
     cursor = stories_collection.find(query).sort("created_at", -1).limit(limit)
     stories = await cursor.to_list(length=limit)
     
-    return [serialize_doc(story) for story in stories]
+    # Format stories with nested creator object for frontend
+    formatted_stories = []
+    for story in stories:
+        formatted_story = serialize_doc(story)
+        # Transform flat creator fields to nested object
+        formatted_story["creator"] = {
+            "id": formatted_story.get("creator_id", ""),
+            "name": formatted_story.get("creator_name", "Unknown"),
+            "avatar": formatted_story.get("creator_avatar", "https://i.pravatar.cc/150?img=1"),
+            "verified": formatted_story.get("creator_verified", False),
+            "bio": formatted_story.get("creator_bio", "")
+        }
+        # Remove flat creator fields
+        for key in ["creator_id", "creator_name", "creator_avatar", "creator_verified", "creator_bio"]:
+            formatted_story.pop(key, None)
+        formatted_stories.append(formatted_story)
+    
+    return formatted_stories
 
 @app.get("/api/stories/{story_id}")
 async def get_story(story_id: str):
