@@ -244,6 +244,9 @@ function FeaturedStoryCard({
 
 function StoryCard({ story, onPress }: { story: Story; onPress: () => void }) {
   const intentionColor = INTENTIONS.find((i) => i.id === story.intentions[0])?.color || '#14B8A6';
+  const formatIcon = story.format === 'video' ? 'video' : 'music-note';
+  const formatColor = story.format === 'video' ? '#EF4444' : '#8B5CF6';
+  const formatLabel = story.format === 'video' ? 'VIDEO' : 'AUDIO';
 
   return (
     <TouchableOpacity
@@ -252,6 +255,11 @@ function StoryCard({ story, onPress }: { story: Story; onPress: () => void }) {
       activeOpacity={0.8}
     >
       <Image source={{ uri: story.thumbnailUrl }} style={styles.storyImage} />
+      {/* Format Badge Overlay */}
+      <View style={[styles.formatBadge, { backgroundColor: formatColor }]}>
+        <MaterialCommunityIcons name={formatIcon as any} size={14} color="#FFF" />
+        <Text style={styles.formatBadgeText}>{formatLabel}</Text>
+      </View>
       <View style={styles.storyContent}>
         <View style={styles.storyHeader}>
           <Text style={styles.storyTitle} numberOfLines={2}>
