@@ -33,7 +33,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png",
+      "favicon": "./assets/images/ariome-logo.png",
       "name": "ARIOME - Conscious Wellness",
       "shortName": "ARIOME",
       "description": "Your conscious broadcasting and wellness journey",
@@ -41,7 +41,8 @@
       "backgroundColor": "#0A0A0F",
       "display": "standalone",
       "startUrl": "/",
-      "orientation": "portrait"
+      "orientation": "portrait",
+      "preferRelatedApplications": false
     },
     "plugins": [
       "expo-router",
