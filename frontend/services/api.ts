@@ -66,17 +66,17 @@ export const storiesAPI = {
     if (intention) params.intention = intention;
     if (format) params.format = format;
     
-    const { data } = await api.get('/api/stories', { params });
+    const { data } = await api.get('/stories', { params });
     return data;
   },
 
   getById: async (id: string) => {
-    const { data } = await api.get(`/api/stories/${id}`);
+    const { data } = await api.get(`/stories/${id}`);
     return data;
   },
 
   addResonance: async (id: string) => {
-    const { data } = await api.post(`/api/stories/${id}/resonance`);
+    const { data } = await api.post(`/stories/${id}/resonance`);
     return data;
   },
 };
