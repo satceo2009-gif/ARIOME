@@ -45,12 +45,19 @@ export default function StoryPlayer() {
   const [showTipModal, setShowTipModal] = useState(false);
   const videoRef = useRef<Video>(null);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
 
   useEffect(() => {
     const foundStory = stories.find((s) => s.id === id);
     if (foundStory) {
       setStory(foundStory);
       setShowReflection(true);
+      
+      // Check if it's a YouTube URL
+      const videoId = getYouTubeVideoId(foundStory.mediaUrl);
+      if (videoId) {
+        setYoutubeVideoId(videoId);
+      }
     }
 
     // Configure audio mode for Android compatibility
