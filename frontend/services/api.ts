@@ -1,8 +1,11 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
-// Backend API URL - hardcoded for development
-const API_URL = 'http://localhost:8001';
+// Backend API URL from environment or default
+const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || 
+                process.env.EXPO_PUBLIC_API_URL || 
+                'https://wellness-hub-227.preview.emergentagent.com/api';
 
 // Create axios instance
 const api = axios.create({
