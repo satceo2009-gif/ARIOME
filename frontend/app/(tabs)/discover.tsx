@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
 import { useContentStore, Story } from '@/store/contentStore';
 import { INTENTIONS } from '@/constants/intentions';
+import { SAMPLE_STORIES } from '@/constants/sampleStories';
 import { storiesAPI } from '../../services/api';
 import * as Haptics from 'expo-haptics';
 
