@@ -62,7 +62,8 @@
     "extra": {
       "router": {
         "origin": "https://wellness-hub-227.preview.emergentagent.com"
-      }
+      },
+      "EXPO_PUBLIC_API_URL": "https://wellness-hub-227.preview.emergentagent.com/api"
     }
   }
 }
