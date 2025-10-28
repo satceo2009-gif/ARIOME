@@ -63,13 +63,9 @@ export default function Index() {
         ),
       ]).start();
 
-      // Navigate after animation
+      // Navigate after animation - Always show onboarding/welcome
       setTimeout(() => {
-        if (isOnboarded) {
-          router.replace('/(tabs)/discover');
-        } else {
-          router.replace('/onboarding');
-        }
+        router.replace('/onboarding');
       }, 2500);
     };
 
