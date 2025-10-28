@@ -33,7 +33,7 @@ api.interceptors.request.use(
 // Auth API
 export const authAPI = {
   signup: async (email: string, name: string, password: string, intentions: string[]) => {
-    const { data } = await api.post('/api/auth/signup', {
+    const { data } = await api.post('/auth/signup', {
       email,
       name,
       password,
@@ -44,13 +44,13 @@ export const authAPI = {
   },
 
   login: async (email: string, password: string) => {
-    const { data } = await api.post('/api/auth/login', { email, password });
+    const { data } = await api.post('/auth/login', { email, password });
     await AsyncStorage.setItem('auth_token', data.access_token);
     return data;
   },
 
   getMe: async () => {
-    const { data } = await api.get('/api/auth/me');
+    const { data } = await api.get('/auth/me');
     return data;
   },
 
