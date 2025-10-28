@@ -186,7 +186,27 @@ export default function StoryPlayer() {
       >
         {/* Media Player */}
         <View style={styles.mediaContainer}>
-          {story.format === 'video' ? (
+          {youtubeVideoId ? (
+            // YouTube Player (works on both iOS and Android)
+            <View style={styles.youtubeContainer}>
+              <YoutubePlayer
+                height={width * 0.75}
+                width={width}
+                videoId={youtubeVideoId}
+                play={isPlaying}
+                onChangeState={(state) => {
+                  if (state === 'playing') setIsPlaying(true);
+                  if (state === 'paused') setIsPlaying(false);
+                }}
+              />
+              <Image
+                source={require('../../assets/images/ariome-logo.png')}
+                style={styles.watermark}
+                resizeMode="contain"
+              />
+            </View>
+          ) : story?.format === 'video' ? (
+            // Regular Video Player
             <>
               <Video
                 ref={videoRef}
@@ -208,9 +228,10 @@ export default function StoryPlayer() {
               />
             </>
           ) : (
+            // Audio Player
             <View style={styles.audioPlayer}>
               <Image
-                source={{ uri: story.thumbnailUrl }}
+                source={{ uri: story?.thumbnailUrl }}
                 style={styles.audioThumbnail}
                 blurRadius={20}
               />
