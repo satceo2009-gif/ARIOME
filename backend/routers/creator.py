@@ -9,8 +9,10 @@ from typing import Optional
 router = APIRouter(prefix="/api/creator", tags=["Creator"])
 
 @router.post("/stories")
-async def create_story(story: StoryCreate, current_user: dict = Depends(require_role(["creator", "admin"]))):
+async def create_story(story: StoryCreate, current_user: dict = Depends(get_current_user)):
     """Create a new story (requires approval)"""
+    if current_user["role"] not in ["creator", "admin"]:
+        raise HTTPException(status_code=403, detail="Creator or admin access required")
     
     # Get creator profile
     creator_profile = await creator_profiles_collection.find_one({"user_id": str(current_user["_id"])})
