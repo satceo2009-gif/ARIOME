@@ -48,8 +48,10 @@ async def approve_story(story_id: str, current_user: dict = Depends(get_current_
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/stories/{story_id}/reject")
-async def reject_story(story_id: str, reason: str, current_user: dict = Depends(require_role(["admin"]))):
+async def reject_story(story_id: str, reason: str, current_user: dict = Depends(get_current_user)):
     """Reject a story"""
+    if current_user["role"] not in ["admin"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
     try:
         result = await stories_collection.update_one(
             {"_id": ObjectId(story_id)},
