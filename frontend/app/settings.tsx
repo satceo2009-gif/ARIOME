@@ -1,0 +1,253 @@
+import { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAuth } from '@/contexts/AuthContext';
+
+export default function SettingsScreen() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState(true);
+  const [emailNotifs, setEmailNotifs] = useState(true);
+  const [pushNotifs, setPushNotifs] = useState(true);
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color="#FFF" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Settings</Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      <ScrollView style={styles.scrollView}>
+        {/* Notifications Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Notifications</Text>
+          
+          <View style={styles.settingItem}>
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="bell" size={24} color="#14B8A6" />
+              <View style={styles.settingText}>
+                <Text style={styles.settingLabel}>Push Notifications</Text>
+                <Text style={styles.settingDesc}>Receive push notifications</Text>
+              </View>
+            </View>
+            <Switch
+              value={pushNotifs}
+              onValueChange={setPushNotifs}
+              trackColor={{ false: '#374151', true: '#14B8A6' }}
+              thumbColor="#FFF"
+            />
+          </View>
+
+          <View style={styles.settingItem}>
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="email" size={24} color="#14B8A6" />
+              <View style={styles.settingText}>
+                <Text style={styles.settingLabel}>Email Notifications</Text>
+                <Text style={styles.settingDesc}>Receive email updates</Text>
+              </View>
+            </View>
+            <Switch
+              value={emailNotifs}
+              onValueChange={setEmailNotifs}
+              trackColor={{ false: '#374151', true: '#14B8A6' }}
+              thumbColor="#FFF"
+            />
+          </View>
+        </View>
+
+        {/* Privacy Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Privacy</Text>
+          
+          <TouchableOpacity style={styles.settingItem}>
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="shield-account" size={24} color="#14B8A6" />
+              <View style={styles.settingText}>
+                <Text style={styles.settingLabel}>Privacy Policy</Text>
+                <Text style={styles.settingDesc}>View our privacy policy</Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.settingItem}>
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="file-document" size={24} color="#14B8A6" />
+              <View style={styles.settingText}>
+                <Text style={styles.settingLabel}>Terms of Service</Text>
+                <Text style={styles.settingDesc}>Read terms and conditions</Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.settingItem}>
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="lock" size={24} color="#14B8A6" />
+              <View style={styles.settingText}>
+                <Text style={styles.settingLabel}>Data & Privacy</Text>
+                <Text style={styles.settingDesc}>Manage your data</Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Billing Section */}
+        {user?.role === 'subscriber' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Billing & Subscription</Text>
+            
+            <TouchableOpacity style={styles.settingItem}>
+              <View style={styles.settingLeft}>
+                <MaterialCommunityIcons name="credit-card" size={24} color="#14B8A6" />
+                <View style={styles.settingText}>
+                  <Text style={styles.settingLabel}>Payment Methods</Text>
+                  <Text style={styles.settingDesc}>Manage payment methods</Text>
+                </View>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.settingItem}>
+              <View style={styles.settingLeft}>
+                <MaterialCommunityIcons name="receipt" size={24} color="#14B8A6" />
+                <View style={styles.settingText}>
+                  <Text style={styles.settingLabel}>Billing History</Text>
+                  <Text style={styles.settingDesc}>View past transactions</Text>
+                </View>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.settingItem}
+              onPress={() => Alert.alert('Cancel Subscription', 'Are you sure you want to cancel your subscription?')}
+            >
+              <View style={styles.settingLeft}>
+                <MaterialCommunityIcons name="cancel" size={24} color="#EF4444" />
+                <View style={styles.settingText}>
+                  <Text style={[styles.settingLabel, { color: '#EF4444' }]}>Cancel Subscription</Text>
+                  <Text style={styles.settingDesc}>Access continues until {new Date().toLocaleDateString()}</Text>
+                </View>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Account Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          
+          <TouchableOpacity style={styles.settingItem}>
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="account-edit" size={24} color="#14B8A6" />
+              <View style={styles.settingText}>
+                <Text style={styles.settingLabel}>Edit Profile</Text>
+                <Text style={styles.settingDesc}>Change name, avatar, etc.</Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.settingItem}>
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="key" size={24} color="#14B8A6" />
+              <View style={styles.settingText}>
+                <Text style={styles.settingLabel}>Change Password</Text>
+                <Text style={styles.settingDesc}>Update your password</Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => Alert.alert('Delete Account', 'This action cannot be undone. Are you sure?')}
+          >
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="delete" size={24} color="#EF4444" />
+              <View style={styles.settingText}>
+                <Text style={[styles.settingLabel, { color: '#EF4444' }]}>Delete Account</Text>
+                <Text style={styles.settingDesc}>Permanently delete your account</Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0A0A0F',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  section: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFF',
+    marginBottom: 16,
+    paddingHorizontal: 20,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#1F2937',
+    padding: 16,
+    marginHorizontal: 20,
+    marginBottom: 8,
+    borderRadius: 12,
+  },
+  settingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 16,
+  },
+  settingText: {
+    flex: 1,
+  },
+  settingLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFF',
+    marginBottom: 4,
+  },
+  settingDesc: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+});

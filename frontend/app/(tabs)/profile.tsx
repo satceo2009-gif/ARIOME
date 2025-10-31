@@ -1,170 +1,111 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  Alert,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useUserStore } from '@/store/userStore';
-import { INTENTIONS } from '@/constants/intentions';
-import * as Haptics from 'expo-haptics';
+import { useAuth } from '@/contexts/AuthContext';
 
-export default function Profile() {
+export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout } = useUserStore();
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: async () => {
-          await logout();
-          router.replace('/onboarding');
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Logout', 
+          style: 'destructive',
+          onPress: async () => {
+            await logout();
+            router.replace('/auth/login');
+          }
         },
-      },
-    ]);
+      ]
+    );
   };
+
+  const getRoleBadge = (role: string) => {
+    const badges = {
+      explorer: { label: 'Explorer', color: '#14B8A6', icon: 'compass' },
+      subscriber: { label: 'Subscriber', color: '#F59E0B', icon: 'crown' },
+      creator: { label: 'Creator', color: '#8B5CF6', icon: 'creation' },
+      admin: { label: 'Admin', color: '#EF4444', icon: 'shield-account' },
+    };
+    return badges[role as keyof typeof badges] || badges.explorer;
+  };
+
+  const badge = getRoleBadge(user?.role || 'explorer');
+
+  const menuItems = [
+    { id: 'settings', label: 'Settings', icon: 'cog', route: '/settings' },
+    ...(user?.role === 'admin' ? [{ id: 'admin', label: 'Admin Dashboard', icon: 'shield-account', route: '/admin' }] : []),
+    ...(user?.role === 'creator' ? [{ id: 'creator', label: 'Creator Dashboard', icon: 'creation', route: '/creator' }] : []),
+    { id: 'help', label: 'Help & Support', icon: 'help-circle' },
+    { id: 'about', label: 'About ARIOME', icon: 'information' },
+  ];
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Profile</Text>
-      </View>
+      <ScrollView style={styles.scrollView}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Profile</Text>
+        </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Profile Card */}
         <View style={styles.profileCard}>
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {user?.name?.charAt(0).toUpperCase()}
-              </Text>
-            </View>
+          <Image 
+            source={{ uri: user?.avatar || 'https://i.pravatar.cc/150' }}
+            style={styles.avatar}
+          />
+          <Text style={styles.name}>{user?.name || 'Guest'}</Text>
+          <Text style={styles.email}>{user?.email || ''}</Text>
+          
+          {/* Role Badge */}
+          <View style={[styles.roleBadge, { backgroundColor: `${badge.color}20` }]}>
+            <MaterialCommunityIcons name={badge.icon as any} size={16} color={badge.color} />
+            <Text style={[styles.roleText, { color: badge.color }]}>{badge.label}</Text>
           </View>
-          <Text style={styles.name}>{user?.name || 'Explorer'}</Text>
-          <Text style={styles.email}>{user?.email || 'explorer@ariome.app'}</Text>
+
+          {/* Upgrade Button for Explorer */}
+          {user?.role === 'explorer' && (
+            <TouchableOpacity style={styles.upgradeButton}>
+              <MaterialCommunityIcons name="crown" size={20} color="#FFF" />
+              <Text style={styles.upgradeButtonText}>Upgrade to Subscriber</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* Intentions */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Intentions</Text>
-          <View style={styles.intentionsGrid}>
-            {user?.intentions?.map((intentionId) => {
-              const intention = INTENTIONS.find((i) => i.id === intentionId);
-              return intention ? (
-                <View
-                  key={intentionId}
-                  style={[
-                    styles.intentionBadge,
-                    { backgroundColor: `${intention.color}20` },
-                  ]}
-                >
-                  <MaterialCommunityIcons
-                    name={intention.icon as any}
-                    size={20}
-                    color={intention.color}
-                  />
-                  <Text style={[styles.intentionText, { color: intention.color }]}>
-                    {intention.name.split(' ')[0]}
-                  </Text>
-                </View>
-              ) : null;
-            })}
-          </View>
+        {/* Menu Items */}
+        <View style={styles.menuSection}>
+          {menuItems.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.menuItem}
+              onPress={() => item.route && router.push(item.route as any)}
+            >
+              <View style={styles.menuItemLeft}>
+                <MaterialCommunityIcons name={item.icon as any} size={24} color="#14B8A6" />
+                <Text style={styles.menuItemText}>{item.label}</Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+            </TouchableOpacity>
+          ))}
         </View>
 
-        {/* Stats */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <MaterialCommunityIcons name="play-circle" size={32} color="#14B8A6" />
-            <Text style={styles.statValue}>0</Text>
-            <Text style={styles.statLabel}>Stories Played</Text>
-          </View>
-          <View style={styles.statCard}>
-            <MaterialCommunityIcons name="notebook" size={32} color="#14B8A6" />
-            <Text style={styles.statValue}>0</Text>
-            <Text style={styles.statLabel}>Reflections</Text>
-          </View>
-          <View style={styles.statCard}>
-            <MaterialCommunityIcons name="heart" size={32} color="#14B8A6" />
-            <Text style={styles.statValue}>0</Text>
-            <Text style={styles.statLabel}>Resonance Given</Text>
-          </View>
-        </View>
-
-        {/* Settings Menu */}
-        <View style={styles.section}>
-          <MenuItem
-            icon="cog-outline"
-            label="Settings"
-            onPress={() => {}}
-          />
-          <MenuItem
-            icon="bell-outline"
-            label="Notifications"
-            onPress={() => {}}
-          />
-          <MenuItem
-            icon="shield-check-outline"
-            label="Privacy & Security"
-            onPress={() => {}}
-          />
-          <MenuItem
-            icon="credit-card-outline"
-            label="Billing & Subscriptions"
-            onPress={() => {}}
-          />
-          <MenuItem
-            icon="help-circle-outline"
-            label="Help & Support"
-            onPress={() => {}}
-          />
-          <MenuItem
-            icon="information-outline"
-            label="About ARIOME"
-            onPress={() => {}}
-          />
-        </View>
-
+        {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <MaterialCommunityIcons name="logout" size={20} color="#EF4444" />
-          <Text style={styles.logoutText}>Sign Out</Text>
+          <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
 
-        <Text style={styles.versionText}>ARIOME v1.0.0</Text>
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>ARIOME v1.0.0</Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
-  );
-}
-
-function MenuItem({
-  icon,
-  label,
-  onPress,
-}: {
-  icon: string;
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity
-      style={styles.menuItem}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <View style={styles.menuItemLeft}>
-        <MaterialCommunityIcons name={icon as any} size={24} color="#9CA3AF" />
-        <Text style={styles.menuItemLabel}>{label}</Text>
-      </View>
-      <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
-    </TouchableOpacity>
   );
 }
 
@@ -173,37 +114,30 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0A0A0F',
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
   scrollView: {
     flex: 1,
   },
-  profileCard: {
-    alignItems: 'center',
-    paddingVertical: 32,
+  header: {
+    padding: 20,
   },
-  avatarContainer: {
-    marginBottom: 16,
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  profileCard: {
+    backgroundColor: '#1F2937',
+    marginHorizontal: 20,
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    marginBottom: 24,
   },
   avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#14B8A6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontSize: 40,
-    fontWeight: 'bold',
-    color: '#FFF',
+    marginBottom: 16,
   },
   name: {
     fontSize: 24,
@@ -214,75 +148,56 @@ const styles = StyleSheet.create({
   email: {
     fontSize: 14,
     color: '#9CA3AF',
-  },
-  section: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFF',
     marginBottom: 16,
   },
-  intentionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  intentionBadge: {
+  roleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 8,
   },
-  intentionText: {
+  roleText: {
     fontSize: 14,
     fontWeight: '600',
   },
-  statsContainer: {
+  upgradeButton: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginBottom: 24,
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#1A1A24',
-    borderRadius: 16,
-    padding: 20,
     alignItems: 'center',
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    marginTop: 16,
+    gap: 8,
   },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  upgradeButtonText: {
     color: '#FFF',
-    marginTop: 8,
-    marginBottom: 4,
+    fontSize: 16,
+    fontWeight: '600',
   },
-  statLabel: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    textAlign: 'center',
+  menuSection: {
+    backgroundColor: '#1F2937',
+    marginHorizontal: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 24,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#1A1A24',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    marginBottom: 12,
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#374151',
   },
   menuItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
   },
-  menuItemLabel: {
+  menuItemText: {
     fontSize: 16,
     color: '#FFF',
   },
@@ -290,24 +205,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
     marginHorizontal: 20,
-    marginVertical: 24,
-    paddingVertical: 16,
+    padding: 16,
     borderRadius: 12,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderColor: '#EF4444',
+    gap: 8,
+    marginBottom: 24,
   },
   logoutText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#EF4444',
   },
-  versionText: {
+  footer: {
+    alignItems: 'center',
+    paddingBottom: 32,
+  },
+  footerText: {
     fontSize: 12,
     color: '#6B7280',
-    textAlign: 'center',
-    marginBottom: 32,
   },
 });
