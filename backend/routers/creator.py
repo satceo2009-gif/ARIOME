@@ -82,8 +82,10 @@ async def get_my_stories(current_user: dict = Depends(get_current_user)):
     return result
 
 @router.put("/stories/{story_id}")
-async def update_story(story_id: str, story_update: dict, current_user: dict = Depends(require_role(["creator", "admin"]))):
+async def update_story(story_id: str, story_update: dict, current_user: dict = Depends(get_current_user)):
     """Update a story"""
+    if current_user["role"] not in ["creator", "admin"]:
+        raise HTTPException(status_code=403, detail="Creator or admin access required")
     try:
         # Verify ownership
         story = await stories_collection.find_one({"_id": ObjectId(story_id)})
