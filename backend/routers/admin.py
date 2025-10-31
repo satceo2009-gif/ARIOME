@@ -110,8 +110,10 @@ async def get_all_users(skip: int = 0, limit: int = 50, current_user: dict = Dep
     return result
 
 @router.put("/users/{user_id}/role")
-async def update_user_role(user_id: str, new_role: str, current_user: dict = Depends(require_role(["admin"]))):
+async def update_user_role(user_id: str, new_role: str, current_user: dict = Depends(get_current_user)):
     """Update a user's role"""
+    if current_user["role"] not in ["admin"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
     try:
         result = await users_collection.update_one(
             {"_id": ObjectId(user_id)},
