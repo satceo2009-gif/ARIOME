@@ -57,8 +57,10 @@ async def create_story(story: StoryCreate, current_user: dict = Depends(get_curr
     }
 
 @router.get("/my-stories")
-async def get_my_stories(current_user: dict = Depends(require_role(["creator", "admin"]))):
+async def get_my_stories(current_user: dict = Depends(get_current_user)):
     """Get all stories by current creator"""
+    if current_user["role"] not in ["creator", "admin"]:
+        raise HTTPException(status_code=403, detail="Creator or admin access required")
     cursor = stories_collection.find({"creator_id": str(current_user["_id"])}).sort("created_at", -1)
     stories = await cursor.to_list(length=100)
     
