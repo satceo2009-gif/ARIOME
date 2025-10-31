@@ -62,6 +62,14 @@ async def init_db():
     await creator_profiles_collection.create_index([("user_id", ASCENDING)], unique=True)
     await creator_profiles_collection.create_index([("verification_status", ASCENDING)])
     
+    # Circle posts indexes
+    await circle_posts_collection.create_index([("circle_id", ASCENDING)])
+    await circle_posts_collection.create_index([("created_at", DESCENDING)])
+    
+    # Journal entries indexes
+    await journal_entries_collection.create_index([("user_id", ASCENDING)])
+    await journal_entries_collection.create_index([("created_at", DESCENDING)])
+    
     print("✅ Database indexes created successfully")
 
 async def close_db():
