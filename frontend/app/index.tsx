@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { View, StyleSheet, Image, Animated } from 'react-native';
+import { View, StyleSheet, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
 import { Audio } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
+import AriomeLogo from '@/components/AriomeLogo';
 
 export default function Index() {
   const router = useRouter();
@@ -105,11 +106,7 @@ export default function Index() {
           },
         ]}
       >
-        <Image
-          source={require('../assets/images/ariome-logo.png')}
-          style={styles.logoImage}
-          resizeMode="contain"
-        />
+        <AriomeLogo width={300} height={130} />
       </Animated.View>
     </View>
   );
@@ -133,9 +130,5 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  logoImage: {
-    width: 280,
-    height: 140,
   },
 });
