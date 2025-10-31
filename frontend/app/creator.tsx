@@ -9,7 +9,7 @@ import Constants from 'expo-constants';
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || 
                 process.env.EXPO_PUBLIC_API_URL || 
-                'https://wellness-hub-227.preview.emergentagent.com/api';
+                'https://ariome-wellness.preview.emergentagent.com/api';
 
 export default function CreatorDashboard() {
   const router = useRouter();

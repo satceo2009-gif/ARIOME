@@ -1,86 +1,84 @@
 <analysis>
-The trajectory details the development of ARIOME, a conscious wellness mobile application, from initial concept to a functional MVP. The AI engineer initiated the process by gathering requirements from extensive user-provided documents, formulating a comprehensive vision, and proposing a phased implementation. Key challenges involved translating abstract product ideas into concrete mobile UI/UX, ensuring cross-platform compatibility (especially for media playback on Android and iOS), and addressing user-specific branding requests like logo changes and splash screen animations. A significant part of the interaction focused on making the app installable as a PWA/APK. Towards the end, the AI integrated a FastAPI backend with MongoDB, populating it with real data, but encountered a frontend issue with displaying this data, leading to a temporary re-introduction of sample data. The final message indicates an immediate fix for a  redeclaration error.
+The AI engineer's work on ARIOME focused on evolving a conscious wellness platform from an MVP concept to a functional, feature-rich application. Initial efforts centered on establishing the full-stack architecture (Expo, FastAPI, MongoDB), implementing core UI/UX (onboarding, tab navigation, story player), and addressing critical issues like PWA installation, branding (logo, splash screen), and cross-platform media playback. A recurring challenge involved frontend-backend data consistency, requiring repeated fixes for field naming conventions (snake_case vs. camelCase) and nested object structures. The latter part of the trajectory saw a significant expansion of features, including user roles, new content (49 stories with mixed media), and a comprehensive suite of profile/settings pages, all while battling persistent media playback issues and ensuring the new SVG logo is properly integrated.
 </analysis>
 
 <product_requirements>
-ARIOME is envisioned as a conscious wellness broadcasting platform, blending a creator economy with mindful entertainment, positioned against traditional meditation apps. It aims to be a mobile-first ecosystem where creators share consciousness-based journeys (video, audio, live), and explorers discover personalized, reflection-driven experiences based on intentions like Healing, Resilience, Love, Mindfulness, Growth, and Joy.
-
-Core differentiators include: intention-based discovery (not category-based), reflection-first engagement (journaling before/after content), emotional gifting, creator empowerment, and values matching. The MVP focuses on the Explorer Experience, featuring immersive onboarding, a personalized discovery feed, a rich media player with reflection prompts, a reflection journal, and profile management. AI integration for recommendations and prompt generation is planned.
-
-The user explicitly requested:
-- Sample stories (data-driven, not AI-generated, 5-6 categories).
-- AI features for personalized feed recommendations and auto-generated reflection prompts.
-- Basic tip functionality.
-- Focus on content/concept relation.
-- Support URLs for external hosted media for testing.
-- A fully polished MVP with broad features.
-- An installable app icon for both Android (APK) and iPhone (PWA with Add to Home Screen prompt).
-- A specific ARIOME by CNESS logo with transparent background, splash screen background music, and zoom/fade animation.
-- Real, meaningful content (8-10 stories per intention) from web searches.
-- Backend integration with a database for authentication and content, with a placeholder for payment gateways.
-- Fixing Android playback issues.
+ARIOME is a conscious wellness broadcasting platform aiming to blend a creator economy with mindful entertainment, focusing on mobile-first, intention-based discovery (Healing, Resilience, Love, Mindfulness, Growth, Joy, Gratitude). The MVP includes immersive onboarding, personalized feed, media player with reflection prompts, journaling, and profile management. The user explicitly requested:
+- A polished, installable app (PWA/APK) with specific ARIOME by CNESS branding, a transparent logo, splash screen, and animations.
+- Backend integration with a database for authentication and content (49 stories total, 7 per intention, mix of videos and audios, non-copyrighted).
+- AI features for personalized recommendations and auto-generated reflection prompts.
+- Basic tip functionality and placeholder for payment gateways.
+- Resolution of Android media playback issues.
+- Always display the welcome screen on app launch.
+- Comprehensive user roles: Explorer (default), Subscriber (premium content, ad-free), Creator (dashboard, content upload, monetization), Evaluator/Moderator (content review, approval).
+- Full user management (signup, login, profile edit, change password, logout).
+- New pages: About ARIOME, Help & Support, Privacy Policy, Terms of Service.
+- Functional community circles and library.
+- Update to a new  logo everywhere.
 </product_requirements>
 
 <key_technical_concepts>
-- **Expo & React Native:** Frontend mobile development framework.
+- **Expo & React Native:** Cross-platform mobile development.
 - **Expo Router:** File-based navigation.
-- **FastAPI:** Backend API framework.
-- **MongoDB:** NoSQL database for data storage.
-- **Zustand:** State management for the frontend.
-- **PWA (Progressive Web App) & APK:** Installable mobile application formats.
-- **AI Integration:** OpenAI GPT-4 via Emergent LLM Key for recommendations and prompts.
-- ** / :** For YouTube video playback.
+- **FastAPI:** Python backend API.
+- **MongoDB:** NoSQL database.
+- **Zustand:** Frontend state management.
+- **PWA & APK:** Installable app formats.
+- **AI Integration:** OpenAI GPT-4 via Emergent LLM Key.
+- ** / :** YouTube playback.
 - **:** Audio/video playback.
-- **:** UI styling.
+- **:** For SVG image rendering.
 </key_technical_concepts>
 
 <code_architecture>
 
-
-
--   ****: Defines the root layout, including the splash screen, initial animations, and global navigation. Modified to incorporate a premium splash screen with transparent ARIOME logo, background music (initially, then removed due to error), zoom/fade effects, and later adapted for the new teal theme.
--   ****: The main onboarding/welcome screen. Modified to include the ARIOME logo, Begin Your Journey button, and adapted styles for iPhone SE visibility, and later for the correct ARIOME logo.
--   ****: The primary content feed. Created to display sample stories, then updated to fetch real stories from the backend API, and finally re-added  as a fallback to ensure content visibility for a demo.
--   ****: Story playback screen. Created to play media, display reflection prompts, and show the ARIOME watermark. Significantly modified to fix Android video playback using  and , and to correctly render the logo watermark within the media container.
--   ****: New file. Created to centralize API calls to the FastAPI backend, fetching stories and eventually other data.
--   ****: Created to store  for backend API calls.
--   ****: Modified to ensure  path aliases work correctly.
--   ** (icons, manifest.json, install.html)**: Multiple files created and modified to support PWA installation, custom app icons, QR codes, and a dedicated install landing page, all updated with the correct ARIOME logo and teal theme.
--   ** (icons, ariome-logo.png)**: Image assets for splash screens and app icons. Consistently updated with the correct ARIOME logo, ensuring transparency and appropriate sizes.
--   ****: Rewritten. Implements FastAPI routes for user authentication (signup, login), story management (CRUD), fetching intentions, and tipping. Integrates with MongoDB for data persistence.
--   ****: New file. Sets up the MongoDB connection using  (async driver) and defines helper functions for database operations.
--   ****: New file. Defines Pydantic models for , , , , ,  to structure data and validate API requests/responses.
--   ****: New file. Contains utilities for password hashing, JWT token generation, and dependency injection for authenticated routes.
--   ****: New file. Script to programmatically populate the MongoDB database with initial sample stories, intentions, and reflection prompts using URLs of real wellness content.
-
+-   ****: Defines root layout. Modified to ensure the welcome screen shows consistently and for PWA meta tags.
+-   ****: Welcome screen. Adapted for logo, button, and to always show.
+-   ****: Main feed. Fixed  redeclaration by moving to , re-enabled fetching from backend, and added format badges.
+-   ****: Story player. Critically fixed media playback by correctly extracting  from , handling  camelCase, and ensuring  populated from API.
+-   ****: Frontend API service. Fixed hardcoded  to use  from environment, corrected field casing ( to ,  to ), and ensured  object nesting.
+-   ** & **: Environment variables. Fixed a malformed  line.
+-   ****: Expo config. Updated for PWA metadata, icons, and .
+-   ****: PWA assets. Icons updated with ARIOME logo,  added, and a temporary  was created and then removed when it interfered with Expo.
+-   ****: New SVG logo asset added.
+-   ****: FastAPI app. Restructured with new  module. Fixed  to ensure  is nested and ,  are camelCase. Integrated , , ,  routers.
+-   ****: MongoDB connection. Updated to include new collections for user roles, subscriptions, etc.
+-   ****: Pydantic models. Extended to include new fields for user roles (Explorer, Subscriber, Creator, Evaluator) and other related data.
+-   ****: New script. Created to populate MongoDB with 49 diverse stories (video/audio).
+-   ****: New script. Created to generate admin, explorer, subscriber, creator, and evaluator test users.
+-   ****: New file. Contains  array, imported by .
+-   ****: New file. Intended for managing authentication state and user roles.
+-   **, , , , , **: New static/interactive frontend screens created.
+-   **, **: New dashboard screens created.
+-   **, **: Frontend components for these tabs were created/updated.
+-   ****: New component created to render the SVG logo using .
 </code_architecture>
 
 <pending_tasks>
-- **Full User Role System:** Implement distinct roles (Explorer, Creator, Subscriber) with corresponding permissions and flows.
-- **Creator Dashboard & Tools:** Develop content upload, management, analytics, and earnings features.
-- **Full Monetization Backend:** Integrate Stripe/PayPal for tipping, subscriptions, and bundles.
-- **Advanced AI:** Implement deep learning recommendations, values matching, and behavior analysis.
-- **Full Community Features:** Develop story chains, actual circles/discussion forums, and emotional gifting.
-- **Live Streaming & NFT Integration:** Advanced features outlined in the plan.
-- **Deployment to Cloud:** User expressed interest in .
+- Full monetization backend (Stripe/PayPal integration).
+- Advanced AI for personalized recommendations and prompt generation.
+- Social login (Google, Apple).
+- Search functionality, advanced filtering/sorting for content.
+- Push and email notifications.
+- Performance optimizations (image caching, lazy loading, offline mode, background audio).
+- Full deployment to cloud ().
+- Android APK and iOS TestFlight/App Store builds.
+- Marketing assets.
+- Complete user role-based access control beyond just screens.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was addressing a critical frontend display issue for the user's demo. The backend database had been successfully populated with 12 real wellness stories (based on web searches) matching various intentions (Healing, Resilience, Love, Mindfulness, Growth, Joy). The frontend was intended to fetch these stories from the newly integrated FastAPI backend API (exposed via  in  and handled by ).
+Immediately before this summary request, the AI engineer was tasked with updating the new ARIOME logo (an SVG file: ) across the entire application and then continuing to build remaining features.
 
-However, the user reported that the stories were not appearing in the app for their demo. The AI confirmed the stories existed in the database via  but recognized a frontend failure to display them. To quickly resolve this for the demo, the AI decided to re-add the  array directly into  to ensure content was visible, even if it wasn't coming from the live API.
-
-The very last exchange indicates a follow-up error from this action: the user provided an image showing SAMPLE_STORIES has already been declared. This means the AI accidentally re-declared  when it was already present, causing a compilation error. The AI acknowledged this, stating Fixing NOW.
-
-The application currently has:
-- A functional backend (FastAPI, MongoDB) with user authentication, story management APIs, and a seeded database with 12 real wellness stories.
-- A polished Expo React Native frontend with a premium splash screen, onboarding, tab navigation (Discover, Library, Journal, Circles, Profile), and a story player.
-- The UI is themed in Teal/Ocean Blue, features the ariome by CNESS logo with transparent background, and includes animations.
-- The app is installable as a PWA on iOS and an APK (build configured, not yet distributed) on Android, with specific QR codes and install pages.
-- Android and iOS media playback (YouTube videos via /) is intended to be fixed and working.
-- The Discover screen currently relies on hardcoded  for content visibility, due to the recent fix attempt.
+The AI engineer has:
+1.  Downloaded the  file.
+2.  Copied it to  and .
+3.  Installed  to enable SVG rendering in React Native.
+4.  Identified the structure and content of the new SVG logo.
+5.  Is in the process of creating a reusable  component in  to encapsulate the SVG rendering logic, which will then replace all existing logo instances.
+The user's last explicit request was to Update the logo...and continue to build remaining features...and then test.
 </current_work>
 
 <optional_next_step>
-Fix the SAMPLE_STORIES has already been declared error in .
+Create the  component and replace all current logo usages with this new SVG component.
 </optional_next_step>

@@ -84,7 +84,7 @@ async def create_test_users():
         print()
     
     print("="*60)
-    print("🌐 Open the app: https://wellness-hub-227.preview.emergentagent.com")
+    print("🌐 Open the app: https://ariome-wellness.preview.emergentagent.com")
     print("="*60)
 
 if __name__ == "__main__":

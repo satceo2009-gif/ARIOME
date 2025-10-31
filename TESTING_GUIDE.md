@@ -1,7 +1,7 @@
 # 🧪 ARIOME COMPLETE TESTING GUIDE
 
 ## 🔗 Access the App
-**Web URL:** https://wellness-hub-227.preview.emergentagent.com
+**Web URL:** https://ariome-wellness.preview.emergentagent.com
 
 ---
 

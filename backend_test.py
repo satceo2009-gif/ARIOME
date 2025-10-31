@@ -15,7 +15,7 @@ from urllib.parse import urlparse, parse_qs
 from collections import Counter
 
 # Get backend URL from environment
-BACKEND_URL = os.getenv('EXPO_PUBLIC_BACKEND_URL', 'https://wellness-hub-227.preview.emergentagent.com')
+BACKEND_URL = os.getenv('EXPO_PUBLIC_BACKEND_URL', 'https://ariome-wellness.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class ARIOMEComprehensiveTester:
