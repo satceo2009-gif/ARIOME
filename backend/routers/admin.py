@@ -8,8 +8,10 @@ from datetime import datetime
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
 @router.get("/pending-stories")
-async def get_pending_stories(current_user: dict = Depends(require_role(["admin"]))):
+async def get_pending_stories(current_user: dict = Depends(get_current_user)):
     """Get all stories pending review"""
+    if current_user["role"] not in ["admin"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
     cursor = stories_collection.find({"status": StoryStatus.PENDING_REVIEW})
     stories = await cursor.to_list(length=100)
     
