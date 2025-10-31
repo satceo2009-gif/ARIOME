@@ -128,8 +128,10 @@ async def update_user_role(user_id: str, new_role: str, current_user: dict = Dep
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/creator-requests")
-async def get_creator_verification_requests(current_user: dict = Depends(require_role(["admin"]))):
+async def get_creator_verification_requests(current_user: dict = Depends(get_current_user)):
     """Get pending creator verification requests"""
+    if current_user["role"] not in ["admin"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
     cursor = creator_profiles_collection.find({"verification_status": VerificationStatus.PENDING})
     profiles = await cursor.to_list(length=100)
     
