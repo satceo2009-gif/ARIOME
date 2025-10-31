@@ -30,8 +30,10 @@ async def get_pending_stories(current_user: dict = Depends(get_current_user)):
     return result
 
 @router.post("/stories/{story_id}/approve")
-async def approve_story(story_id: str, current_user: dict = Depends(require_role(["admin"]))):
+async def approve_story(story_id: str, current_user: dict = Depends(get_current_user)):
     """Approve a story for publishing"""
+    if current_user["role"] not in ["admin"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
     try:
         result = await stories_collection.update_one(
             {"_id": ObjectId(story_id)},
