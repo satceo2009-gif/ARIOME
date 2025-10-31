@@ -1,189 +1,201 @@
-import { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-} from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { format } from 'date-fns';
+import { useAuth } from '@/contexts/AuthContext';
+import axios from 'axios';
+import Constants from 'expo-constants';
 
-interface JournalEntry {
-  id: string;
-  date: string;
-  mood: string;
-  content: string;
-  storyId?: string;
-}
+const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || 
+                process.env.EXPO_PUBLIC_API_URL || 
+                'https://wellness-hub-227.preview.emergentagent.com/api';
 
-const MOODS = [
-  { emoji: '😊', label: 'Joyful', color: '#FBBF24' },
-  { emoji: '😌', label: 'Peaceful', color: '#8B5CF6' },
-  { emoji: '💪', label: 'Strong', color: '#F59E0B' },
-  { emoji: '💚', label: 'Healing', color: '#10B981' },
-  { emoji: '🤔', label: 'Reflective', color: '#06B6D4' },
-  { emoji: '😔', label: 'Heavy', color: '#6B7280' },
-];
+export default function JournalScreen() {
+  const { token, user } = useAuth();
+  const [entries, setEntries] = useState<any[]>([]);
+  const [reflections, setReflections] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedTab, setSelectedTab] = useState('entries');
 
-export default function Journal() {
-  const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [isWriting, setIsWriting] = useState(false);
-  const [selectedMood, setSelectedMood] = useState('');
-  const [content, setContent] = useState('');
-
-  const handleSaveEntry = () => {
-    if (content.trim() && selectedMood) {
-      const newEntry: JournalEntry = {
-        id: Date.now().toString(),
-        date: new Date().toISOString(),
-        mood: selectedMood,
-        content: content.trim(),
-      };
-      setEntries([newEntry, ...entries]);
-      setContent('');
-      setSelectedMood('');
-      setIsWriting(false);
+  useEffect(() => {
+    if (!user) {
+      Alert.alert('Please Login', 'Login to access journal');
+      return;
     }
+    loadJournalData();
+  }, []);
+
+  const loadJournalData = async () => {
+    try {
+      const [entriesRes, reflectionsRes, statsRes] = await Promise.all([
+        axios.get(`${API_URL}/journal/entries`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API_URL}/journal/reflections`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API_URL}/journal/stats`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+      setEntries(entriesRes.data);
+      setReflections(reflectionsRes.data);
+      setStats(statsRes.data);
+    } catch (error) {
+      console.error('Error loading journal:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const getMoodEmoji = (mood: string) => {
+    const moods: any = {
+      happy: '😊',
+      peaceful: '😌',
+      grateful: '🙏',
+      sad: '😢',
+      anxious: '😰',
+      calm: '🧘',
+    };
+    return moods[mood] || '💭';
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Reflection Journal</Text>
-          <Text style={styles.subtitle}>Track your inner journey</Text>
-        </View>
-        {!isWriting && (
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => setIsWriting(true)}
-          >
-            <MaterialCommunityIcons name="plus" size={24} color="#FFF" />
-          </TouchableOpacity>
-        )}
+        <Text style={styles.title}>Journal</Text>
+        <TouchableOpacity style={styles.createButton}>
+          <MaterialCommunityIcons name="plus" size={24} color="#FFF" />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {isWriting && (
-          <View style={styles.writingContainer}>
-            <Text style={styles.sectionTitle}>How are you feeling?</Text>
-            <View style={styles.moodGrid}>
-              {MOODS.map((mood) => (
-                <TouchableOpacity
-                  key={mood.label}
-                  style={[
-                    styles.moodButton,
-                    selectedMood === mood.label && {
-                      backgroundColor: `${mood.color}30`,
-                      borderColor: mood.color,
-                    },
-                  ]}
-                  onPress={() => setSelectedMood(mood.label)}
-                >
-                  <Text style={styles.moodEmoji}>{mood.emoji}</Text>
-                  <Text
-                    style={[
-                      styles.moodLabel,
-                      selectedMood === mood.label && { color: mood.color },
-                    ]}
-                  >
-                    {mood.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <Text style={styles.sectionTitle}>Your Reflection</Text>
-            <TextInput
-              style={styles.textInput}
-              placeholder="What's on your mind and heart today?"
-              placeholderTextColor="#6B7280"
-              multiline
-              numberOfLines={8}
-              value={content}
-              onChangeText={setContent}
-              textAlignVertical="top"
-            />
-
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => {
-                  setIsWriting(false);
-                  setContent('');
-                  setSelectedMood('');
-                }}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.saveButton,
-                  (!content.trim() || !selectedMood) && styles.saveButtonDisabled,
-                ]}
-                onPress={handleSaveEntry}
-                disabled={!content.trim() || !selectedMood}
-              >
-                <Text style={styles.saveButtonText}>Save Reflection</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {entries.length > 0 ? (
-          <View style={styles.entriesContainer}>
-            {entries.map((entry) => {
-              const mood = MOODS.find((m) => m.label === entry.mood);
-              return (
-                <View key={entry.id} style={styles.entryCard}>
-                  <View style={styles.entryHeader}>
-                    <View style={styles.moodIndicator}>
-                      <Text style={styles.entryMoodEmoji}>{mood?.emoji}</Text>
-                      <Text
-                        style={[
-                          styles.entryMoodLabel,
-                          { color: mood?.color || '#9CA3AF' },
-                        ]}
-                      >
-                        {entry.mood}
-                      </Text>
-                    </View>
-                    <Text style={styles.entryDate}>
-                      {format(new Date(entry.date), 'MMM d, yyyy')}
-                    </Text>
-                  </View>
-                  <Text style={styles.entryContent}>{entry.content}</Text>
-                </View>
-              );
-            })}
-          </View>
-        ) : (
-          !isWriting && (
-            <View style={styles.emptyState}>
-              <MaterialCommunityIcons
-                name="notebook-outline"
-                size={64}
-                color="#4B5563"
-              />
-              <Text style={styles.emptyTitle}>Start Your Journal</Text>
-              <Text style={styles.emptySubtitle}>
-                Capture your thoughts, feelings, and insights from your conscious
-                journey
-              </Text>
-              <TouchableOpacity
-                style={styles.startButton}
-                onPress={() => setIsWriting(true)}
-              >
-                <MaterialCommunityIcons name="pencil" size={20} color="#FFF" />
-                <Text style={styles.startButtonText}>Write Your First Entry</Text>
-              </TouchableOpacity>
-            </View>
-          )
-        )}
+      {/* Stats Cards */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statsContainer}>
+        <View style={styles.statCard}>
+          <MaterialCommunityIcons name="book-open-variant" size={32} color="#14B8A6" />
+          <Text style={styles.statValue}>{stats?.total_entries || 0}</Text>
+          <Text style={styles.statLabel}>Entries</Text>
+        </View>
+        <View style={styles.statCard}>
+          <MaterialCommunityIcons name="lightbulb" size={32} color="#F59E0B" />
+          <Text style={styles.statValue}>{stats?.total_reflections || 0}</Text>
+          <Text style={styles.statLabel}>Reflections</Text>
+        </View>
+        <View style={styles.statCard}>
+          <MaterialCommunityIcons name="calendar" size={32} color="#8B5CF6" />
+          <Text style={styles.statValue}>{new Date().toLocaleDateString('en-US', { day: 'numeric' })}</Text>
+          <Text style={styles.statLabel}>Today</Text>
+        </View>
       </ScrollView>
+
+      {/* Tabs */}
+      <View style={styles.tabs}>
+        <TouchableOpacity 
+          style={[styles.tab, selectedTab === 'entries' && styles.tabActive]}
+          onPress={() => setSelectedTab('entries')}
+        >
+          <Text style={[styles.tabText, selectedTab === 'entries' && styles.tabTextActive]}>My Entries</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tab, selectedTab === 'reflections' && styles.tabActive]}
+          onPress={() => setSelectedTab('reflections')}
+        >
+          <Text style={[styles.tabText, selectedTab === 'reflections' && styles.tabTextActive]}>Story Reflections</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Content */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#14B8A6" />
+        </View>
+      ) : (
+        <ScrollView style={styles.content}>
+          {selectedTab === 'entries' && (
+            <View>
+              {entries.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <MaterialCommunityIcons name="book-open-variant" size={64} color="#9CA3AF" />
+                  <Text style={styles.emptyText}>No journal entries yet</Text>
+                  <Text style={styles.emptySubtext}>Start writing your thoughts</Text>
+                </View>
+              ) : (
+                entries.map((entry) => (
+                  <View key={entry.id} style={styles.entryCard}>
+                    <View style={styles.entryHeader}>
+                      <Text style={styles.entryDate}>{formatDate(entry.created_at)}</Text>
+                      {entry.mood && (
+                        <Text style={styles.moodEmoji}>{getMoodEmoji(entry.mood)}</Text>
+                      )}
+                    </View>
+                    <Text style={styles.entryTitle}>{entry.title}</Text>
+                    <Text style={styles.entryContent} numberOfLines={3}>
+                      {entry.content}
+                    </Text>
+                    {entry.tags && entry.tags.length > 0 && (
+                      <View style={styles.tagsContainer}>
+                        {entry.tags.map((tag: string, idx: number) => (
+                          <View key={idx} style={styles.tag}>
+                            <Text style={styles.tagText}>#{tag}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                ))
+              )}
+            </View>
+          )}
+
+          {selectedTab === 'reflections' && (
+            <View>
+              {reflections.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <MaterialCommunityIcons name="lightbulb" size={64} color="#9CA3AF" />
+                  <Text style={styles.emptyText}>No story reflections yet</Text>
+                  <Text style={styles.emptySubtext}>Watch stories and reflect on them</Text>
+                </View>
+              ) : (
+                reflections.map((reflection) => (
+                  <View key={reflection.id} style={styles.reflectionCard}>
+                    <View style={styles.reflectionHeader}>
+                      <MaterialCommunityIcons name="lightbulb" size={24} color="#F59E0B" />
+                      <Text style={styles.reflectionDate}>{formatDate(reflection.created_at)}</Text>
+                    </View>
+                    
+                    {reflection.mood && (
+                      <View style={styles.moodBadge}>
+                        <Text style={styles.moodText}>{getMoodEmoji(reflection.mood)} {reflection.mood}</Text>
+                      </View>
+                    )}
+                    
+                    {reflection.before_reflection && (
+                      <View style={styles.reflectionSection}>
+                        <Text style={styles.reflectionLabel}>Before:</Text>
+                        <Text style={styles.reflectionText}>{reflection.before_reflection}</Text>
+                      </View>
+                    )}
+                    
+                    {reflection.after_reflection && (
+                      <View style={styles.reflectionSection}>
+                        <Text style={styles.reflectionLabel}>After:</Text>
+                        <Text style={styles.reflectionText}>{reflection.after_reflection}</Text>
+                      </View>
+                    )}
+                  </View>
+                ))
+              )}
+            </View>
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -195,177 +207,181 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    padding: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#FFF',
-    marginBottom: 4,
   },
-  subtitle: {
-    fontSize: 14,
-    color: '#9CA3AF',
-  },
-  addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  createButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#14B8A6',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scrollView: {
-    flex: 1,
-  },
-  writingContainer: {
-    padding: 20,
-    backgroundColor: '#1A1A24',
-    margin: 20,
-    borderRadius: 16,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFF',
-    marginBottom: 16,
-  },
-  moodGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+  statsContainer: {
+    paddingHorizontal: 20,
     marginBottom: 24,
   },
-  moodButton: {
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: '#0A0A0F',
-    borderWidth: 2,
-    borderColor: 'transparent',
-    minWidth: 90,
-  },
-  moodEmoji: {
-    fontSize: 28,
-    marginBottom: 6,
-  },
-  moodLabel: {
-    fontSize: 13,
-    color: '#9CA3AF',
-    fontWeight: '600',
-  },
-  textInput: {
-    backgroundColor: '#0A0A0F',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 15,
-    color: '#FFF',
-    minHeight: 160,
-    marginBottom: 20,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: '#0A0A0F',
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#9CA3AF',
-  },
-  saveButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: '#14B8A6',
-    alignItems: 'center',
-  },
-  saveButtonDisabled: {
-    backgroundColor: '#4B5563',
-    opacity: 0.5,
-  },
-  saveButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  entriesContainer: {
-    padding: 20,
-  },
-  entryCard: {
-    backgroundColor: '#1A1A24',
+  statCard: {
+    backgroundColor: '#1F2937',
     borderRadius: 16,
     padding: 20,
+    marginRight: 16,
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFF',
+    marginTop: 8,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 4,
+  },
+  tabs: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabActive: {
+    borderBottomColor: '#14B8A6',
+  },
+  tabText: {
+    fontSize: 16,
+    color: '#9CA3AF',
+  },
+  tabTextActive: {
+    color: '#14B8A6',
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 64,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFF',
+    marginTop: 16,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    marginTop: 8,
+  },
+  entryCard: {
+    backgroundColor: '#1F2937',
+    borderRadius: 16,
+    padding: 16,
     marginBottom: 16,
   },
   entryHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  moodIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  entryMoodEmoji: {
-    fontSize: 24,
-  },
-  entryMoodLabel: {
-    fontSize: 15,
-    fontWeight: '600',
+    marginBottom: 12,
   },
   entryDate: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#9CA3AF',
   },
-  entryContent: {
-    fontSize: 15,
-    color: '#FFF',
-    lineHeight: 24,
+  moodEmoji: {
+    fontSize: 24,
   },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 80,
-    paddingHorizontal: 40,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  entryTitle: {
+    fontSize: 18,
+    fontWeight: '600',
     color: '#FFF',
-    marginTop: 16,
     marginBottom: 8,
   },
-  emptySubtitle: {
+  entryContent: {
     fontSize: 14,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 22,
+    color: '#D1D5DB',
+    lineHeight: 20,
+    marginBottom: 12,
   },
-  startButton: {
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  tag: {
+    backgroundColor: 'rgba(20, 184, 166, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  tagText: {
+    fontSize: 12,
+    color: '#14B8A6',
+  },
+  reflectionCard: {
+    backgroundColor: '#1F2937',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  reflectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#14B8A6',
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    borderRadius: 12,
+    marginBottom: 12,
   },
-  startButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFF',
+  reflectionDate: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+  moodBadge: {
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+  },
+  moodText: {
+    fontSize: 14,
+    color: '#F59E0B',
+  },
+  reflectionSection: {
+    marginBottom: 12,
+  },
+  reflectionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#9CA3AF',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  reflectionText: {
+    fontSize: 14,
+    color: '#D1D5DB',
+    lineHeight: 20,
   },
 });
