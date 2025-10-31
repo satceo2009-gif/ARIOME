@@ -162,8 +162,10 @@ async def get_creator_analytics(current_user: dict = Depends(get_current_user)):
     }
 
 @router.put("/profile")
-async def update_creator_profile(profile_update: dict, current_user: dict = Depends(require_role(["creator", "admin"]))):
+async def update_creator_profile(profile_update: dict, current_user: dict = Depends(get_current_user)):
     """Update creator profile"""
+    if current_user["role"] not in ["creator", "admin"]:
+        raise HTTPException(status_code=403, detail="Creator or admin access required")
     creator_profile = await creator_profiles_collection.find_one({"user_id": str(current_user["_id"])})
     
     if not creator_profile:
