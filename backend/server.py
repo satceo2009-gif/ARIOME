@@ -11,7 +11,9 @@ from database import (
     stories_collection,
     reflections_collection,
     transactions_collection,
-    creator_profiles_collection
+    creator_profiles_collection,
+    circles_collection,
+    journal_entries_collection
 )
 from models import (
     UserCreate, UserLogin, UserRole,
@@ -21,12 +23,9 @@ from models import (
     CreatorProfileCreate,
     VerificationStatus
 )
-from auth import (
-    verify_password,
-    get_password_hash,
-    create_access_token,
-    decode_access_token
-)
+
+# Import routers
+from routers import auth, admin, creator, subscription, circles, journal
 
 app = FastAPI(title="ARIOME API", version="1.0.0")
 
@@ -38,6 +37,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(auth.router)
+app.include_router(admin.router)
+app.include_router(creator.router)
+app.include_router(subscription.router)
+app.include_router(circles.router)
+app.include_router(journal.router)
 
 # Helper functions
 def serialize_doc(doc):
