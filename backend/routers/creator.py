@@ -111,8 +111,10 @@ async def update_story(story_id: str, story_update: dict, current_user: dict = D
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete("/stories/{story_id}")
-async def delete_story(story_id: str, current_user: dict = Depends(require_role(["creator", "admin"]))):
+async def delete_story(story_id: str, current_user: dict = Depends(get_current_user)):
     """Delete a story"""
+    if current_user["role"] not in ["creator", "admin"]:
+        raise HTTPException(status_code=403, detail="Creator or admin access required")
     try:
         story = await stories_collection.find_one({"_id": ObjectId(story_id)})
         if not story:
