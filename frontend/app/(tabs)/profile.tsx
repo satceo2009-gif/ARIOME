@@ -42,8 +42,8 @@ export default function ProfileScreen() {
     { id: 'settings', label: 'Settings', icon: 'cog', route: '/settings' },
     ...(user?.role === 'admin' ? [{ id: 'admin', label: 'Admin Dashboard', icon: 'shield-account', route: '/admin' }] : []),
     ...(user?.role === 'creator' ? [{ id: 'creator', label: 'Creator Dashboard', icon: 'creation', route: '/creator' }] : []),
-    { id: 'help', label: 'Help & Support', icon: 'help-circle' },
-    { id: 'about', label: 'About ARIOME', icon: 'information' },
+    { id: 'help', label: 'Help & Support', icon: 'help-circle', route: '/help' },
+    { id: 'about', label: 'About ARIOME', icon: 'information', route: '/about' },
   ];
 
   return (
