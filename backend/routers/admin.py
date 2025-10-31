@@ -89,8 +89,10 @@ async def get_admin_stats(current_user: dict = Depends(get_current_user)):
     }
 
 @router.get("/users")
-async def get_all_users(skip: int = 0, limit: int = 50, current_user: dict = Depends(require_role(["admin"]))):
+async def get_all_users(skip: int = 0, limit: int = 50, current_user: dict = Depends(get_current_user)):
     """Get all users for admin management"""
+    if current_user["role"] not in ["admin"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
     cursor = users_collection.find({}).skip(skip).limit(limit).sort("created_at", -1)
     users = await cursor.to_list(length=limit)
     
