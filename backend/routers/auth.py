@@ -55,14 +55,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
 
 async def require_role(required_roles: list):
-    async def role_checker(current_user: dict = Depends(get_current_user)):
+    def role_checker(current_user: dict = Depends(get_current_user)):
         if current_user["role"] not in required_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Requires one of roles: {required_roles}"
             )
         return current_user
-    return role_checker
+    return Depends(role_checker)
 
 @router.post("/signup")
 async def signup(user: UserCreate):
