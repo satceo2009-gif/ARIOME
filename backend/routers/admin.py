@@ -153,8 +153,10 @@ async def get_creator_verification_requests(current_user: dict = Depends(get_cur
     return result
 
 @router.post("/creators/{profile_id}/verify")
-async def verify_creator(profile_id: str, current_user: dict = Depends(require_role(["admin"]))):
+async def verify_creator(profile_id: str, current_user: dict = Depends(get_current_user)):
     """Verify a creator profile"""
+    if current_user["role"] not in ["admin"]:
+        raise HTTPException(status_code=403, detail="Admin access required")
     try:
         result = await creator_profiles_collection.update_one(
             {"_id": ObjectId(profile_id)},
