@@ -19,6 +19,8 @@ reflections_collection = db.reflections
 transactions_collection = db.transactions
 creator_profiles_collection = db.creator_profiles
 admin_logs_collection = db.admin_logs
+circle_posts_collection = db.circle_posts
+journal_entries_collection = db.journal_entries
 
 async def init_db():
     """Initialize database with indexes and constraints"""
