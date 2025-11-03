@@ -13,7 +13,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useUserStore } from '@/store/userStore';
 import { INTENTIONS, Intention } from '@/constants/intentions';
 import * as Haptics from 'expo-haptics';
-import AriomeLogo from '@/components/AriomeLogo';
+// import AriomeLogo from '@/components/AriomeLogo';
 
 const { width } = Dimensions.get('window');
 
