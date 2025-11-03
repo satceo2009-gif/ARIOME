@@ -98,6 +98,130 @@ export const storiesAPI = {
 export const reflectionsAPI = {
   create: async (reflection: {
     story_id: string;
+
+// Journal API
+export const journalAPI = {
+  createEntry: async (entry: {
+    title: string;
+    content: string;
+    mood?: string;
+    tags?: string[];
+  }) => {
+    const { data } = await api.post('/journal/entries', entry);
+    return data;
+  },
+
+  getEntries: async () => {
+    const { data } = await api.get('/journal/entries');
+    return data;
+  },
+
+  createReflection: async (reflection: {
+    story_id: string;
+    mood?: string;
+    before_reflection?: string;
+    after_reflection?: string;
+  }) => {
+    const { data } = await api.post('/journal/reflections', reflection);
+    return data;
+  },
+
+  getReflections: async () => {
+    const { data } = await api.get('/journal/reflections');
+    return data;
+  },
+
+  getStats: async () => {
+    const { data } = await api.get('/journal/stats');
+    return data;
+  },
+};
+
+// Circles API
+export const circlesAPI = {
+  getAll: async (intention?: string) => {
+    const params: any = {};
+    if (intention) params.intention = intention;
+    const { data } = await api.get('/circles', { params });
+    return data;
+  },
+
+  create: async (circle: {
+    name: string;
+    description: string;
+    intention?: string;
+    is_private?: boolean;
+  }) => {
+    const { data } = await api.post('/circles', circle);
+    return data;
+  },
+
+  join: async (circleId: string) => {
+    const { data } = await api.post(`/circles/${circleId}/join`);
+    return data;
+  },
+
+  leave: async (circleId: string) => {
+    const { data } = await api.post(`/circles/${circleId}/leave`);
+    return data;
+  },
+
+  getPosts: async (circleId: string) => {
+    const { data } = await api.get(`/circles/${circleId}/posts`);
+    return data;
+  },
+
+  createPost: async (circleId: string, post: {
+    content: string;
+    post_type?: string;
+  }) => {
+    const { data } = await api.post(`/circles/${circleId}/posts`, post);
+    return data;
+  },
+};
+
+// Creator API
+export const creatorAPI = {
+  uploadStory: async (story: {
+    title: string;
+    description: string;
+    intentions: string[];
+    format: string;
+    media_url: string;
+    thumbnail_url?: string;
+    duration?: number;
+    tags?: string[];
+    is_premium?: boolean;
+    price?: number;
+  }) => {
+    const { data } = await api.post('/creator/upload', story);
+    return data;
+  },
+
+  getMyStories: async () => {
+    const { data } = await api.get('/creator/my-stories');
+    return data;
+  },
+
+  getAnalytics: async () => {
+    const { data } = await api.get('/creator/analytics');
+    return data;
+  },
+
+  deleteStory: async (storyId: string) => {
+    const { data } = await api.delete(`/creator/stories/${storyId}`);
+    return data;
+  },
+};
+
+// AI Recommendations API
+export const recommendationsAPI = {
+  getPersonalized: async () => {
+    const { data } = await api.post('/stories/recommendations');
+    return data;
+  },
+};
+
     mood: string;
     before_reflection?: string;
     after_reflection?: string;
