@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
 import { Audio } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
-import AriomeLogo from '@/components/AriomeLogo';
+// import AriomeLogo from '@/components/AriomeLogo';
 
 export default function Index() {
   const router = useRouter();
