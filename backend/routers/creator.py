@@ -1,196 +1,134 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
-from database import stories_collection, creator_profiles_collection, transactions_collection
-from models import StoryCreate, StoryStatus
-from routers.auth import get_current_user, require_role
-from bson import ObjectId
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from typing import List, Optional
 from datetime import datetime
-from typing import Optional
+from pydantic import BaseModel
+from bson import ObjectId
+from ..auth import get_current_user
+from ..database import db
 
-router = APIRouter(prefix="/api/creator", tags=["Creator"])
+router = APIRouter(prefix="/creator", tags=["creator"])
 
-@router.post("/stories")
-async def create_story(story: StoryCreate, current_user: dict = Depends(get_current_user)):
-    """Create a new story (requires approval)"""
-    if current_user["role"] not in ["creator", "admin"]:
-        raise HTTPException(status_code=403, detail="Creator or admin access required")
-    
-    # Get creator profile
-    creator_profile = await creator_profiles_collection.find_one({"user_id": str(current_user["_id"])})
+class StoryUpload(BaseModel):
+    title: str
+    description: str
+    intentions: List[str]
+    format: str  # "video" or "audio"
+    media_url: str
+    thumbnail_url: Optional[str] = None
+    duration: Optional[int] = None  # in seconds
+    tags: Optional[List[str]] = []
+    is_premium: bool = False
+    price: Optional[float] = 0.0
+
+@router.post("/upload")
+async def upload_story(story: StoryUpload, current_user: dict = Depends(get_current_user)):
+    """Upload a new story (creator only)"""
+    if current_user.get("role") not in ["creator", "admin"]:
+        raise HTTPException(status_code=403, detail="Creator access required")
     
     story_doc = {
-        "title": story.title,
-        "description": story.description,
-        "intentions": story.intentions,
-        "format": story.format,
-        "media_url": story.media_url,
-        "thumbnail_url": story.thumbnail_url,
-        "duration": story.duration,
-        "tags": story.tags,
-        "reflection_prompts": story.reflection_prompts.dict(),
-        "is_premium": story.is_premium,
-        "price": story.price,
+        **story.dict(),
         "creator_id": str(current_user["_id"]),
-        "creator_name": current_user["name"],
-        "creator_avatar": current_user["avatar"],
-        "creator_bio": creator_profile.get("bio", "") if creator_profile else "",
-        "creator_verified": creator_profile.get("verification_status", "pending") == "verified" if creator_profile else False,
-        "status": StoryStatus.PENDING_REVIEW,
-        "resonance_count": 0,
+        "creator_name": current_user.get("name", "Unknown"),
+        "creator_avatar": current_user.get("avatar", ""),
+        "creator_bio": current_user.get("bio", ""),
+        "creator_verified": current_user.get("verification_status") == "verified",
+        "status": "pending_review",
         "play_count": 0,
+        "resonance_count": 0,
+        "reflection_prompts": {
+            "before": "How are you feeling right now?",
+            "after": "What resonated with you from this story?"
+        },
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow()
     }
     
-    result = await stories_collection.insert_one(story_doc)
-    
-    # Update creator story count
-    if creator_profile:
-        await creator_profiles_collection.update_one(
-            {"_id": creator_profile["_id"]},
-            {"$inc": {"total_stories": 1}}
-        )
+    result = await db.stories.insert_one(story_doc)
     
     return {
         "id": str(result.inserted_id),
-        "message": "Story created and submitted for review",
-        "status": StoryStatus.PENDING_REVIEW
+        "message": "Story uploaded and submitted for review",
+        "status": "pending_review"
     }
 
 @router.get("/my-stories")
 async def get_my_stories(current_user: dict = Depends(get_current_user)):
     """Get all stories by current creator"""
-    if current_user["role"] not in ["creator", "admin"]:
-        raise HTTPException(status_code=403, detail="Creator or admin access required")
-    cursor = stories_collection.find({"creator_id": str(current_user["_id"])}).sort("created_at", -1)
-    stories = await cursor.to_list(length=100)
+    if current_user.get("role") not in ["creator", "admin"]:
+        raise HTTPException(status_code=403, detail="Creator access required")
     
-    result = []
-    for story in stories:
-        result.append({
-            "id": str(story["_id"]),
-            "title": story["title"],
-            "format": story["format"],
-            "status": story["status"],
-            "thumbnail_url": story["thumbnail_url"],
-            "play_count": story.get("play_count", 0),
-            "resonance_count": story.get("resonance_count", 0),
-            "is_premium": story.get("is_premium", False),
-            "created_at": story["created_at"],
-            "rejection_reason": story.get("rejection_reason")
-        })
+    stories = await db.stories.find(
+        {"creator_id": str(current_user["_id"])}
+    ).sort("created_at", -1).to_list(100)
     
-    return result
+    return [
+        {
+            "id": str(s["_id"]),
+            "title": s.get("title"),
+            "format": s.get("format"),
+            "status": s.get("status"),
+            "thumbnail_url": s.get("thumbnail_url"),
+            "play_count": s.get("play_count", 0),
+            "resonance_count": s.get("resonance_count", 0),
+            "is_premium": s.get("is_premium", False),
+            "created_at": s.get("created_at").isoformat() if s.get("created_at") else None,
+            "rejection_reason": s.get("rejection_reason")
+        }
+        for s in stories
+    ]
 
-@router.put("/stories/{story_id}")
-async def update_story(story_id: str, story_update: dict, current_user: dict = Depends(get_current_user)):
-    """Update a story"""
-    if current_user["role"] not in ["creator", "admin"]:
-        raise HTTPException(status_code=403, detail="Creator or admin access required")
-    try:
-        # Verify ownership
-        story = await stories_collection.find_one({"_id": ObjectId(story_id)})
-        if not story:
-            raise HTTPException(status_code=404, detail="Story not found")
-        
-        if str(story["creator_id"]) != str(current_user["_id"]) and current_user["role"] != "admin":
-            raise HTTPException(status_code=403, detail="Not authorized to edit this story")
-        
-        # Only allow certain fields to be updated
-        allowed_fields = ["title", "description", "thumbnail_url", "tags", "is_premium", "price"]
-        update_fields = {k: v for k, v in story_update.items() if k in allowed_fields}
-        update_fields["updated_at"] = datetime.utcnow()
-        update_fields["status"] = StoryStatus.PENDING_REVIEW  # Reset to pending after edit
-        
-        await stories_collection.update_one(
-            {"_id": ObjectId(story_id)},
-            {"$set": update_fields}
-        )
-        
-        return {"message": "Story updated and resubmitted for review"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+@router.get("/analytics")
+async def get_creator_analytics(current_user: dict = Depends(get_current_user)):
+    """Get creator analytics dashboard data"""
+    if current_user.get("role") not in ["creator", "admin"]:
+        raise HTTPException(status_code=403, detail="Creator access required")
+    
+    # Get all creator stories
+    stories = await db.stories.find(
+        {"creator_id": str(current_user["_id"])}
+    ).to_list(1000)
+    
+    # Calculate stats
+    published_stories = len([s for s in stories if s.get("status") == "published"])
+    pending_stories = len([s for s in stories if s.get("status") == "pending_review"])
+    rejected_stories = len([s for s in stories if s.get("status") == "rejected"])
+    
+    total_plays = sum(s.get("play_count", 0) for s in stories)
+    total_resonance = sum(s.get("resonance_count", 0) for s in stories)
+    
+    # Get earnings (placeholder for now)
+    total_earnings = 0.0  # TODO: Calculate from transactions
+    
+    return {
+        "published_stories": published_stories,
+        "pending_stories": pending_stories,
+        "rejected_stories": rejected_stories,
+        "total_plays": total_plays,
+        "total_resonance": total_resonance,
+        "total_earnings": total_earnings,
+        "verification_status": current_user.get("verification_status", "pending")
+    }
 
 @router.delete("/stories/{story_id}")
 async def delete_story(story_id: str, current_user: dict = Depends(get_current_user)):
     """Delete a story"""
-    if current_user["role"] not in ["creator", "admin"]:
-        raise HTTPException(status_code=403, detail="Creator or admin access required")
+    if current_user.get("role") not in ["creator", "admin"]:
+        raise HTTPException(status_code=403, detail="Creator access required")
+    
     try:
-        story = await stories_collection.find_one({"_id": ObjectId(story_id)})
-        if not story:
-            raise HTTPException(status_code=404, detail="Story not found")
-        
-        if str(story["creator_id"]) != str(current_user["_id"]) and current_user["role"] != "admin":
-            raise HTTPException(status_code=403, detail="Not authorized to delete this story")
-        
-        await stories_collection.delete_one({"_id": ObjectId(story_id)})
-        
-        return {"message": "Story deleted successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-@router.get("/analytics")
-async def get_creator_analytics(current_user: dict = Depends(get_current_user)):
-    """Get creator analytics"""
-    if current_user["role"] not in ["creator", "admin"]:
-        raise HTTPException(status_code=403, detail="Creator or admin access required")
-    # Get creator profile
-    creator_profile = await creator_profiles_collection.find_one({"user_id": str(current_user["_id"])})
+        story_oid = ObjectId(story_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid story ID")
     
-    # Get story stats
-    cursor = stories_collection.find({"creator_id": str(current_user["_id"])})
-    stories = await cursor.to_list(length=1000)
+    # Verify ownership
+    story = await db.stories.find_one({"_id": story_oid})
+    if not story:
+        raise HTTPException(status_code=404, detail="Story not found")
     
-    total_plays = sum(story.get("play_count", 0) for story in stories)
-    total_resonance = sum(story.get("resonance_count", 0) for story in stories)
+    if story.get("creator_id") != str(current_user["_id"]) and current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Get earnings
-    transactions_cursor = transactions_collection.find({"creator_id": str(current_user["_id"]), "status": "completed"})
-    transactions = await transactions_cursor.to_list(length=1000)
-    total_earnings = sum(t.get("amount", 0) for t in transactions)
+    await db.stories.delete_one({"_id": story_oid})
     
-    return {
-        "total_stories": len(stories),
-        "published_stories": len([s for s in stories if s["status"] == StoryStatus.PUBLISHED]),
-        "pending_stories": len([s for s in stories if s["status"] == StoryStatus.PENDING_REVIEW]),
-        "rejected_stories": len([s for s in stories if s["status"] == StoryStatus.REJECTED]),
-        "total_plays": total_plays,
-        "total_resonance": total_resonance,
-        "total_earnings": total_earnings,
-        "total_followers": creator_profile.get("total_followers", 0) if creator_profile else 0,
-        "verification_status": creator_profile.get("verification_status", "pending") if creator_profile else "pending"
-    }
-
-@router.put("/profile")
-async def update_creator_profile(profile_update: dict, current_user: dict = Depends(get_current_user)):
-    """Update creator profile"""
-    if current_user["role"] not in ["creator", "admin"]:
-        raise HTTPException(status_code=403, detail="Creator or admin access required")
-    creator_profile = await creator_profiles_collection.find_one({"user_id": str(current_user["_id"])})
-    
-    if not creator_profile:
-        # Create profile if doesn't exist
-        profile_doc = {
-            "user_id": str(current_user["_id"]),
-            "bio": profile_update.get("bio", ""),
-            "website": profile_update.get("website"),
-            "social_links": profile_update.get("social_links", {}),
-            "specialties": profile_update.get("specialties", []),
-            "verification_status": "pending",
-            "total_earnings": 0.0,
-            "total_stories": 0,
-            "total_followers": 0,
-            "created_at": datetime.utcnow()
-        }
-        await creator_profiles_collection.insert_one(profile_doc)
-    else:
-        # Update existing profile
-        allowed_fields = ["bio", "website", "social_links", "specialties"]
-        update_fields = {k: v for k, v in profile_update.items() if k in allowed_fields}
-        
-        await creator_profiles_collection.update_one(
-            {"_id": creator_profile["_id"]},
-            {"$set": update_fields}
-        )
-    
-    return {"message": "Creator profile updated successfully"}
+    return {"message": "Story deleted successfully"}
