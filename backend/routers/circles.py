@@ -1,72 +1,89 @@
-from fastapi import APIRouter, HTTPException, Depends
-from database import circles_collection, circle_posts_collection, users_collection
-from routers.auth import get_current_user
-from bson import ObjectId
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from typing import List, Optional
 from datetime import datetime
+from pydantic import BaseModel
+from bson import ObjectId
+from ..auth import get_current_user
+from ..database import db
 
-router = APIRouter(prefix="/api/circles", tags=["Circles"])
+router = APIRouter(prefix="/circles", tags=["circles"])
 
-@router.post("/")
-async def create_circle(circle_data: dict, current_user: dict = Depends(get_current_user)):
-    """Create a new community circle"""
+class CreateCircle(BaseModel):
+    name: str
+    description: str
+    intention: Optional[str] = None
+    is_private: bool = False
+
+class CreatePost(BaseModel):
+    content: str
+    post_type: str = "text"  # text, reflection, question
+
+@router.post("")
+async def create_circle(circle: CreateCircle, current_user: dict = Depends(get_current_user)):
+    """Create a new circle"""
     circle_doc = {
-        "name": circle_data["name"],
-        "description": circle_data["description"],
-        "intention": circle_data["intention"],
-        "is_private": circle_data.get("is_private", False),
-        "created_by": str(current_user["_id"]),
-        "creator_name": current_user["name"],
-        "creator_avatar": current_user["avatar"],
+        **circle.dict(),
+        "creator_id": str(current_user["_id"]),
+        "creator_name": current_user.get("name", "Unknown"),
         "members": [str(current_user["_id"])],
         "member_count": 1,
         "post_count": 0,
         "created_at": datetime.utcnow()
     }
-    
-    result = await circles_collection.insert_one(circle_doc)
-    return {"id": str(result.inserted_id), "message": "Circle created successfully"}
+    result = await db.circles.insert_one(circle_doc)
+    circle_doc["id"] = str(result.inserted_id)
+    return circle_doc
 
-@router.get("/")
-async def get_circles(intention: str = None, current_user: dict = Depends(get_current_user)):
-    """Get all circles (filtered by intention if provided)"""
+@router.get("")
+async def get_circles(
+    intention: Optional[str] = Query(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all circles (optionally filtered by intention)"""
     query = {}
     if intention:
         query["intention"] = intention
     
-    cursor = circles_collection.find(query).sort("created_at", -1)
-    circles = await cursor.to_list(length=100)
+    circles = await db.circles.find(query).sort("created_at", -1).to_list(100)
+    user_id = str(current_user["_id"])
     
-    result = []
-    for circle in circles:
-        result.append({
-            "id": str(circle["_id"]),
-            "name": circle["name"],
-            "description": circle["description"],
-            "intention": circle["intention"],
-            "creator_name": circle["creator_name"],
-            "creator_avatar": circle["creator_avatar"],
-            "member_count": circle.get("member_count", len(circle.get("members", []))),
-            "post_count": circle.get("post_count", 0),
-            "is_member": str(current_user["_id"]) in circle.get("members", []),
-            "created_at": circle["created_at"]
-        })
-    
-    return result
+    return [
+        {
+            "id": str(c["_id"]),
+            "name": c.get("name"),
+            "description": c.get("description"),
+            "intention": c.get("intention"),
+            "creator_name": c.get("creator_name"),
+            "member_count": c.get("member_count", 0),
+            "post_count": c.get("post_count", 0),
+            "is_member": user_id in c.get("members", []),
+            "is_private": c.get("is_private", False)
+        }
+        for c in circles
+    ]
 
 @router.post("/{circle_id}/join")
 async def join_circle(circle_id: str, current_user: dict = Depends(get_current_user)):
     """Join a circle"""
-    circle = await circles_collection.find_one({"_id": ObjectId(circle_id)})
+    try:
+        circle_oid = ObjectId(circle_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid circle ID")
+    
+    circle = await db.circles.find_one({"_id": circle_oid})
     if not circle:
         raise HTTPException(status_code=404, detail="Circle not found")
     
-    if str(current_user["_id"]) in circle.get("members", []):
+    user_id = str(current_user["_id"])
+    if user_id in circle.get("members", []):
         raise HTTPException(status_code=400, detail="Already a member")
     
-    await circles_collection.update_one(
-        {"_id": ObjectId(circle_id)},
-        {"$push": {"members": str(current_user["_id"])},
-         "$inc": {"member_count": 1}}
+    await db.circles.update_one(
+        {"_id": circle_oid},
+        {
+            "$push": {"members": user_id},
+            "$inc": {"member_count": 1}
+        }
     )
     
     return {"message": "Joined circle successfully"}
@@ -74,87 +91,86 @@ async def join_circle(circle_id: str, current_user: dict = Depends(get_current_u
 @router.post("/{circle_id}/leave")
 async def leave_circle(circle_id: str, current_user: dict = Depends(get_current_user)):
     """Leave a circle"""
-    await circles_collection.update_one(
-        {"_id": ObjectId(circle_id)},
-        {"$pull": {"members": str(current_user["_id"])},
-         "$inc": {"member_count": -1}}
+    try:
+        circle_oid = ObjectId(circle_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid circle ID")
+    
+    user_id = str(current_user["_id"])
+    await db.circles.update_one(
+        {"_id": circle_oid},
+        {
+            "$pull": {"members": user_id},
+            "$inc": {"member_count": -1}
+        }
     )
     
     return {"message": "Left circle successfully"}
 
-@router.post("/{circle_id}/posts")
-async def create_post(circle_id: str, post_data: dict, current_user: dict = Depends(get_current_user)):
-    """Create a post in a circle"""
-    circle = await circles_collection.find_one({"_id": ObjectId(circle_id)})
+@router.get("/{circle_id}/posts")
+async def get_circle_posts(circle_id: str, current_user: dict = Depends(get_current_user)):
+    """Get posts in a circle"""
+    try:
+        circle_oid = ObjectId(circle_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid circle ID")
+    
+    # Check if user is a member
+    circle = await db.circles.find_one({"_id": circle_oid})
     if not circle:
         raise HTTPException(status_code=404, detail="Circle not found")
     
-    if str(current_user["_id"]) not in circle.get("members", []):
-        raise HTTPException(status_code=403, detail="Must be a member to post")
+    user_id = str(current_user["_id"])
+    if user_id not in circle.get("members", []):
+        raise HTTPException(status_code=403, detail="Not a member of this circle")
+    
+    posts = await db.circle_posts.find(
+        {"circle_id": circle_id}
+    ).sort("created_at", -1).to_list(100)
+    
+    return [
+        {
+            "id": str(p["_id"]),
+            "content": p.get("content"),
+            "post_type": p.get("post_type"),
+            "author_name": p.get("author_name"),
+            "created_at": p.get("created_at").isoformat() if p.get("created_at") else None
+        }
+        for p in posts
+    ]
+
+@router.post("/{circle_id}/posts")
+async def create_post(circle_id: str, post: CreatePost, current_user: dict = Depends(get_current_user)):
+    """Create a post in a circle"""
+    try:
+        circle_oid = ObjectId(circle_id)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid circle ID")
+    
+    # Check if user is a member
+    circle = await db.circles.find_one({"_id": circle_oid})
+    if not circle:
+        raise HTTPException(status_code=404, detail="Circle not found")
+    
+    user_id = str(current_user["_id"])
+    if user_id not in circle.get("members", []):
+        raise HTTPException(status_code=403, detail="Not a member of this circle")
     
     post_doc = {
+        **post.dict(),
         "circle_id": circle_id,
-        "user_id": str(current_user["_id"]),
-        "user_name": current_user["name"],
-        "user_avatar": current_user["avatar"],
-        "content": post_data["content"],
-        "likes": [],
-        "like_count": 0,
-        "comment_count": 0,
+        "author_id": user_id,
+        "author_name": current_user.get("name", "Unknown"),
         "created_at": datetime.utcnow()
     }
     
-    result = await circle_posts_collection.insert_one(post_doc)
+    result = await db.circle_posts.insert_one(post_doc)
     
     # Update circle post count
-    await circles_collection.update_one(
-        {"_id": ObjectId(circle_id)},
+    await db.circles.update_one(
+        {"_id": circle_oid},
         {"$inc": {"post_count": 1}}
     )
     
-    return {"id": str(result.inserted_id), "message": "Post created successfully"}
-
-@router.get("/{circle_id}/posts")
-async def get_circle_posts(circle_id: str, current_user: dict = Depends(get_current_user)):
-    """Get all posts in a circle"""
-    cursor = circle_posts_collection.find({"circle_id": circle_id}).sort("created_at", -1)
-    posts = await cursor.to_list(length=100)
-    
-    result = []
-    for post in posts:
-        result.append({
-            "id": str(post["_id"]),
-            "user_name": post["user_name"],
-            "user_avatar": post["user_avatar"],
-            "content": post["content"],
-            "like_count": post.get("like_count", 0),
-            "comment_count": post.get("comment_count", 0),
-            "is_liked": str(current_user["_id"]) in post.get("likes", []),
-            "created_at": post["created_at"]
-        })
-    
-    return result
-
-@router.post("/posts/{post_id}/like")
-async def like_post(post_id: str, current_user: dict = Depends(get_current_user)):
-    """Like a post"""
-    post = await circle_posts_collection.find_one({"_id": ObjectId(post_id)})
-    if not post:
-        raise HTTPException(status_code=404, detail="Post not found")
-    
-    if str(current_user["_id"]) in post.get("likes", []):
-        # Unlike
-        await circle_posts_collection.update_one(
-            {"_id": ObjectId(post_id)},
-            {"$pull": {"likes": str(current_user["_id"])},
-             "$inc": {"like_count": -1}}
-        )
-        return {"message": "Post unliked"}
-    else:
-        # Like
-        await circle_posts_collection.update_one(
-            {"_id": ObjectId(post_id)},
-            {"$push": {"likes": str(current_user["_id"])},
-             "$inc": {"like_count": 1}}
-        )
-        return {"message": "Post liked"}
+    post_doc["id"] = str(result.inserted_id)
+    return post_doc

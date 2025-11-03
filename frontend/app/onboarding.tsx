@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
-  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +13,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useUserStore } from '@/store/userStore';
 import { INTENTIONS, Intention } from '@/constants/intentions';
 import * as Haptics from 'expo-haptics';
+import AriomeLogo from '@/components/AriomeLogo';
 
 const { width } = Dimensions.get('window');
 
@@ -61,11 +61,7 @@ export default function Onboarding() {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.header}>
-              <Image 
-                source={require('../assets/images/ariome-logo.png')} 
-                style={styles.logoImage}
-                resizeMode="contain"
-              />
+              <AriomeLogo width={240} height={100} />
               <Text style={styles.welcomeTitle}>Welcome to ARIOME</Text>
               <Text style={styles.welcomeSubtitle}>
                 Your conscious journey begins here
@@ -236,15 +232,11 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20,
   },
-  logoImage: {
-    width: 180,
-    height: 70,
-    marginBottom: 24,
-  },
   welcomeTitle: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#FFF',
+    marginTop: 24,
     marginBottom: 8,
     textAlign: 'center',
   },

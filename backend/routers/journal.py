@@ -1,83 +1,100 @@
-from fastapi import APIRouter, HTTPException, Depends
-from database import reflections_collection, journal_entries_collection
-from routers.auth import get_current_user
-from bson import ObjectId
+from fastapi import APIRouter, Depends, HTTPException, status
+from typing import List, Optional
 from datetime import datetime
+from pydantic import BaseModel
+from bson import ObjectId
+from ..auth import get_current_user
+from ..database import db
 
-router = APIRouter(prefix="/api/journal", tags=["Journal"])
+router = APIRouter(prefix="/journal", tags=["journal"])
+
+class JournalEntry(BaseModel):
+    title: str
+    content: str
+    mood: Optional[str] = None
+    tags: Optional[List[str]] = []
+
+class StoryReflection(BaseModel):
+    story_id: str
+    mood: Optional[str] = None
+    before_reflection: Optional[str] = None
+    after_reflection: Optional[str] = None
 
 @router.post("/entries")
-async def create_journal_entry(entry_data: dict, current_user: dict = Depends(get_current_user)):
-    """Create a personal journal entry"""
+async def create_entry(entry: JournalEntry, current_user: dict = Depends(get_current_user)):
+    """Create a new journal entry"""
     entry_doc = {
+        **entry.dict(),
         "user_id": str(current_user["_id"]),
-        "title": entry_data.get("title", "Untitled Entry"),
-        "content": entry_data["content"],
-        "mood": entry_data.get("mood"),
-        "tags": entry_data.get("tags", []),
-        "is_private": entry_data.get("is_private", True),
-        "created_at": datetime.utcnow()
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow()
     }
-    
-    result = await journal_entries_collection.insert_one(entry_doc)
-    return {"id": str(result.inserted_id), "message": "Journal entry created"}
+    result = await db.journal_entries.insert_one(entry_doc)
+    entry_doc["id"] = str(result.inserted_id)
+    return entry_doc
 
 @router.get("/entries")
-async def get_journal_entries(current_user: dict = Depends(get_current_user)):
+async def get_entries(current_user: dict = Depends(get_current_user)):
     """Get all journal entries for current user"""
-    cursor = journal_entries_collection.find({"user_id": str(current_user["_id"])}).sort("created_at", -1)
-    entries = await cursor.to_list(length=100)
+    entries = await db.journal_entries.find(
+        {"user_id": str(current_user["_id"])}
+    ).sort("created_at", -1).to_list(100)
     
-    result = []
-    for entry in entries:
-        result.append({
-            "id": str(entry["_id"]),
-            "title": entry.get("title", "Untitled"),
-            "content": entry["content"],
-            "mood": entry.get("mood"),
-            "tags": entry.get("tags", []),
-            "created_at": entry["created_at"]
-        })
-    
-    return result
+    return [
+        {
+            "id": str(e["_id"]),
+            "title": e.get("title"),
+            "content": e.get("content"),
+            "mood": e.get("mood"),
+            "tags": e.get("tags", []),
+            "created_at": e.get("created_at").isoformat() if e.get("created_at") else None
+        }
+        for e in entries
+    ]
+
+@router.post("/reflections")
+async def create_reflection(reflection: StoryReflection, current_user: dict = Depends(get_current_user)):
+    """Create a story reflection"""
+    reflection_doc = {
+        **reflection.dict(),
+        "user_id": str(current_user["_id"]),
+        "created_at": datetime.utcnow()
+    }
+    result = await db.story_reflections.insert_one(reflection_doc)
+    reflection_doc["id"] = str(result.inserted_id)
+    return reflection_doc
 
 @router.get("/reflections")
-async def get_my_reflections(current_user: dict = Depends(get_current_user)):
+async def get_reflections(current_user: dict = Depends(get_current_user)):
     """Get all story reflections for current user"""
-    cursor = reflections_collection.find({"user_id": str(current_user["_id"])}).sort("created_at", -1)
-    reflections = await cursor.to_list(length=100)
+    reflections = await db.story_reflections.find(
+        {"user_id": str(current_user["_id"])}
+    ).sort("created_at", -1).to_list(100)
     
-    result = []
-    for reflection in reflections:
-        result.append({
-            "id": str(reflection["_id"]),
-            "story_id": reflection["story_id"],
-            "mood": reflection["mood"],
-            "before_reflection": reflection.get("before_reflection"),
-            "after_reflection": reflection.get("after_reflection"),
-            "created_at": reflection["created_at"]
-        })
-    
-    return result
+    return [
+        {
+            "id": str(r["_id"]),
+            "story_id": r.get("story_id"),
+            "mood": r.get("mood"),
+            "before_reflection": r.get("before_reflection"),
+            "after_reflection": r.get("after_reflection"),
+            "created_at": r.get("created_at").isoformat() if r.get("created_at") else None
+        }
+        for r in reflections
+    ]
 
 @router.get("/stats")
-async def get_journal_stats(current_user: dict = Depends(get_current_user)):
-    """Get journaling statistics"""
-    entries_count = await journal_entries_collection.count_documents({"user_id": str(current_user["_id"])})
-    reflections_count = await reflections_collection.count_documents({"user_id": str(current_user["_id"])})
-    
-    # Get mood distribution
-    cursor = journal_entries_collection.find({"user_id": str(current_user["_id"])})
-    entries = await cursor.to_list(length=1000)
-    
-    mood_counts = {}
-    for entry in entries:
-        mood = entry.get("mood")
-        if mood:
-            mood_counts[mood] = mood_counts.get(mood, 0) + 1
+async def get_stats(current_user: dict = Depends(get_current_user)):
+    """Get journal stats for current user"""
+    total_entries = await db.journal_entries.count_documents(
+        {"user_id": str(current_user["_id"])}
+    )
+    total_reflections = await db.story_reflections.count_documents(
+        {"user_id": str(current_user["_id"])}
+    )
     
     return {
-        "total_entries": entries_count,
-        "total_reflections": reflections_count,
-        "mood_distribution": mood_counts
+        "total_entries": total_entries,
+        "total_reflections": total_reflections,
+        "current_streak": 0  # TODO: Calculate streak
     }
