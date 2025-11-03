@@ -233,6 +233,19 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20,
   },
+  logoText: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#14B8A6',
+    letterSpacing: 4,
+    marginBottom: 4,
+  },
+  logoTagline: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    letterSpacing: 2,
+    marginBottom: 16,
+  },
   welcomeTitle: {
     fontSize: 32,
     fontWeight: 'bold',
