@@ -54,6 +54,19 @@ export const authAPI = {
     return data;
   },
 
+  updateProfile: async (profileData: { name?: string; bio?: string; avatar?: string }) => {
+    const { data } = await api.put('/auth/profile', profileData);
+    return data;
+  },
+
+  changePassword: async (oldPassword: string, newPassword: string) => {
+    const { data } = await api.put('/auth/change-password', {
+      old_password: oldPassword,
+      new_password: newPassword,
+    });
+    return data;
+  },
+
   logout: async () => {
     await AsyncStorage.removeItem('auth_token');
   },
