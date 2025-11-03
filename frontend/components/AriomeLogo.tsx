@@ -15,7 +15,7 @@ export default function AriomeLogo({ width = 280, height = 120, style }: LogoPro
   
   return (
     <View style={[{ width, height: calculatedHeight, alignItems: 'center', justifyContent: 'center' }, style]}>
-      <Svg width={width} height={calculatedHeight} viewBox="0 0 589 248" preserveAspectRatio="xMidYMid meet"
+      <Svg width={width} height={calculatedHeight} viewBox="0 0 589 248" preserveAspectRatio="xMidYMid meet">
         <Defs>
           <LinearGradient id="paint0" x1="112.951" y1="36.5293" x2="112.951" y2="198.529">
             <Stop offset="0" stopColor="#346DF4" />
