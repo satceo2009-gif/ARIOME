@@ -106,7 +106,8 @@ export default function Index() {
           },
         ]}
       >
-        <AriomeLogo width={300} height={130} />
+        <Text style={styles.logoText}>ARIOME</Text>
+        <Text style={styles.tagline}>by CNESS</Text>
       </Animated.View>
     </View>
   );
