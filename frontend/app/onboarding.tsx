@@ -61,7 +61,8 @@ export default function Onboarding() {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.header}>
-              <AriomeLogo width={240} height={100} />
+              <Text style={styles.logoText}>ARIOME</Text>
+              <Text style={styles.logoTagline}>by CNESS</Text>
               <Text style={styles.welcomeTitle}>Welcome to ARIOME</Text>
               <Text style={styles.welcomeSubtitle}>
                 Your conscious journey begins here
