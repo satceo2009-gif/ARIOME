@@ -168,6 +168,91 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "subscription_expires_at": current_user.get("subscription_expires_at")
     }
 
+
+@router.put("/profile")
+async def update_profile(
+    name: Optional[str] = None,
+    bio: Optional[str] = None,
+    avatar: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user profile"""
+    update_fields = {}
+    if name:
+        update_fields["name"] = name
+    if bio:
+        update_fields["bio"] = bio
+    if avatar:
+        update_fields["avatar"] = avatar
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    update_fields["updated_at"] = datetime.utcnow()
+    
+    result = await users_collection.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": update_fields}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="Profile update failed")
+    
+    # Get updated user
+    updated_user = await users_collection.find_one({"_id": current_user["_id"]})
+    
+    return {
+        "id": str(updated_user["_id"]),
+        "name": updated_user["name"],
+        "email": updated_user["email"],
+        "avatar": updated_user.get("avatar"),
+        "bio": updated_user.get("bio", ""),
+        "role": updated_user["role"]
+    }
+
+@router.put("/change-password")
+async def change_password(
+    old_password: str,
+    new_password: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Change user password"""
+    # Verify old password
+    if not verify_password(old_password, current_user["password_hash"]):
+        raise HTTPException(status_code=400, detail="Incorrect current password")
+    
+    # Hash new password
+    new_hashed = hash_password(new_password)
+    
+    # Update password
+    result = await users_collection.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {
+            "password_hash": new_hashed,
+            "updated_at": datetime.utcnow()
+        }}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="Password change failed")
+    
+    return {"message": "Password changed successfully"}
+
+@router.get("/me")
+async def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    """Get current user information"""
+    return {
+        "id": str(current_user["_id"]),
+        "name": current_user["name"],
+        "email": current_user["email"],
+        "role": current_user["role"],
+        "avatar": current_user.get("avatar"),
+        "bio": current_user.get("bio", ""),
+        "preferred_intentions": current_user.get("preferred_intentions", []),
+        "verification_status": current_user.get("verification_status", "pending"),
+        "subscription_status": current_user.get("subscription_status", "free")
+    }
+
 @router.put("/me")
 async def update_profile(update_data: dict, current_user: dict = Depends(get_current_user)):
     allowed_fields = ["name", "avatar", "intentions"]
