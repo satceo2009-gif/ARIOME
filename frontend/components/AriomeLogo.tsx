@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import Svg, { Path, Defs, LinearGradient, Stop, G, Filter, FeFlood, FeColorMatrix, FeMorphology, FeOffset, FeGaussianBlur, FeComposite, FeBlend } from 'react-native-svg';
+import Svg, { Path, Defs, LinearGradient, Stop, G } from 'react-native-svg';
 
 interface LogoProps {
   width?: number;
@@ -9,9 +9,13 @@ interface LogoProps {
 }
 
 export default function AriomeLogo({ width = 280, height = 120, style }: LogoProps) {
+  // Calculate aspect ratio: 589/248 ≈ 2.375
+  const aspectRatio = 589 / 248;
+  const calculatedHeight = width / aspectRatio;
+  
   return (
-    <View style={[{ width, height }, style]}>
-      <Svg width="100%" height="100%" viewBox="0 0 589 248" fill="none">
+    <View style={[{ width, height: calculatedHeight, alignItems: 'center', justifyContent: 'center' }, style]}>
+      <Svg width={width} height={calculatedHeight} viewBox="0 0 589 248" preserveAspectRatio="xMidYMid meet"
         <Defs>
           <LinearGradient id="paint0" x1="112.951" y1="36.5293" x2="112.951" y2="198.529">
             <Stop offset="0" stopColor="#346DF4" />
