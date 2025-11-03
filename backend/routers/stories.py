@@ -3,12 +3,12 @@ from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel
 from bson import ObjectId
-from ..auth import get_current_user
-from ..database import db
+from auth import get_current_user
+from database import db
 import os
 from openai import OpenAI
 
-router = APIRouter(prefix="/stories", tags=["stories"])
+router = APIRouter(prefix="/api/stories", tags=["stories"])
 
 # AI Integration for recommendations
 client = None

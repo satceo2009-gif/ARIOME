@@ -3,10 +3,10 @@ from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel
 from bson import ObjectId
-from ..auth import get_current_user
-from ..database import db
+from auth import get_current_user
+from database import db
 
-router = APIRouter(prefix="/creator", tags=["creator"])
+router = APIRouter(prefix="/api/creator", tags=["creator"])
 
 class StoryUpload(BaseModel):
     title: str
