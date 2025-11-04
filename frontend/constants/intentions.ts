@@ -44,9 +44,16 @@ export const INTENTIONS: Intention[] = [
   },
   {
     id: 'joy',
-    name: 'Joy & Gratitude',
+    name: 'Joy & Celebration',
     icon: 'emoticon-happy-outline',
     color: '#FBBF24',
-    description: 'Celebrate life and cultivate appreciation',
+    description: 'Celebrate life and cultivate joy',
+  },
+  {
+    id: 'gratitude',
+    name: 'Gratitude',
+    icon: 'hand-heart-outline',
+    color: '#F97316',
+    description: 'Cultivate thankfulness and appreciation',
   },
 ];
