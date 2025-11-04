@@ -151,7 +151,7 @@ async def get_stories(
     formatted_stories = []
     for story in stories:
         formatted_story = serialize_doc(story)
-        print(f"DEBUG: After serialize - category: {formatted_story.get('category')}, content_type: {formatted_story.get('content_type')}")
+        logger.info(f"Story: {formatted_story.get('title')} - category: {formatted_story.get('category')}, content_type: {formatted_story.get('content_type')}")
         
         # Transform snake_case to camelCase for frontend
         formatted_story["mediaUrl"] = formatted_story.pop("media_url", "")
