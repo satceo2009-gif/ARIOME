@@ -61,9 +61,9 @@
     },
     "extra": {
       "router": {
-        "origin": "https://ariome-wellness.preview.emergentagent.com"
+        "origin": "https://ariome-repo.preview.emergentagent.com"
       },
-      "EXPO_PUBLIC_API_URL": "https://ariome-wellness.preview.emergentagent.com/api"
+      "EXPO_PUBLIC_API_URL": "https://ariome-repo.preview.emergentagent.com/api"
     }
   }
 }
