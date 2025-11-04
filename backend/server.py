@@ -4,6 +4,9 @@ from typing import Optional, List
 from datetime import datetime
 from bson import ObjectId
 import uvicorn
+import logging
+
+logger = logging.getLogger("uvicorn.error")
 
 from database import (
     init_db, 
