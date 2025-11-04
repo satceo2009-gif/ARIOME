@@ -94,11 +94,6 @@ export const storiesAPI = {
   },
 };
 
-// Reflections API
-export const reflectionsAPI = {
-  create: async (reflection: {
-    story_id: string;
-
 // Journal API
 export const journalAPI = {
   createEntry: async (entry: {
