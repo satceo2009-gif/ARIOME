@@ -157,9 +157,8 @@ async def get_stories(
         formatted_story["resonanceCount"] = formatted_story.pop("resonance_count", 0)
         formatted_story["createdAt"] = formatted_story.pop("created_at", "")
         formatted_story["playCount"] = formatted_story.pop("play_count", 0)
-        # Keep category and content_type for frontend
-        if "content_type" in formatted_story:
-            formatted_story["contentType"] = formatted_story.pop("content_type")
+        formatted_story["contentType"] = formatted_story.pop("content_type", None)
+        # category stays as-is for frontend
         
         # Transform flat creator fields to nested object
         formatted_story["creator"] = {
