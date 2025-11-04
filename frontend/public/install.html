@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ARIOME">
+    <meta name="theme-color" content="#14B8A6">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png">
+    <title>Install ARIOME</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0A0A0F 0%, #1A1A24 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            margin: 40px auto 24px;
+            background: linear-gradient(135deg, #14B8A6, #06B6D4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            font-weight: bold;
+            box-shadow: 0 20px 60px rgba(20, 184, 166, 0.4);
+        }
+        
+        h1 {
+            font-size: 36px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #14B8A6, #06B6D4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: #9CA3AF;
+            font-size: 16px;
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+        
+        .install-btn {
+            background: #14B8A6;
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto 24px;
+            display: block;
+            box-shadow: 0 10px 30px rgba(20, 184, 166, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .install-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .device-specific {
+            display: none;
+            background: rgba(26, 26, 36, 0.6);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+            text-align: left;
+            border: 1px solid rgba(20, 184, 166, 0.2);
+        }
+        
+        .device-specific.show {
+            display: block;
+        }
+        
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        
+        .step-number {
+            background: #14B8A6;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-right: 16px;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        
+        .step-desc {
+            color: #9CA3AF;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .icon-demo {
+            background: rgba(20, 184, 166, 0.1);
+            border: 2px solid #14B8A6;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 24px 0;
+        }
+        
+        .icon-demo img {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            margin: 0 auto 12px;
+            display: block;
+        }
+        
+        .features {
+            background: rgba(10, 10, 15, 0.6);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+            text-align: left;
+        }
+        
+        .features h3 {
+            color: #14B8A6;
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            color: #E5E7EB;
+        }
+        
+        .feature-item::before {
+            content: "✓";
+            color: #14B8A6;
+            font-weight: bold;
+            font-size: 20px;
+            margin-right: 12px;
+        }
+        
+        .android-download {
+            display: none;
+            background: rgba(20, 184, 166, 0.1);
+            border: 2px solid #14B8A6;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+        
+        .android-download.show {
+            display: block;
+        }
+        
+        .download-apk-btn {
+            background: #10B981;
+            color: white;
+            text-decoration: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">A</div>
+        <h1>ARIOME</h1>
+        <p class="subtitle">Your conscious wellness journey begins here</p>
+        
+        <button class="install-btn" id="installBtn">
+            📱 Install ARIOME App
+        </button>
+        
+        <div class="icon-demo">
+            <p style="color: #14B8A6; font-weight: 600; margin-bottom: 8px;">After installing, you'll see:</p>
+            <img src="/icon-192.png" alt="ARIOME Icon" onerror="this.style.display='none'">
+            <p style="color: #9CA3AF; font-size: 14px;">ARIOME icon on your home screen</p>
+        </div>
+        
+        <!-- iPhone Instructions -->
+        <div class="device-specific" id="iphoneInstructions">
+            <h3 style="color: #14B8A6; margin-bottom: 16px; font-size: 20px;">📱 iPhone Installation</h3>
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <div class="step-title">Tap Share Button</div>
+                    <div class="step-desc">Look for the share icon (box with arrow ↗️) at the bottom of Safari</div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <div class="step-title">Find "Add to Home Screen"</div>
+                    <div class="step-desc">Scroll down in the share menu and tap this option</div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="step-title">Tap "Add"</div>
+                    <div class="step-desc">Confirm and the ARIOME icon will appear on your home screen!</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Android Instructions -->
+        <div class="device-specific" id="androidInstructions">
+            <h3 style="color: #14B8A6; margin-bottom: 16px; font-size: 20px;">🤖 Android Installation</h3>
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <div class="step-title">Look for Install Banner</div>
+                    <div class="step-desc">Chrome will show "Add ARIOME to Home screen" at the bottom</div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <div class="step-title">Or Use Menu</div>
+                    <div class="step-desc">Tap menu (⋮) → "Add to Home screen" or "Install app"</div>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="step-title">Tap "Install"</div>
+                    <div class="step-desc">Confirm and the ARIOME icon appears instantly!</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Android APK Download Option -->
+        <div class="android-download" id="androidApk">
+            <h3 style="color: #14B8A6; margin-bottom: 12px;">🤖 Android Users:</h3>
+            <p style="color: #9CA3AF; margin-bottom: 16px;">Download ARIOME.apk for offline installation</p>
+            <a href="/ariome.apk" class="download-apk-btn" download>
+                ⬇️ Download APK File
+            </a>
+            <p style="color: #6B7280; font-size: 12px; margin-top: 12px;">
+                Enable "Install from Unknown Sources" in Settings if prompted
+            </p>
+        </div>
+        
+        <div class="features">
+            <h3>✨ What You'll Experience:</h3>
+            <div class="feature-item">Intention-based story discovery</div>
+            <div class="feature-item">Audio & video mindfulness content</div>
+            <div class="feature-item">Personal reflection journal</div>
+            <div class="feature-item">Support conscious creators</div>
+            <div class="feature-item">Community circles (coming soon)</div>
+        </div>
+        
+        <p style="color: #6B7280; font-size: 13px; margin-top: 32px;">
+            ARIOME works on all devices with modern browsers
+        </p>
+    </div>
+
+    <script>
+        // Detect device
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isAndroid = /Android/.test(navigator.userAgent);
+        const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+        
+        // Show appropriate instructions
+        if (isIOS) {
+            document.getElementById('iphoneInstructions').classList.add('show');
+        } else if (isAndroid) {
+            document.getElementById('androidInstructions').classList.add('show');
+            document.getElementById('androidApk').classList.add('show');
+        }
+        
+        // PWA install prompt
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBtn').style.display = 'block';
+        });
+        
+        document.getElementById('installBtn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                }
+                deferredPrompt = null;
+            } else if (isIOS && isSafari) {
+                // Show instructions for iOS
+                document.getElementById('iphoneInstructions').scrollIntoView({ behavior: 'smooth' });
+            } else {
+                // Redirect to main app
+                window.location.href = '/';
+            }
+        });
+        
+        // Auto-redirect after 3 seconds if already installed
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

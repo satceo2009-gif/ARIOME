@@ -1,0 +1,69 @@
+{
+  "expo": {
+    "name": "ARIOME",
+    "slug": "ariome",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "ariome",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0A0F"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ariome.app"
+    },
+    "android": {
+      "package": "com.ariome.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0A0A0F"
+      },
+      "permissions": [
+        "INTERNET",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/ariome-logo.png",
+      "name": "ARIOME - Conscious Wellness",
+      "shortName": "ARIOME",
+      "description": "Your conscious broadcasting and wellness journey",
+      "themeColor": "#14B8A6",
+      "backgroundColor": "#0A0A0F",
+      "display": "standalone",
+      "startUrl": "/",
+      "orientation": "portrait",
+      "preferRelatedApplications": false
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#0A0A0F"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": "https://ariome-wellness.preview.emergentagent.com"
+      },
+      "EXPO_PUBLIC_API_URL": "https://ariome-wellness.preview.emergentagent.com/api"
+    }
+  }
+}
