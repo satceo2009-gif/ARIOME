@@ -40,6 +40,8 @@ async def get_stories(
             "id": str(story["_id"]),
             "title": story.get("title"),
             "description": story.get("description"),
+            "category": story.get("category"),
+            "contentType": story.get("content_type"),
             "format": story.get("format"),
             "mediaUrl": story.get("media_url"),
             "thumbnailUrl": story.get("thumbnail_url"),
