@@ -886,8 +886,17 @@ async def seed_database():
     for story_data in STORIES:
         creator = CREATORS[story_data.pop("creator_idx")]
         
+        # Set category based on primary intention
+        primary_intention = story_data["intentions"][0] if story_data.get("intentions") else "mindfulness"
+        category = primary_intention.capitalize()
+        
+        # Map format to content_type
+        content_type = "video" if story_data.get("format") == "video" else "audio"
+        
         story_doc = {
             **story_data,
+            "category": category,
+            "content_type": content_type,
             "creator_id": str(creator["_id"]),
             "creator_name": creator["name"],
             "creator_avatar": creator["avatar"],
