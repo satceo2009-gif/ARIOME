@@ -69,7 +69,7 @@ export default function Discover() {
   const filteredStories =
     selectedFilter === 'all'
       ? stories
-      : stories.filter((story) => story.intentions.includes(selectedFilter));
+      : stories.filter((story) => story.category?.toLowerCase() === selectedFilter.toLowerCase());
 
   const userIntentions = user?.intentions || [];
   const recommendedStories = stories.filter((story) =>
