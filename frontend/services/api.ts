@@ -43,8 +43,15 @@ export const authAPI = {
     return data;
   },
 
-  login: async (email: string, password: string) => {
-    const { data } = await api.post('/auth/login', { email, password });
+  login: async ({ email, password }: { email: string; password: string }) => {
+    // Backend expects form data with "username" field (OAuth2 standard)
+    const formData = new URLSearchParams();
+    formData.append('username', email);
+    formData.append('password', password);
+    
+    const { data } = await api.post('/auth/login', formData, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
     await AsyncStorage.setItem('auth_token', data.access_token);
     return data;
   },
