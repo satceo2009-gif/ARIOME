@@ -16,62 +16,13 @@ export default function Index() {
   const glowAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const initApp = async () => {
-      await loadUser();
-      
-      // Optional: Play ambient sound if available
-      // (gracefully skips if file doesn't exist)
-      try {
-        // Uncomment when splash.mp3 is added to assets/sounds/
-        // const { sound } = await Audio.Sound.createAsync(
-        //   require('../assets/sounds/splash.mp3'),
-        //   { shouldPlay: true, volume: 0.3 }
-        // );
-        // setTimeout(() => sound.unloadAsync(), 2000);
-      } catch (error) {
-        // Silent fail - no audio needed
-      }
-
-      // Start animations
-      Animated.parallel([
-        // Fade in
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        // Scale up with bounce
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          friction: 4,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-        // Glow pulse
-        Animated.loop(
-          Animated.sequence([
-            Animated.timing(glowAnim, {
-              toValue: 1,
-              duration: 1500,
-              useNativeDriver: true,
-            }),
-            Animated.timing(glowAnim, {
-              toValue: 0,
-              duration: 1500,
-              useNativeDriver: true,
-            }),
-          ])
-        ),
-      ]).start();
-
-      // Navigate after animation - Always show auth screen
-      setTimeout(() => {
-        router.replace('/auth');
-      }, 2500);
-    };
-
-    initApp();
-  }, [isOnboarded]);
+    // Navigate immediately to auth screen
+    const timer = setTimeout(() => {
+      router.replace('/auth');
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   const glowOpacity = glowAnim.interpolate({
     inputRange: [0, 1],
