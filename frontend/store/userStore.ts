@@ -41,7 +41,11 @@ export const useUserStore = create<UserStore>((set) => ({
   
   logout: async () => {
     set({ user: null, isOnboarded: false });
-    await AsyncStorage.multiRemove(['user', 'isOnboarded']);
+    await AsyncStorage.multiRemove(['user', 'isOnboarded', 'auth_token']);
+  },
+  
+  clearUser: () => {
+    set({ user: null, isOnboarded: false });
   },
   
   loadUser: async () => {
