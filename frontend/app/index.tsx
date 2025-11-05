@@ -63,9 +63,16 @@ export default function Index() {
         ),
       ]).start();
 
-      // Navigate after animation - Always show onboarding/welcome
+      // Navigate after animation - Check if user is logged in
       setTimeout(() => {
-        router.replace('/onboarding');
+        const { user } = useUserStore.getState();
+        if (user?.id) {
+          // User is logged in, go to discover
+          router.replace('/(tabs)/discover');
+        } else {
+          // No user, show auth screen
+          router.replace('/auth');
+        }
       }, 2500);
     };
 
