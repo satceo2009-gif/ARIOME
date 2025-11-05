@@ -64,30 +64,9 @@ export default function Index() {
         ),
       ]).start();
 
-      // Navigate after animation - Always show auth if no valid token
-      setTimeout(async () => {
-        try {
-          const token = await AsyncStorage.getItem('auth_token');
-          if (token) {
-            // Has token, try to get user data
-            const { user } = useUserStore.getState();
-            if (user?.email?.includes('@ariome-test.com') || user?.email?.includes('@ariome.app')) {
-              // Valid logged-in user
-              router.replace('/(tabs)/discover');
-            } else {
-              // Invalid/fake user, clear and show auth
-              useUserStore.getState().clearUser();
-              await AsyncStorage.removeItem('auth_token');
-              router.replace('/auth');
-            }
-          } else {
-            // No token, show auth
-            router.replace('/auth');
-          }
-        } catch (error) {
-          // Error, show auth
-          router.replace('/auth');
-        }
+      // Navigate after animation - Always show auth screen
+      setTimeout(() => {
+        router.replace('/auth');
       }, 2500);
     };
 
