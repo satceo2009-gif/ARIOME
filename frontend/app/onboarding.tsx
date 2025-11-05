@@ -36,14 +36,7 @@ export default function Onboarding() {
     if (step === 0) {
       setStep(1);
     } else {
-      // Complete onboarding
-      const user = {
-        id: 'user_' + Date.now(),
-        name: 'Explorer',
-        email: 'explorer@ariome.app',
-        intentions: selectedIntentions,
-      };
-      setUser(user);
+      // Save selected intentions to user profile
       setIntentions(selectedIntentions);
       await completeOnboarding();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
