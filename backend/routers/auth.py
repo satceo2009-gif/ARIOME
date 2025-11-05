@@ -133,7 +133,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         )
     
     # Verify password
-    if not verify_password(form_data.password, user["password_hash"]):
+    if not verify_password(form_data.password, user.get("password_hash") or user.get("password")):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
