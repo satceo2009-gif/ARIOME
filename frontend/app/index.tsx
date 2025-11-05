@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Redirect } from 'expo-router';
 import { useUserStore } from '@/store/userStore';
 import { Audio } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
