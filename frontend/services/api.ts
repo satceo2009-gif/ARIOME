@@ -32,12 +32,12 @@ api.interceptors.request.use(
 
 // Auth API
 export const authAPI = {
-  signup: async (email: string, name: string, password: string, intentions: string[]) => {
+  signup: async ({ email, password, name }: { email: string; password: string; name: string }) => {
     const { data } = await api.post('/auth/signup', {
       email,
       name,
       password,
-      intentions,
+      intentions: [], // Will be set during onboarding
     });
     await AsyncStorage.setItem('auth_token', data.access_token);
     return data;
