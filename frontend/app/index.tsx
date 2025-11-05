@@ -105,11 +105,7 @@ export default function Index() {
           },
         ]}
       >
-        <Image
-          source={require('../assets/images/ariome-logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <Text style={styles.logoText}>ARIOME</Text>
         <Text style={styles.tagline}>by CNESS</Text>
       </Animated.View>
     </View>
