@@ -135,16 +135,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logoText: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#14B8A6',
-    letterSpacing: 4,
+  logo: {
+    width: 200,
+    height: 200,
   },
   tagline: {
     fontSize: 14,
     color: '#9CA3AF',
-    marginTop: 8,
+    marginTop: 16,
     letterSpacing: 2,
   },
 });
