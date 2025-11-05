@@ -1,18 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
-import { useRouter, Redirect } from 'expo-router';
-import { useUserStore } from '@/store/userStore';
-import { Audio } from 'expo-av';
-import { LinearGradient } from 'expo-linear-gradient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Redirect } from 'expo-router';
 
 export default function Index() {
-  const router = useRouter();
-  const { isOnboarded, loadUser } = useUserStore();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.5)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
-  
   // Direct redirect to auth
   return <Redirect href="/auth" />;
 }
