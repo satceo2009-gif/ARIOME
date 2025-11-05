@@ -265,3 +265,45 @@ async def update_profile(update_data: dict, current_user: dict = Depends(get_cur
     )
     
     return {"message": "Profile updated successfully"}
+
+
+@router.put("/settings/notifications")
+async def update_notification_settings(
+    email_notifications: Optional[bool] = None,
+    push_notifications: Optional[bool] = None,
+    marketing_emails: Optional[bool] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update notification settings - stored in database"""
+    settings = {}
+    if email_notifications is not None:
+        settings["email_notifications"] = email_notifications
+    if push_notifications is not None:
+        settings["push_notifications"] = push_notifications
+    if marketing_emails is not None:
+        settings["marketing_emails"] = marketing_emails
+    
+    if not settings:
+        raise HTTPException(status_code=400, detail="No settings to update")
+    
+    settings["updated_at"] = datetime.utcnow()
+    
+    # Update in database
+    await users_collection.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"notification_settings": settings}}
+    )
+    
+    return {"message": "Notification settings updated", "settings": settings}
+
+@router.get("/settings/notifications")
+async def get_notification_settings(current_user: dict = Depends(get_current_user)):
+    """Get notification settings from database"""
+    user = await users_collection.find_one({"_id": current_user["_id"]})
+    settings = user.get("notification_settings", {
+        "email_notifications": True,
+        "push_notifications": True,
+        "marketing_emails": False
+    })
+    return settings
+
