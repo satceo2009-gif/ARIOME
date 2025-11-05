@@ -9,59 +9,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function Index() {
   const router = useRouter();
   const { isOnboarded, loadUser } = useUserStore();
-  
-  // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    // Navigate immediately to auth screen
-    const timer = setTimeout(() => {
-      router.replace('/auth');
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
-  const glowOpacity = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.3, 0.8],
-  });
-
-  return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={['#0A0A0F', '#1A1A24', '#0A0A0F']}
-        style={StyleSheet.absoluteFillObject}
-      />
-      
-      {/* Ambient glow effect */}
-      <Animated.View
-        style={[
-          styles.glowCircle,
-          {
-            opacity: glowOpacity,
-            transform: [{ scale: scaleAnim }],
-          },
-        ]}
-      />
-
-      {/* Logo */}
-      <Animated.View
-        style={[
-          styles.logoContainer,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
-          },
-        ]}
-      >
-        <Text style={styles.logoText}>ARIOME</Text>
-        <Text style={styles.tagline}>by CNESS</Text>
-      </Animated.View>
-    </View>
-  );
+  
+  // Direct redirect to auth
+  return <Redirect href="/auth" />;
 }
 
 const styles = StyleSheet.create({
