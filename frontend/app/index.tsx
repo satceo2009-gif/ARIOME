@@ -4,5 +4,3 @@ export default function Index() {
   // Direct redirect to auth
   return <Redirect href="/auth" />;
 }
-
- 
