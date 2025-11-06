@@ -129,7 +129,10 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Privacy</Text>
           
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => router.push('/privacy')}
+          >
             <View style={styles.settingLeft}>
               <MaterialCommunityIcons name="shield-account" size={24} color="#14B8A6" />
               <View style={styles.settingText}>
@@ -140,7 +143,10 @@ export default function SettingsScreen() {
             <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => router.push('/terms')}
+          >
             <View style={styles.settingLeft}>
               <MaterialCommunityIcons name="file-document" size={24} color="#14B8A6" />
               <View style={styles.settingText}>
@@ -151,7 +157,10 @@ export default function SettingsScreen() {
             <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => router.push('/privacy')}
+          >
             <View style={styles.settingLeft}>
               <MaterialCommunityIcons name="lock" size={24} color="#14B8A6" />
               <View style={styles.settingText}>
