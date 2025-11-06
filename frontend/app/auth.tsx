@@ -71,8 +71,11 @@ export default function AuthScreen() {
         >
           {/* Logo */}
           <View style={styles.logoContainer}>
-            <Text style={styles.logo}>ARIOME</Text>
-            <Text style={styles.tagline}>by CNESS</Text>
+            <Image 
+              source={require('@/assets/images/ariome-logo-dark.svg')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
             <Text style={styles.subtitle}>Your conscious journey begins here</Text>
           </View>
 
