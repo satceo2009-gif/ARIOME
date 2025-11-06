@@ -170,7 +170,15 @@ export default function Discover() {
                 <FeaturedStoryCard
                   key={story.id}
                   story={story}
-                  onPress={() => router.push(`/story/${story.id}`)}
+                  onPress={() => {
+                    // Check if user has email - if not, prompt for email signup
+                    const user = useUserStore.getState().user;
+                    if (!user?.email) {
+                      router.push('/email-signup');
+                    } else {
+                      router.push(`/story/${story.id}`);
+                    }
+                  }}
                 />
               ))}
             </ScrollView>
