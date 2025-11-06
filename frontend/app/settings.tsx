@@ -125,6 +125,41 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+
+        {/* Account Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => router.push('/edit-profile')}
+          >
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="account-edit" size={24} color="#14B8A6" />
+              <View style={styles.settingText}>
+                <Text style={styles.settingLabel}>Edit Profile</Text>
+                <Text style={styles.settingDesc}>Update your name and bio</Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => router.push('/change-password')}
+          >
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="lock-reset" size={24} color="#14B8A6" />
+              <View style={styles.settingText}>
+                <Text style={styles.settingLabel}>Change Password</Text>
+                <Text style={styles.settingDesc}>Update your password</Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+          </TouchableOpacity>
+        </View>
+
+
         {/* Privacy Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Privacy</Text>
