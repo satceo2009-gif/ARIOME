@@ -77,6 +77,25 @@ export const authAPI = {
   logout: async () => {
     await AsyncStorage.removeItem('auth_token');
   },
+  
+  updateProfile: async (data: { name?: string; bio?: string; avatar?: string }) => {
+    const token = await AsyncStorage.getItem('auth_token');
+    const response = await api.put('/auth/profile', data, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+  
+  changePassword: async (oldPassword: string, newPassword: string) => {
+    const token = await AsyncStorage.getItem('auth_token');
+    const response = await api.put('/auth/change-password', {
+      old_password: oldPassword,
+      new_password: newPassword
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
 };
 
 // Stories API
