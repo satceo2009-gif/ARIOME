@@ -197,6 +197,26 @@ export default function AuthScreen() {
 }
 
 const styles = StyleSheet.create({
+  benefitsBox: {
+    backgroundColor: '#1F2937',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#14B8A6',
+  },
+  benefitsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#14B8A6',
+    marginBottom: 8,
+  },
+  benefitItem: {
+    fontSize: 13,
+    color: '#D1D5DB',
+    marginBottom: 4,
+  },
+
   container: {
     flex: 1,
     backgroundColor: '#0A0A0F',
