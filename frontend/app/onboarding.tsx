@@ -36,7 +36,15 @@ export default function Onboarding() {
     if (step === 0) {
       setStep(1);
     } else {
-      // Save selected intentions to user profile
+      // Save selected intentions and create guest user
+      const guestUser = {
+        id: 'guest_' + Date.now(),
+        name: 'Explorer',
+        email: '',
+        role: 'explorer',
+        intentions: selectedIntentions,
+      };
+      setUser(guestUser);
       setIntentions(selectedIntentions);
       await completeOnboarding();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
