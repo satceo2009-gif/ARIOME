@@ -77,14 +77,26 @@ export default function AuthScreen() {
               style={styles.logoImage}
               resizeMode="contain"
             />
-            <Text style={styles.subtitle}>Your conscious journey begins here</Text>
+            <Text style={styles.subtitle}>
+              {isLogin ? 'Login to your account' : 'Subscribe for full access'}
+            </Text>
           </View>
 
           {/* Auth Form */}
           <View style={styles.formContainer}>
             <Text style={styles.formTitle}>
-              {isLogin ? 'Welcome Back' : 'Create Account'}
+              {isLogin ? 'Welcome Back' : 'Subscribe Now'}
             </Text>
+            
+            {!isLogin && (
+              <View style={styles.benefitsBox}>
+                <Text style={styles.benefitsTitle}>✨ Subscriber Benefits:</Text>
+                <Text style={styles.benefitItem}>• Full-length meditations & stories</Text>
+                <Text style={styles.benefitItem}>• Ad-free experience</Text>
+                <Text style={styles.benefitItem}>• Offline downloads</Text>
+                <Text style={styles.benefitItem}>• Premium creator content</Text>
+              </View>
+            )}
 
             {!isLogin && (
               <View style={styles.inputContainer}>
