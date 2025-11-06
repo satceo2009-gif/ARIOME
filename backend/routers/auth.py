@@ -118,6 +118,36 @@ async def signup(user: UserCreate):
             "email": user.email,
             "name": user.name,
             "role": user.role,
+
+
+@router.post("/email-signup")
+async def email_signup(email: EmailStr):
+    """Email-only signup for explorers (no password) - access to short clips only"""
+    # Check if user already exists
+    existing_user = await users_collection.find_one({"email": email})
+    if existing_user:
+        return {"user_id": str(existing_user["_id"]), "message": "Email already registered"}
+    
+    # Create explorer user with email only (no password)
+    user_data = {
+        "email": email,
+        "name": "Explorer",
+        "role": "explorer",
+        "verified": False,
+        "subscription_status": "free",
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow()
+    }
+    
+    result = await users_collection.insert_one(user_data)
+    
+    # TODO: Send verification email
+    
+    return {
+        "user_id": str(result.inserted_id),
+        "message": "Verification email sent. Check your inbox!"
+    }
+
             "avatar": user_doc["avatar"]
         }
     }
