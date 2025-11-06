@@ -91,20 +91,13 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   headerTitle: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  logoText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#14B8A6',
-    letterSpacing: 3,
-  },
-  tagline: {
-    fontSize: 8,
-    color: '#9CA3AF',
-    letterSpacing: 1,
-    marginTop: -2,
+  logo: {
+    width: 120,
+    height: 40,
   },
 });
 
