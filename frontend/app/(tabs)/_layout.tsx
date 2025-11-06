@@ -1,11 +1,26 @@
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Text, View, StyleSheet } from 'react-native';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
+        headerStyle: {
+          backgroundColor: '#0A0A0F',
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 1,
+          borderBottomColor: '#1F2937',
+        },
+        headerTitle: () => (
+          <View style={styles.headerTitle}>
+            <Text style={styles.logoText}>ARIOME</Text>
+            <Text style={styles.tagline}>by CNESS</Text>
+          </View>
+        ),
+        headerTintColor: '#14B8A6',
         tabBarStyle: {
           backgroundColor: '#1A1A24',
           borderTopWidth: 0,
