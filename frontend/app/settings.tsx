@@ -1,16 +1,53 @@
 import { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useAuth } from '@/contexts/AuthContext';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://ariome-repo.preview.emergentagent.com/api';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { user } = useAuth();
-  const [notifications, setNotifications] = useState(true);
   const [emailNotifs, setEmailNotifs] = useState(true);
   const [pushNotifs, setPushNotifs] = useState(true);
+  const [marketingEmails, setMarketingEmails] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadNotificationSettings();
+  }, []);
+
+  const loadNotificationSettings = async () => {
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      const response = await axios.get(`${API_URL}/auth/settings/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setEmailNotifs(response.data.email_notifications ?? true);
+      setPushNotifs(response.data.push_notifications ?? true);
+      setMarketingEmails(response.data.marketing_emails ?? false);
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateNotificationSetting = async (setting: string, value: boolean) => {
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      await axios.put(
+        `${API_URL}/auth/settings/notifications`,
+        { [setting]: value },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update setting');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
