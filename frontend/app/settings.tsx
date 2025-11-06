@@ -74,9 +74,13 @@ export default function SettingsScreen() {
             </View>
             <Switch
               value={pushNotifs}
-              onValueChange={setPushNotifs}
+              onValueChange={(value) => {
+                setPushNotifs(value);
+                updateNotificationSetting('push_notifications', value);
+              }}
               trackColor={{ false: '#374151', true: '#14B8A6' }}
               thumbColor="#FFF"
+              disabled={loading}
             />
           </View>
 
@@ -90,9 +94,33 @@ export default function SettingsScreen() {
             </View>
             <Switch
               value={emailNotifs}
-              onValueChange={setEmailNotifs}
+              onValueChange={(value) => {
+                setEmailNotifs(value);
+                updateNotificationSetting('email_notifications', value);
+              }}
               trackColor={{ false: '#374151', true: '#14B8A6' }}
               thumbColor="#FFF"
+              disabled={loading}
+            />
+          </View>
+
+          <View style={styles.settingItem}>
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="email-newsletter" size={24} color="#14B8A6" />
+              <View style={styles.settingText}>
+                <Text style={styles.settingLabel}>Marketing Emails</Text>
+                <Text style={styles.settingDesc}>Promotional content and updates</Text>
+              </View>
+            </View>
+            <Switch
+              value={marketingEmails}
+              onValueChange={(value) => {
+                setMarketingEmails(value);
+                updateNotificationSetting('marketing_emails', value);
+              }}
+              trackColor={{ false: '#374151', true: '#14B8A6' }}
+              thumbColor="#FFF"
+              disabled={loading}
             />
           </View>
         </View>
