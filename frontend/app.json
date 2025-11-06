@@ -4,11 +4,11 @@
     "slug": "ariome",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/ariome-logo.png",
+    "icon": "./assets/images/ariome-logo-dark.svg",
     "scheme": "ariome",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/images/ariome-logo.png",
+      "image": "./assets/images/ariome-logo-dark.svg",
       "resizeMode": "contain",
       "backgroundColor": "#0A0A0F"
     },
