@@ -46,11 +46,13 @@ export default function AuthScreen() {
         // Login
         const response = await authAPI.login({ email, password });
         setUser(response.user);
-        router.replace('/onboarding');
+        // Go directly to discover after login
+        router.replace('/(tabs)/discover');
       } else {
-        // Signup
+        // Signup (Subscribe)
         const response = await authAPI.signup({ email, password, name });
         setUser(response.user);
+        // After subscribe, go to onboarding to select intentions
         router.replace('/onboarding');
       }
     } catch (err: any) {
