@@ -9,12 +9,19 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="auth" />
+          <Stack.Screen name="email-signup" />
           <Stack.Screen name="onboarding" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="story/[id]" />
           <Stack.Screen name="settings" />
+          <Stack.Screen name="edit-profile" />
+          <Stack.Screen name="change-password" />
           <Stack.Screen name="admin" />
           <Stack.Screen name="creator" />
+          <Stack.Screen name="help" />
+          <Stack.Screen name="about" />
+          <Stack.Screen name="privacy" />
+          <Stack.Screen name="terms" />
         </Stack>
       </SafeAreaProvider>
     </AuthProvider>
