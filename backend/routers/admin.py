@@ -7,6 +7,31 @@ from datetime import datetime
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
+
+@router.get("/users")
+async def get_all_users(current_user: dict = Depends(get_current_user)):
+    """Get all users - Admin only"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    cursor = users_collection.find({})
+    users = await cursor.to_list(length=1000)
+    
+    result = []
+    for user in users:
+        result.append({
+            "id": str(user["_id"]),
+            "name": user.get("name", ""),
+            "email": user.get("email", ""),
+            "role": user.get("role", "explorer"),
+            "subscription_status": user.get("subscription_status", "free"),
+            "created_at": user.get("created_at"),
+            "verified": user.get("verified", False)
+        })
+    
+    return result
+
+
 @router.get("/pending-stories")
 async def get_pending_stories(current_user: dict = Depends(get_current_user)):
     """Get all stories pending review"""
