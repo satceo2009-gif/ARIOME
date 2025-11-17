@@ -22,6 +22,9 @@ import YoutubePlayer from 'react-native-youtube-iframe';
 import { useContentStore, Story } from '@/store/contentStore';
 import { INTENTIONS } from '@/constants/intentions';
 import * as Haptics from 'expo-haptics';
+import { useUserStore } from '@/store/userStore';
+import { canAccessFullContent, needsSubscription, getAccessMessage } from '@/utils/contentAccess';
+
 
 const { width, height } = Dimensions.get('window');
 
