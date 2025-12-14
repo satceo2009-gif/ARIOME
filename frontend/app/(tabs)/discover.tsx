@@ -186,14 +186,7 @@ export default function Discover() {
             <StoryCard
               key={story.id}
               story={story}
-              onPress={() => {
-                const user = useUserStore.getState().user;
-                if (!user?.email) {
-                  router.push('/email-signup');
-                } else {
-                  router.push(`/story/${story.id}`);
-                }
-              }}
+              onPress={() => router.push(`/story/${story.id}`)}
             />
           ))}
         </View>
