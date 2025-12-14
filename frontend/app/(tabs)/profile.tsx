@@ -69,24 +69,7 @@ export default function ProfileScreen() {
             <Text style={[styles.roleText, { color: badge.color }]}>{badge.label}</Text>
           </View>
 
-          {/* Login Button for Guest */}
-          {!user?.email && (
-            <TouchableOpacity 
-              style={styles.loginButton}
-              onPress={() => router.push('/auth')}
-            >
-              <MaterialCommunityIcons name="login" size={20} color="#FFF" />
-              <Text style={styles.loginButtonText}>Login / Sign Up</Text>
-            </TouchableOpacity>
-          )}
-          
-          {/* Upgrade Button for Explorer */}
-          {user?.email && user?.role === 'explorer' && (
-            <TouchableOpacity style={styles.upgradeButton}>
-              <MaterialCommunityIcons name="crown" size={20} color="#FFF" />
-              <Text style={styles.upgradeButtonText}>Upgrade to Subscriber</Text>
-            </TouchableOpacity>
-          )}
+          {/* Profile always accessible */}
         </View>
 
         {/* Menu Items */}
