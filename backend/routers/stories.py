@@ -4,6 +4,16 @@ from datetime import datetime
 from pydantic import BaseModel
 from bson import ObjectId
 from routers.auth import get_current_user
+
+async def get_current_user_optional(authorization: Optional[str] = Header(None)):
+    """Optional authentication - returns None if no token"""
+    if not authorization:
+        return None
+    try:
+        return await get_current_user(authorization)
+    except:
+        return None
+
 from database import db
 import os
 from openai import OpenAI
