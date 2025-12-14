@@ -7,9 +7,9 @@ export default function SplashScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    // Navigate after 2.5 seconds
+    // Navigate directly to discover - skip onboarding
     const timer = setTimeout(() => {
-      router.replace('/onboarding');
+      router.replace('/(tabs)/discover');
     }, 2500);
 
     return () => clearTimeout(timer);
