@@ -23,7 +23,8 @@ except:
 async def get_stories(
     intention: Optional[str] = None,
     format: Optional[str] = None,
-    limit: int = 100
+    limit: int = 100,
+    current_user: Optional[dict] = Depends(get_current_user_optional)
 ):
     """Get all published stories with optional filters"""
     query = {"status": "published"}
