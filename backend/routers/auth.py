@@ -123,9 +123,13 @@ async def signup(user: UserCreate):
     }
 
 
+class EmailSignupRequest(BaseModel):
+    email: EmailStr
+
 @router.post("/email-signup")
-async def email_signup(email: EmailStr):
+async def email_signup(request: EmailSignupRequest):
     """Email-only signup for explorers (no password) - access to short clips only"""
+    email = request.email
     # Check if user already exists
     existing_user = await users_collection.find_one({"email": email})
     if existing_user:
