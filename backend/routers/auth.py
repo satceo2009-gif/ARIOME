@@ -199,34 +199,34 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     }
 
 
+class ProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    bio: Optional[str] = None
+    avatar: Optional[str] = None
+
 @router.put("/profile")
 async def update_profile(
-    name: Optional[str] = None,
-    bio: Optional[str] = None,
-    avatar: Optional[str] = None,
+    profile_data: ProfileUpdate,
     current_user: dict = Depends(get_current_user)
 ):
     """Update user profile"""
     update_fields = {}
-    if name:
-        update_fields["name"] = name
-    if bio:
-        update_fields["bio"] = bio
-    if avatar:
-        update_fields["avatar"] = avatar
+    if profile_data.name:
+        update_fields["name"] = profile_data.name
+    if profile_data.bio is not None:
+        update_fields["bio"] = profile_data.bio
+    if profile_data.avatar:
+        update_fields["avatar"] = profile_data.avatar
     
     if not update_fields:
         raise HTTPException(status_code=400, detail="No fields to update")
     
     update_fields["updated_at"] = datetime.utcnow()
     
-    result = await users_collection.update_one(
+    await users_collection.update_one(
         {"_id": current_user["_id"]},
         {"$set": update_fields}
     )
-    
-    if result.modified_count == 0:
-        raise HTTPException(status_code=400, detail="Profile update failed")
     
     # Get updated user
     updated_user = await users_collection.find_one({"_id": current_user["_id"]})
