@@ -104,6 +104,162 @@ class ARIOMEAPITester:
             print(f"❌ {error_msg}")
             return False
     
+    async def test_admin_login_api(self):
+        """Test POST /api/auth/login with admin credentials"""
+        print("\n🔍 Testing Admin Login API...")
+        try:
+            # Prepare form data for admin login
+            form_data = aiohttp.FormData()
+            form_data.add_field('username', ADMIN_EMAIL)
+            form_data.add_field('password', ADMIN_PASSWORD)
+            
+            async with self.session.post(f"{API_BASE}/auth/login", data=form_data) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if 'access_token' in data and data.get('user', {}).get('role') == 'admin':
+                        self.admin_token = data['access_token']
+                        self.test_results['admin_login_success'] = True
+                        print(f"✅ Admin login successful - Admin token received")
+                        return True
+                    else:
+                        error_msg = "Admin login response missing access_token or user is not admin"
+                        self.test_results['auth_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Admin login failed with status {response.status}: {error_text}"
+                    self.test_results['auth_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Admin login API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
+    async def test_admin_stats_api(self):
+        """Test GET /api/admin/stats with admin token"""
+        print("\n🔍 Testing Admin Stats API...")
+        if not self.admin_token:
+            print("❌ Cannot test admin stats - no admin token")
+            return False
+        
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.admin_token}'
+            }
+            
+            async with self.session.get(f"{API_BASE}/admin/stats", headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    required_fields = ['total_users', 'total_creators', 'total_subscribers', 'total_stories', 'pending_reviews']
+                    if all(field in data for field in required_fields):
+                        self.test_results['admin_stats_success'] = True
+                        print(f"✅ Admin stats successful - {data}")
+                        return True
+                    else:
+                        error_msg = f"Admin stats response missing required fields: {required_fields}"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Admin stats failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Admin stats API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
+    async def test_admin_users_api(self):
+        """Test GET /api/admin/users with admin token"""
+        print("\n🔍 Testing Admin Users List API...")
+        if not self.admin_token:
+            print("❌ Cannot test admin users - no admin token")
+            return False
+        
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.admin_token}'
+            }
+            
+            async with self.session.get(f"{API_BASE}/admin/users", headers=headers) as response:
+                if response.status == 200:
+                    users = await response.json()
+                    if isinstance(users, list) and len(users) >= 1:
+                        # Check if users have required fields
+                        required_fields = ['id', 'name', 'email', 'role']
+                        if all(all(field in user for field in required_fields) for user in users):
+                            self.test_results['admin_users_success'] = True
+                            print(f"✅ Admin users list successful - {len(users)} users returned")
+                            # Print user roles for verification
+                            roles = [user.get('role') for user in users]
+                            print(f"   User roles found: {roles}")
+                            return True
+                        else:
+                            error_msg = "Admin users response missing required fields in user objects"
+                            self.test_results['api_errors'].append(error_msg)
+                            print(f"❌ {error_msg}")
+                            return False
+                    else:
+                        error_msg = f"Admin users returned invalid data: expected list with users, got {type(users)} with {len(users) if isinstance(users, list) else 'N/A'} items"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Admin users failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Admin users API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
+    async def test_email_signup_api(self):
+        """Test POST /api/auth/email-signup with JSON body"""
+        print("\n🔍 Testing Email Signup API...")
+        try:
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            
+            email_data = {
+                "email": "test-explorer@test.com"
+            }
+            
+            async with self.session.post(f"{API_BASE}/auth/email-signup", 
+                                       json=email_data, 
+                                       headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if 'user_id' in data and 'message' in data:
+                        self.test_results['email_signup_success'] = True
+                        print(f"✅ Email signup successful - Explorer user created: {data}")
+                        return True
+                    else:
+                        error_msg = "Email signup response missing user_id or message"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Email signup failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Email signup API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
     async def test_profile_update_api(self):
         """Test PUT /api/auth/profile with JSON body"""
         print("\n🔍 Testing Profile Update API...")
