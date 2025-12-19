@@ -28,8 +28,13 @@ class ARIOMEAPITester:
     def __init__(self):
         self.session = None
         self.access_token = None
+        self.admin_token = None
         self.test_results = {
             'login_success': False,
+            'admin_login_success': False,
+            'admin_stats_success': False,
+            'admin_users_success': False,
+            'email_signup_success': False,
             'profile_update_success': False,
             'notification_settings_success': False,
             'change_password_success': False,
