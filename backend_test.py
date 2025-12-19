@@ -514,12 +514,23 @@ class ARIOMEAPITester:
         if not await self.test_health_endpoint():
             return
         
-        # Test authentication first
+        # Test regular user authentication first
         if not await self.test_login_api():
-            print("❌ Cannot proceed without authentication")
+            print("❌ Cannot proceed without regular user authentication")
             return
         
-        # Run authenticated API tests
+        # Test admin authentication
+        await self.test_admin_login_api()
+        
+        # Test email signup (no auth required)
+        await self.test_email_signup_api()
+        
+        # Test admin APIs (require admin token)
+        if self.admin_token:
+            await self.test_admin_stats_api()
+            await self.test_admin_users_api()
+        
+        # Run regular authenticated API tests
         await self.test_profile_update_api()
         await self.test_notification_settings_api()
         await self.test_change_password_api()
