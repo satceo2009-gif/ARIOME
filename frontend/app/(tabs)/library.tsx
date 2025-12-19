@@ -15,12 +15,33 @@ import { INTENTIONS } from '@/constants/intentions';
 
 export default function Library() {
   const router = useRouter();
-  const { stories, savedStories } = useContentStore();
+  const { stories, savedStories, recentlyPlayed } = useContentStore();
   const [activeTab, setActiveTab] = useState<'saved' | 'recent'>('saved');
 
   const mySavedStories = stories.filter((story) =>
     savedStories.includes(story.id)
   );
+
+  // Get recently played stories with their data
+  const recentlyPlayedStories = recentlyPlayed
+    .map(r => {
+      const story = stories.find(s => s.id === r.storyId);
+      return story ? { ...story, playedAt: r.playedAt, progress: r.progress } : null;
+    })
+    .filter((s): s is NonNullable<typeof s> => s !== null);
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -36,7 +57,7 @@ export default function Library() {
           <Text
             style={[styles.tabText, activeTab === 'saved' && styles.tabTextActive]}
           >
-            Saved Stories
+            Saved Stories ({mySavedStories.length})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -49,7 +70,7 @@ export default function Library() {
               activeTab === 'recent' && styles.tabTextActive,
             ]}
           >
-            Recently Played
+            Recently Played ({recentlyPlayedStories.length})
           </Text>
         </TouchableOpacity>
       </View>
@@ -96,6 +117,9 @@ export default function Library() {
                     <Text style={styles.metaText}>{story.resonanceCount}</Text>
                   </View>
                 </View>
+                <View style={styles.savedBadge}>
+                  <MaterialCommunityIcons name="bookmark" size={20} color="#14B8A6" />
+                </View>
               </TouchableOpacity>
             ))
           ) : (
@@ -118,17 +142,67 @@ export default function Library() {
             </View>
           )
         ) : (
-          <View style={styles.emptyState}>
-            <MaterialCommunityIcons
-              name="history"
-              size={64}
-              color="#4B5563"
-            />
-            <Text style={styles.emptyTitle}>No Recent Stories</Text>
-            <Text style={styles.emptySubtitle}>
-              Your listening history will appear here
-            </Text>
-          </View>
+          recentlyPlayedStories.length > 0 ? (
+            recentlyPlayedStories.map((story) => (
+              <TouchableOpacity
+                key={story.id}
+                style={styles.storyCard}
+                onPress={() => router.push(`/story/${story.id}`)}
+                activeOpacity={0.8}
+              >
+                <Image
+                  source={{ uri: story.thumbnailUrl }}
+                  style={styles.storyImage}
+                />
+                {story.progress > 0 && (
+                  <View style={styles.progressBar}>
+                    <View style={[styles.progressFill, { width: `${story.progress}%` }]} />
+                  </View>
+                )}
+                <View style={styles.storyContent}>
+                  <Text style={styles.storyTitle} numberOfLines={2}>
+                    {story.title}
+                  </Text>
+                  <View style={styles.creatorInfo}>
+                    <Image
+                      source={{ uri: story.creator.avatar }}
+                      style={styles.creatorAvatar}
+                    />
+                    <Text style={styles.creatorName}>{story.creator.name}</Text>
+                  </View>
+                  <View style={styles.storyMeta}>
+                    <MaterialCommunityIcons
+                      name={story.format === 'video' ? 'video' : 'music-note'}
+                      size={14}
+                      color="#9CA3AF"
+                    />
+                    <Text style={styles.metaText}>
+                      {Math.floor(story.duration / 60)} min
+                    </Text>
+                    <Text style={styles.timeAgo}>{formatTimeAgo(story.playedAt)}</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <MaterialCommunityIcons
+                name="history"
+                size={64}
+                color="#4B5563"
+              />
+              <Text style={styles.emptyTitle}>No Recent Stories</Text>
+              <Text style={styles.emptySubtitle}>
+                Stories you listen to will appear here
+              </Text>
+              <TouchableOpacity
+                style={styles.exploreButton}
+                onPress={() => router.push('/(tabs)/discover')}
+              >
+                <Text style={styles.exploreButtonText}>Start Listening</Text>
+              </TouchableOpacity>
+            </View>
+          )
         )}
       </ScrollView>
     </SafeAreaView>
@@ -183,10 +257,23 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 16,
     overflow: 'hidden',
+    position: 'relative',
   },
   storyImage: {
     width: 100,
     height: 120,
+  },
+  progressBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: 100,
+    height: 3,
+    backgroundColor: '#374151',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#14B8A6',
   },
   storyContent: {
     flex: 1,
@@ -223,6 +310,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#9CA3AF',
     marginRight: 8,
+  },
+  timeAgo: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginLeft: 'auto',
+  },
+  savedBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
   },
   emptyState: {
     flex: 1,
