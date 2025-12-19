@@ -1,6 +1,6 @@
 import { Redirect } from 'expo-router';
 
 export default function Index() {
-  // Show splash screen first
-  return <Redirect href="/splash" />;
+  // Redirect to auth screen - users must login/signup first
+  return <Redirect href="/auth" />;
 }
