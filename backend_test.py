@@ -437,8 +437,8 @@ class ARIOMEAPITester:
 
 async def main():
     """Main test runner"""
-    async with ARIOMEComprehensiveTester() as tester:
-        await tester.run_comprehensive_test()
+    async with ARIOMEAPITester() as tester:
+        await tester.run_api_tests()
 
 if __name__ == "__main__":
     asyncio.run(main())
