@@ -603,7 +603,7 @@ class ARIOMEAPITester:
         auth_issues = len(self.test_results['auth_errors'])
         api_issues = len(self.test_results['api_errors'])
         
-        if critical_issues == 0 and auth_issues == 0 and passed_tests >= 6:
+        if critical_issues == 0 and auth_issues == 0 and passed_tests >= 9:
             print("✅ BACKEND APIs WORKING - Most critical functionality operational")
         elif critical_issues > 0 or auth_issues > 0:
             print("❌ CRITICAL ISSUES FOUND - Authentication or core functionality broken")
