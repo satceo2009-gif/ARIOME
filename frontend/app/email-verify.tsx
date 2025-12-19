@@ -310,6 +310,30 @@ const styles = StyleSheet.create({
   resendLinkDisabled: {
     color: '#6B7280',
   },
+  devCodeBox: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    borderRadius: 12,
+    padding: 16,
+    gap: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+  },
+  devCodeContent: {
+    flex: 1,
+  },
+  devCodeLabel: {
+    fontSize: 12,
+    color: '#F59E0B',
+    marginBottom: 4,
+  },
+  devCodeValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFF',
+    letterSpacing: 4,
+  },
   infoBox: {
     flexDirection: 'row',
     backgroundColor: 'rgba(20, 184, 166, 0.1)',
