@@ -384,9 +384,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Admin Console with Users"
     - "Help Center/FAQ"
-    - "3-tier Authentication Flow"
     - "Story Player Watermark"
   stuck_tasks: []
   test_all: true
