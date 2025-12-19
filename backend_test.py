@@ -718,34 +718,51 @@ class ARIOMEAPITester:
         
         # Test Results Summary
         print(f"\n📊 TEST RESULTS SUMMARY:")
-        print(f"Login API: {'✅ PASS' if self.test_results['login_success'] else '❌ FAIL'}")
-        print(f"Admin Login API: {'✅ PASS' if self.test_results['admin_login_success'] else '❌ FAIL'}")
-        print(f"Admin Stats API: {'✅ PASS' if self.test_results['admin_stats_success'] else '❌ FAIL'}")
-        print(f"Admin Users API: {'✅ PASS' if self.test_results['admin_users_success'] else '❌ FAIL'}")
-        print(f"Email Signup API: {'✅ PASS' if self.test_results['email_signup_success'] else '❌ FAIL'}")
-        print(f"Profile Update API: {'✅ PASS' if self.test_results['profile_update_success'] else '❌ FAIL'}")
-        print(f"Notification Settings API: {'✅ PASS' if self.test_results['notification_settings_success'] else '❌ FAIL'}")
-        print(f"Change Password API: {'✅ PASS' if self.test_results['change_password_success'] else '❌ FAIL'}")
-        print(f"Journal Entries API: {'✅ PASS' if self.test_results['journal_entries_success'] else '❌ FAIL'}")
-        print(f"Journal Stats API: {'✅ PASS' if self.test_results['journal_stats_success'] else '❌ FAIL'}")
-        print(f"Circles List API: {'✅ PASS' if self.test_results['circles_list_success'] else '❌ FAIL'}")
-        print(f"Circles Join API: {'✅ PASS' if self.test_results['circles_join_success'] else '❌ FAIL'}")
+        print(f"🔐 AUTHENTICATION & VERIFICATION:")
+        print(f"  Email Send Verification API: {'✅ PASS' if self.test_results['email_send_verification_success'] else '❌ FAIL'}")
+        print(f"  Email Verify Code API: {'✅ PASS' if self.test_results['email_verify_code_success'] else '❌ FAIL'}")
+        print(f"  Login API: {'✅ PASS' if self.test_results['login_success'] else '❌ FAIL'}")
+        print(f"  Signup API: {'✅ PASS' if self.test_results['signup_success'] else '❌ FAIL'}")
+        print(f"  Admin Login API: {'✅ PASS' if self.test_results['admin_login_success'] else '❌ FAIL'}")
+        print(f"  Email Signup API: {'✅ PASS' if self.test_results['email_signup_success'] else '❌ FAIL'}")
+        
+        print(f"\n👥 CIRCLES & COMMUNITY:")
+        print(f"  Circles (No Auth) API: {'✅ PASS' if self.test_results['circles_no_auth_success'] else '❌ FAIL'}")
+        print(f"  Circles List API: {'✅ PASS' if self.test_results['circles_list_success'] else '❌ FAIL'}")
+        print(f"  Circles Join API: {'✅ PASS' if self.test_results['circles_join_success'] else '❌ FAIL'}")
+        
+        print(f"\n👤 USER PROFILE & SETTINGS:")
+        print(f"  Profile Update API: {'✅ PASS' if self.test_results['profile_update_success'] else '❌ FAIL'}")
+        print(f"  Notification Settings API: {'✅ PASS' if self.test_results['notification_settings_success'] else '❌ FAIL'}")
+        print(f"  Change Password API: {'✅ PASS' if self.test_results['change_password_success'] else '❌ FAIL'}")
+        
+        print(f"\n📖 JOURNAL & CONTENT:")
+        print(f"  Journal Entries API: {'✅ PASS' if self.test_results['journal_entries_success'] else '❌ FAIL'}")
+        print(f"  Journal Stats API: {'✅ PASS' if self.test_results['journal_stats_success'] else '❌ FAIL'}")
+        
+        print(f"\n🛡️ ADMIN FUNCTIONS:")
+        print(f"  Admin Stats API: {'✅ PASS' if self.test_results['admin_stats_success'] else '❌ FAIL'}")
+        print(f"  Admin Users API: {'✅ PASS' if self.test_results['admin_users_success'] else '❌ FAIL'}")
         
         # Count successes
-        total_tests = 12
+        total_tests = 16
         passed_tests = sum([
+            self.test_results['email_send_verification_success'],
+            self.test_results['email_verify_code_success'],
             self.test_results['login_success'],
+            self.test_results['signup_success'],
             self.test_results['admin_login_success'],
-            self.test_results['admin_stats_success'],
-            self.test_results['admin_users_success'],
             self.test_results['email_signup_success'],
+            self.test_results['circles_no_auth_success'],
+            self.test_results['circles_list_success'],
+            self.test_results['circles_join_success'],
             self.test_results['profile_update_success'],
             self.test_results['notification_settings_success'],
             self.test_results['change_password_success'],
             self.test_results['journal_entries_success'],
             self.test_results['journal_stats_success'],
-            self.test_results['circles_list_success'],
-            self.test_results['circles_join_success']
+            self.test_results['admin_stats_success'],
+            self.test_results['admin_users_success']
         ])
         
         print(f"\n📈 OVERALL SCORE: {passed_tests}/{total_tests} tests passed ({(passed_tests/total_tests)*100:.1f}%)")
