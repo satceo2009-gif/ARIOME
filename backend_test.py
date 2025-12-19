@@ -675,7 +675,16 @@ class ARIOMEAPITester:
         if not await self.test_health_endpoint():
             return
         
-        # Test regular user authentication first
+        # Test email verification APIs (no auth required) - PRIORITY FROM REVIEW REQUEST
+        await self.test_email_verification_apis()
+        
+        # Test signup API (no auth required) - FROM REVIEW REQUEST
+        await self.test_signup_api()
+        
+        # Test circles without auth - FROM REVIEW REQUEST
+        await self.test_circles_without_auth()
+        
+        # Test regular user authentication first - FROM REVIEW REQUEST
         if not await self.test_login_api():
             print("❌ Cannot proceed without regular user authentication")
             return
