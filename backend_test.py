@@ -21,6 +21,8 @@ API_BASE = f"{BACKEND_URL}/api"
 # Test credentials
 TEST_EMAIL = "subscriber@ariome-test.com"
 TEST_PASSWORD = "test123"
+ADMIN_EMAIL = "admin@ariome-test.com"
+ADMIN_PASSWORD = "test123"
 
 class ARIOMEAPITester:
     def __init__(self):
