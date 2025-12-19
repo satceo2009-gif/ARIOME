@@ -111,11 +111,14 @@ backend:
     file: "backend/routers/auth.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "API updated to accept JSON body with Pydantic model. Successfully updates name and bio fields."
+        - working: true
+          agent: "testing"
+          comment: "✅ Profile Update API tested successfully. Accepts JSON body with name and bio fields. Returns updated user profile data correctly. Authentication with Bearer token working properly."
 
   - task: "Notification Settings API - PUT/GET /api/auth/settings/notifications"
     implemented: true
