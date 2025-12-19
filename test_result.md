@@ -180,6 +180,18 @@ backend:
           agent: "testing"
           comment: "✅ Circles APIs tested successfully. GET /api/circles returns 3 circles with proper structure including id, name, description, member_count, and is_member status. POST /api/circles/{id}/join works correctly for joining circles. Authentication required and working properly."
 
+  - task: "Login API - POST /api/auth/login"
+    implemented: true
+    working: true
+    file: "backend/routers/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ Login API tested successfully with form data (username=subscriber@ariome-test.com&password=test123). Returns access_token and user data correctly. Token authentication working for all subsequent API calls."
+
   - task: "Stories API - GET /api/stories"
     implemented: true
     working: true
