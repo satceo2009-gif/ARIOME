@@ -309,13 +309,15 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Stories API - GET /api/stories"
-    - "Story Details API - GET /api/stories/{id}"
-    - "Story Data Quality Validation"
-    - "Media URL Validation"
-    - "YouTube Video Playback Compatibility"
+    - "Profile Update API"
+    - "Notification Settings API"
+    - "Change Password API"
+    - "Settings Navigation from Profile"
+    - "Story Player with YouTube"
+    - "Circles Tab"
+    - "Journal Tab"
   stuck_tasks: []
-  test_all: false
+  test_all: true
   test_priority: "high_first"
 
 agent_communication:
@@ -323,3 +325,5 @@ agent_communication:
       message: "✅ ARIOME Backend API testing completed successfully. All 5 backend tasks passed with excellent results. Found 12 real wellness meditation stories with high-quality data, proper YouTube integration, and full Android compatibility. No critical issues detected. Backend is production-ready."
     - agent: "testing"
       message: "✅ COMPREHENSIVE TESTING COMPLETE: Verified all review request requirements. Database contains exactly 49 stories (14 video, 35 audio) matching expected counts. All YouTube video IDs are valid 11-character format and extractable. API response format perfect with proper creator objects (name/avatar/bio). All stories have reflection prompts. Content well-distributed across 7 intentions. All media URLs are Android/iOS compatible. Zero critical issues found. FINAL RECOMMENDATION: READY - Backend is production ready for deployment."
+    - agent: "main"
+      message: "Implemented P0 and P1 tasks: Fixed Settings navigation, fixed Settings screen (removed duplicates, added useAuth), fixed backend APIs (profile update, notification settings, change password) to accept JSON body with Pydantic models. All tabs (Discover, Library, Circles, Journal, Profile) are functional and connected to backend. Story player working with YouTube embedded videos. Test credentials: subscriber@ariome-test.com / test123"
