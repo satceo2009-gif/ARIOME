@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-ARIOME Backend Comprehensive Testing Suite
-Tests database content mix, YouTube extraction, API format, and compatibility
+ARIOME Backend API Testing Suite
+Tests authentication, profile, journal, circles, and other backend APIs
 Based on review request requirements
 """
 
@@ -17,6 +17,10 @@ from collections import Counter
 # Get backend URL from environment
 BACKEND_URL = os.getenv('EXPO_PUBLIC_BACKEND_URL', 'https://mind-wellness-70.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
+
+# Test credentials
+TEST_EMAIL = "subscriber@ariome-test.com"
+TEST_PASSWORD = "test123"
 
 class ARIOMEComprehensiveTester:
     def __init__(self):
