@@ -48,52 +48,6 @@ class ARIOMEAPITester:
         if self.session:
             await self.session.close()
     
-    def extract_youtube_id(self, url):
-        """Extract YouTube video ID from URL"""
-        if not url or 'youtube.com' not in url:
-            return None
-        
-        # Parse URL and extract video ID
-        parsed = urlparse(url)
-        if parsed.hostname in ['www.youtube.com', 'youtube.com']:
-            query_params = parse_qs(parsed.query)
-            video_id = query_params.get('v', [None])[0]
-            if video_id and len(video_id) == 11:
-                return video_id
-        
-        return None
-    
-    def is_compatible_media_url(self, url, format_type):
-        """Check if media URL is compatible with Android/iOS"""
-        if not url:
-            return False, "Empty URL"
-        
-        if format_type == "video":
-            if "youtube.com" in url:
-                youtube_id = self.extract_youtube_id(url)
-                if youtube_id:
-                    return True, f"YouTube compatible (ID: {youtube_id})"
-                else:
-                    return False, "Invalid YouTube URL format"
-            elif url.endswith(('.mp4', '.mov', '.avi')):
-                return True, "Direct video file"
-            else:
-                return False, "Unsupported video format"
-        
-        elif format_type == "audio":
-            if "youtube.com" in url:
-                youtube_id = self.extract_youtube_id(url)
-                if youtube_id:
-                    return True, f"YouTube audio compatible (ID: {youtube_id})"
-                else:
-                    return False, "Invalid YouTube URL format"
-            elif url.endswith(('.mp3', '.wav', '.m4a', '.aac')):
-                return True, "Direct audio file"
-            else:
-                return False, "Unsupported audio format"
-        
-        return False, "Unknown format"
-    
     async def test_health_endpoint(self):
         """Test if backend is running"""
         print("🔍 Testing backend health...")
