@@ -83,11 +83,8 @@ export default function EmailVerifyScreen() {
         // Mark mood selection as needed
         await AsyncStorage.setItem('has_selected_mood', 'false');
         
-        Alert.alert(
-          'Welcome to ARIOME! 🎉',
-          'Your email has been verified. Explore our wellness content!',
-          [{ text: 'Start Exploring', onPress: () => router.replace('/mood-selection') }]
-        );
+        // Navigate directly to mood selection (faster UX)
+        router.replace('/mood-selection');
       }
     } catch (error: any) {
       Alert.alert('Error', error.response?.data?.detail || 'Invalid verification code');
