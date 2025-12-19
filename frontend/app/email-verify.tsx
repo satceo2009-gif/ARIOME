@@ -187,6 +187,17 @@ export default function EmailVerifyScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Dev Code Display - For Testing */}
+        {displayDevCode && (
+          <View style={styles.devCodeBox}>
+            <MaterialCommunityIcons name="developer-board" size={20} color="#F59E0B" />
+            <View style={styles.devCodeContent}>
+              <Text style={styles.devCodeLabel}>Test Mode - Your Code:</Text>
+              <Text style={styles.devCodeValue}>{displayDevCode}</Text>
+            </View>
+          </View>
+        )}
+
         <View style={styles.infoBox}>
           <MaterialCommunityIcons name="information" size={20} color="#14B8A6" />
           <Text style={styles.infoText}>
