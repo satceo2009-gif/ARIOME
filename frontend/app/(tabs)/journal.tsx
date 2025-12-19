@@ -1,57 +1,40 @@
 import { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
-import axios from 'axios';
-import Constants from 'expo-constants';
 
-const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || 
-                process.env.EXPO_PUBLIC_API_URL || 
-                'https://mind-wellness-70.preview.emergentagent.com/api';
+// Default journal entries for display
+const DEFAULT_ENTRIES = [
+  {
+    id: '1',
+    title: 'Morning Reflection',
+    content: 'Today I woke up feeling grateful for the little things in life...',
+    mood: 'grateful',
+    tags: ['morning', 'gratitude'],
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: '2',
+    title: 'Evening Thoughts',
+    content: 'After a long day, I found peace in meditation...',
+    mood: 'peaceful',
+    tags: ['evening', 'meditation'],
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+  },
+];
 
 export default function JournalScreen() {
-  const { token, user } = useAuth();
-  const [entries, setEntries] = useState<any[]>([]);
+  const { user } = useAuth();
+  const [entries, setEntries] = useState<any[]>(DEFAULT_ENTRIES);
   const [reflections, setReflections] = useState<any[]>([]);
-  const [stats, setStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState('entries');
-
-  useEffect(() => {
-    if (!user) {
-      Alert.alert('Please Login', 'Login to access journal');
-      return;
-    }
-    loadJournalData();
-  }, []);
-
-  const loadJournalData = async () => {
-    try {
-      const [entriesRes, reflectionsRes, statsRes] = await Promise.all([
-        axios.get(`${API_URL}/journal/entries`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API_URL}/journal/reflections`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API_URL}/journal/stats`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-      ]);
-      setEntries(entriesRes.data);
-      setReflections(reflectionsRes.data);
-      setStats(statsRes.data);
-    } catch (error) {
-      console.error('Error loading journal:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newEntry, setNewEntry] = useState({ title: '', content: '', mood: 'peaceful' });
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   const getMoodEmoji = (mood: string) => {
@@ -62,8 +45,33 @@ export default function JournalScreen() {
       sad: '😢',
       anxious: '😰',
       calm: '🧘',
+      excited: '🎉',
+      reflective: '🤔',
     };
     return moods[mood] || '💭';
+  };
+
+  const handleCreateEntry = () => {
+    if (!newEntry.title || !newEntry.content) {
+      Alert.alert('Error', 'Please fill in title and content');
+      return;
+    }
+    const entry = {
+      id: Date.now().toString(),
+      ...newEntry,
+      tags: [],
+      created_at: new Date().toISOString(),
+    };
+    setEntries([entry, ...entries]);
+    setNewEntry({ title: '', content: '', mood: 'peaceful' });
+    setShowCreateModal(false);
+    Alert.alert('Success', 'Journal entry created!');
+  };
+
+  const stats = {
+    totalEntries: entries.length,
+    totalReflections: reflections.length,
+    streak: 7,
   };
 
   return (
@@ -71,7 +79,10 @@ export default function JournalScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Journal</Text>
-        <TouchableOpacity style={styles.createButton}>
+        <TouchableOpacity 
+          style={styles.createButton}
+          onPress={() => setShowCreateModal(true)}
+        >
           <MaterialCommunityIcons name="plus" size={24} color="#FFF" />
         </TouchableOpacity>
       </View>
@@ -79,19 +90,19 @@ export default function JournalScreen() {
       {/* Stats Cards */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statsContainer}>
         <View style={styles.statCard}>
-          <MaterialCommunityIcons name="book-open-variant" size={32} color="#14B8A6" />
-          <Text style={styles.statValue}>{stats?.total_entries || 0}</Text>
+          <MaterialCommunityIcons name="notebook" size={24} color="#14B8A6" />
+          <Text style={styles.statValue}>{stats.totalEntries}</Text>
           <Text style={styles.statLabel}>Entries</Text>
         </View>
         <View style={styles.statCard}>
-          <MaterialCommunityIcons name="lightbulb" size={32} color="#F59E0B" />
-          <Text style={styles.statValue}>{stats?.total_reflections || 0}</Text>
+          <MaterialCommunityIcons name="thought-bubble" size={24} color="#F59E0B" />
+          <Text style={styles.statValue}>{stats.totalReflections}</Text>
           <Text style={styles.statLabel}>Reflections</Text>
         </View>
         <View style={styles.statCard}>
-          <MaterialCommunityIcons name="calendar" size={32} color="#8B5CF6" />
-          <Text style={styles.statValue}>{new Date().toLocaleDateString('en-US', { day: 'numeric' })}</Text>
-          <Text style={styles.statLabel}>Today</Text>
+          <MaterialCommunityIcons name="fire" size={24} color="#EF4444" />
+          <Text style={styles.statValue}>{stats.streak}</Text>
+          <Text style={styles.statLabel}>Day Streak</Text>
         </View>
       </ScrollView>
 
@@ -101,101 +112,121 @@ export default function JournalScreen() {
           style={[styles.tab, selectedTab === 'entries' && styles.tabActive]}
           onPress={() => setSelectedTab('entries')}
         >
-          <Text style={[styles.tabText, selectedTab === 'entries' && styles.tabTextActive]}>My Entries</Text>
+          <Text style={[styles.tabText, selectedTab === 'entries' && styles.tabTextActive]}>
+            My Entries
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={[styles.tab, selectedTab === 'reflections' && styles.tabActive]}
           onPress={() => setSelectedTab('reflections')}
         >
-          <Text style={[styles.tabText, selectedTab === 'reflections' && styles.tabTextActive]}>Story Reflections</Text>
+          <Text style={[styles.tabText, selectedTab === 'reflections' && styles.tabTextActive]}>
+            Reflections
+          </Text>
         </TouchableOpacity>
       </View>
 
       {/* Content */}
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#14B8A6" />
-        </View>
-      ) : (
-        <ScrollView style={styles.content}>
-          {selectedTab === 'entries' && (
-            <View>
-              {entries.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <MaterialCommunityIcons name="book-open-variant" size={64} color="#9CA3AF" />
-                  <Text style={styles.emptyText}>No journal entries yet</Text>
-                  <Text style={styles.emptySubtext}>Start writing your thoughts</Text>
+      <ScrollView style={styles.content}>
+        {selectedTab === 'entries' ? (
+          entries.length > 0 ? (
+            entries.map((entry) => (
+              <TouchableOpacity key={entry.id} style={styles.entryCard}>
+                <View style={styles.entryHeader}>
+                  <Text style={styles.entryMood}>{getMoodEmoji(entry.mood)}</Text>
+                  <Text style={styles.entryDate}>{formatDate(entry.created_at)}</Text>
                 </View>
-              ) : (
-                entries.map((entry) => (
-                  <View key={entry.id} style={styles.entryCard}>
-                    <View style={styles.entryHeader}>
-                      <Text style={styles.entryDate}>{formatDate(entry.created_at)}</Text>
-                      {entry.mood && (
-                        <Text style={styles.moodEmoji}>{getMoodEmoji(entry.mood)}</Text>
-                      )}
-                    </View>
-                    <Text style={styles.entryTitle}>{entry.title}</Text>
-                    <Text style={styles.entryContent} numberOfLines={3}>
-                      {entry.content}
-                    </Text>
-                    {entry.tags && entry.tags.length > 0 && (
-                      <View style={styles.tagsContainer}>
-                        {entry.tags.map((tag: string, idx: number) => (
-                          <View key={idx} style={styles.tag}>
-                            <Text style={styles.tagText}>#{tag}</Text>
-                          </View>
-                        ))}
+                <Text style={styles.entryTitle}>{entry.title}</Text>
+                <Text style={styles.entryContent} numberOfLines={2}>{entry.content}</Text>
+                {entry.tags?.length > 0 && (
+                  <View style={styles.tagsContainer}>
+                    {entry.tags.map((tag: string, i: number) => (
+                      <View key={i} style={styles.tag}>
+                        <Text style={styles.tagText}>#{tag}</Text>
                       </View>
-                    )}
+                    ))}
                   </View>
-                ))
-              )}
+                )}
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <MaterialCommunityIcons name="notebook-outline" size={64} color="#6B7280" />
+              <Text style={styles.emptyText}>No entries yet</Text>
+              <Text style={styles.emptySubtext}>Start journaling your thoughts</Text>
+              <TouchableOpacity 
+                style={styles.createEntryBtn}
+                onPress={() => setShowCreateModal(true)}
+              >
+                <Text style={styles.createEntryBtnText}>Create First Entry</Text>
+              </TouchableOpacity>
             </View>
-          )}
+          )
+        ) : (
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="thought-bubble-outline" size={64} color="#6B7280" />
+            <Text style={styles.emptyText}>No reflections yet</Text>
+            <Text style={styles.emptySubtext}>Reflections from stories will appear here</Text>
+          </View>
+        )}
+      </ScrollView>
 
-          {selectedTab === 'reflections' && (
-            <View>
-              {reflections.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <MaterialCommunityIcons name="lightbulb" size={64} color="#9CA3AF" />
-                  <Text style={styles.emptyText}>No story reflections yet</Text>
-                  <Text style={styles.emptySubtext}>Watch stories and reflect on them</Text>
-                </View>
-              ) : (
-                reflections.map((reflection) => (
-                  <View key={reflection.id} style={styles.reflectionCard}>
-                    <View style={styles.reflectionHeader}>
-                      <MaterialCommunityIcons name="lightbulb" size={24} color="#F59E0B" />
-                      <Text style={styles.reflectionDate}>{formatDate(reflection.created_at)}</Text>
-                    </View>
-                    
-                    {reflection.mood && (
-                      <View style={styles.moodBadge}>
-                        <Text style={styles.moodText}>{getMoodEmoji(reflection.mood)} {reflection.mood}</Text>
-                      </View>
-                    )}
-                    
-                    {reflection.before_reflection && (
-                      <View style={styles.reflectionSection}>
-                        <Text style={styles.reflectionLabel}>Before:</Text>
-                        <Text style={styles.reflectionText}>{reflection.before_reflection}</Text>
-                      </View>
-                    )}
-                    
-                    {reflection.after_reflection && (
-                      <View style={styles.reflectionSection}>
-                        <Text style={styles.reflectionLabel}>After:</Text>
-                        <Text style={styles.reflectionText}>{reflection.after_reflection}</Text>
-                      </View>
-                    )}
-                  </View>
-                ))
-              )}
+      {/* Create Entry Modal */}
+      <Modal
+        visible={showCreateModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowCreateModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>New Journal Entry</Text>
+              <TouchableOpacity onPress={() => setShowCreateModal(false)}>
+                <MaterialCommunityIcons name="close" size={24} color="#FFF" />
+              </TouchableOpacity>
             </View>
-          )}
-        </ScrollView>
-      )}
+
+            <TextInput
+              style={styles.input}
+              placeholder="Entry title"
+              placeholderTextColor="#6B7280"
+              value={newEntry.title}
+              onChangeText={(text) => setNewEntry(prev => ({ ...prev, title: text }))}
+            />
+
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="What's on your mind?"
+              placeholderTextColor="#6B7280"
+              value={newEntry.content}
+              onChangeText={(text) => setNewEntry(prev => ({ ...prev, content: text }))}
+              multiline
+              numberOfLines={6}
+            />
+
+            <Text style={styles.moodLabel}>How are you feeling?</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.moodSelector}>
+              {['happy', 'peaceful', 'grateful', 'reflective', 'anxious', 'sad'].map((mood) => (
+                <TouchableOpacity
+                  key={mood}
+                  style={[styles.moodOption, newEntry.mood === mood && styles.moodOptionActive]}
+                  onPress={() => setNewEntry(prev => ({ ...prev, mood }))}
+                >
+                  <Text style={styles.moodOptionEmoji}>{getMoodEmoji(mood)}</Text>
+                  <Text style={[styles.moodOptionText, newEntry.mood === mood && styles.moodOptionTextActive]}>
+                    {mood}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <TouchableOpacity style={styles.saveButton} onPress={handleCreateEntry}>
+              <Text style={styles.saveButtonText}>Save Entry</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -209,35 +240,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#FFF',
   },
   createButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#14B8A6',
     alignItems: 'center',
     justifyContent: 'center',
   },
   statsContainer: {
     paddingHorizontal: 20,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   statCard: {
     backgroundColor: '#1F2937',
-    borderRadius: 16,
-    padding: 20,
-    marginRight: 16,
+    borderRadius: 12,
+    padding: 16,
+    marginRight: 12,
     minWidth: 100,
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#FFF',
     marginTop: 8,
@@ -270,19 +302,59 @@ const styles = StyleSheet.create({
     color: '#14B8A6',
     fontWeight: '600',
   },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   content: {
     flex: 1,
     paddingHorizontal: 20,
   },
+  entryCard: {
+    backgroundColor: '#1F2937',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  },
+  entryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  entryMood: {
+    fontSize: 24,
+  },
+  entryDate: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+  entryTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFF',
+    marginBottom: 8,
+  },
+  entryContent: {
+    fontSize: 14,
+    color: '#D1D5DB',
+    lineHeight: 20,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 12,
+    gap: 8,
+  },
+  tag: {
+    backgroundColor: '#374151',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  tagText: {
+    fontSize: 12,
+    color: '#14B8A6',
+  },
   emptyState: {
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 64,
+    paddingVertical: 60,
   },
   emptyText: {
     fontSize: 18,
@@ -295,93 +367,92 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     marginTop: 8,
   },
-  entryCard: {
+  createEntryBtn: {
+    backgroundColor: '#14B8A6',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+  createEntryBtnText: {
+    color: '#FFF',
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
     backgroundColor: '#1F2937',
-    borderRadius: 16,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: '85%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  input: {
+    backgroundColor: '#374151',
+    borderRadius: 12,
     padding: 16,
+    color: '#FFF',
+    fontSize: 16,
     marginBottom: 16,
   },
-  entryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  textArea: {
+    height: 120,
+    textAlignVertical: 'top',
+  },
+  moodLabel: {
+    color: '#9CA3AF',
+    fontSize: 14,
     marginBottom: 12,
   },
-  entryDate: {
-    fontSize: 12,
-    color: '#9CA3AF',
+  moodSelector: {
+    marginBottom: 24,
   },
-  moodEmoji: {
+  moodOption: {
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#374151',
+    marginRight: 10,
+  },
+  moodOptionActive: {
+    backgroundColor: '#14B8A6',
+  },
+  moodOptionEmoji: {
     fontSize: 24,
   },
-  entryTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+  moodOptionText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 4,
+    textTransform: 'capitalize',
+  },
+  moodOptionTextActive: {
     color: '#FFF',
-    marginBottom: 8,
   },
-  entryContent: {
-    fontSize: 14,
-    color: '#D1D5DB',
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  tag: {
-    backgroundColor: 'rgba(20, 184, 166, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+  saveButton: {
+    backgroundColor: '#14B8A6',
+    paddingVertical: 16,
     borderRadius: 12,
-  },
-  tagText: {
-    fontSize: 12,
-    color: '#14B8A6',
-  },
-  reflectionCard: {
-    backgroundColor: '#1F2937',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-  },
-  reflectionHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
   },
-  reflectionDate: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  moodBadge: {
-    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-    marginBottom: 12,
-  },
-  moodText: {
-    fontSize: 14,
-    color: '#F59E0B',
-  },
-  reflectionSection: {
-    marginBottom: 12,
-  },
-  reflectionLabel: {
-    fontSize: 12,
+  saveButtonText: {
+    color: '#FFF',
+    fontSize: 16,
     fontWeight: '600',
-    color: '#9CA3AF',
-    marginBottom: 4,
-    textTransform: 'uppercase',
-  },
-  reflectionText: {
-    fontSize: 14,
-    color: '#D1D5DB',
-    lineHeight: 20,
   },
 });

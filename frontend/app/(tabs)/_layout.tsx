@@ -31,26 +31,26 @@ export default function TabLayout() {
         tabBarActiveTintColor: '#14B8A6',
         tabBarInactiveTintColor: '#6B7280',
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: '600',
         },
       }}
     >
+      <Tabs.Screen
+        name="for-you"
+        options={{
+          title: 'For You',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="heart-outline" size={size} color={color} />
+          ),
+        }}
+      />
       <Tabs.Screen
         name="discover"
         options={{
           title: 'Discover',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="compass-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="library"
-        options={{
-          title: 'Library',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="bookmark-outline" size={size} color={color} />
           ),
         }}
       />
@@ -81,10 +81,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="library"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
-
 
 const styles = StyleSheet.create({
   headerTitle: {
@@ -92,9 +97,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logo: {
-    width: 120,
-    height: 40,
-  },
 });
-
