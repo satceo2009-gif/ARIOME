@@ -549,6 +549,10 @@ class ARIOMEAPITester:
         # Test Results Summary
         print(f"\n📊 TEST RESULTS SUMMARY:")
         print(f"Login API: {'✅ PASS' if self.test_results['login_success'] else '❌ FAIL'}")
+        print(f"Admin Login API: {'✅ PASS' if self.test_results['admin_login_success'] else '❌ FAIL'}")
+        print(f"Admin Stats API: {'✅ PASS' if self.test_results['admin_stats_success'] else '❌ FAIL'}")
+        print(f"Admin Users API: {'✅ PASS' if self.test_results['admin_users_success'] else '❌ FAIL'}")
+        print(f"Email Signup API: {'✅ PASS' if self.test_results['email_signup_success'] else '❌ FAIL'}")
         print(f"Profile Update API: {'✅ PASS' if self.test_results['profile_update_success'] else '❌ FAIL'}")
         print(f"Notification Settings API: {'✅ PASS' if self.test_results['notification_settings_success'] else '❌ FAIL'}")
         print(f"Change Password API: {'✅ PASS' if self.test_results['change_password_success'] else '❌ FAIL'}")
@@ -558,9 +562,13 @@ class ARIOMEAPITester:
         print(f"Circles Join API: {'✅ PASS' if self.test_results['circles_join_success'] else '❌ FAIL'}")
         
         # Count successes
-        total_tests = 8
+        total_tests = 12
         passed_tests = sum([
             self.test_results['login_success'],
+            self.test_results['admin_login_success'],
+            self.test_results['admin_stats_success'],
+            self.test_results['admin_users_success'],
+            self.test_results['email_signup_success'],
             self.test_results['profile_update_success'],
             self.test_results['notification_settings_success'],
             self.test_results['change_password_success'],
