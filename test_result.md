@@ -171,11 +171,14 @@ backend:
     file: "backend/routers/circles.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Circles APIs working. Users can view circles, join and leave them."
+        - working: true
+          agent: "testing"
+          comment: "✅ Circles APIs tested successfully. GET /api/circles returns 3 circles with proper structure including id, name, description, member_count, and is_member status. POST /api/circles/{id}/join works correctly for joining circles. Authentication required and working properly."
 
   - task: "Stories API - GET /api/stories"
     implemented: true
