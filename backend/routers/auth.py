@@ -240,13 +240,18 @@ async def update_profile(
         "role": updated_user["role"]
     }
 
+class PasswordChange(BaseModel):
+    old_password: str
+    new_password: str
+
 @router.put("/change-password")
 async def change_password(
-    old_password: str,
-    new_password: str,
+    password_data: PasswordChange,
     current_user: dict = Depends(get_current_user)
 ):
     """Change user password"""
+    old_password = password_data.old_password
+    new_password = password_data.new_password
     # Verify old password
     if not verify_password(old_password, current_user["password_hash"]):
         raise HTTPException(status_code=400, detail="Incorrect current password")
