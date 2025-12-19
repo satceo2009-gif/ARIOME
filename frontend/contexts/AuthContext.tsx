@@ -5,7 +5,7 @@ import Constants from 'expo-constants';
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || 
                 process.env.EXPO_PUBLIC_API_URL || 
-                'https://ariome-repo.preview.emergentagent.com/api';
+                'https://mind-wellness-70.preview.emergentagent.com/api';
 
 interface User {
   id: string;
