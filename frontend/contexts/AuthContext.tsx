@@ -11,7 +11,7 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: 'explorer' | 'subscriber' | 'creator' | 'admin';
+  role: 'guest' | 'explorer' | 'subscriber' | 'creator' | 'admin';
   avatar: string;
   subscription_status?: string;
 }
@@ -20,10 +20,16 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
+  isGuest: boolean;
+  isExplorer: boolean;
+  isSubscriber: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, name: string, password: string, role: string, intentions: string[]) => Promise<void>;
+  emailSignup: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  canAccessFullContent: () => boolean;
+  canAccessShortClips: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -81,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         name,
         password,
-        role,
+        role: role || 'subscriber',
         intentions
       });
 
@@ -94,6 +100,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(userData);
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || 'Signup failed');
+    }
+  };
+
+  // Email-only signup for Explorer access (short clips only)
+  const emailSignup = async (email: string) => {
+    try {
+      const response = await axios.post(`${API_URL}/auth/email-signup`, { email });
+      
+      // Create a temporary explorer user locally
+      const explorerUser: User = {
+        id: response.data.user_id,
+        email: email,
+        name: 'Explorer',
+        role: 'explorer',
+        avatar: `https://i.pravatar.cc/150?u=${email}`,
+        subscription_status: 'free'
+      };
+      
+      await AsyncStorage.setItem('user', JSON.stringify(explorerUser));
+      setUser(explorerUser);
+      // Note: No token for email-only signup, limited access
+    } catch (error: any) {
+      throw new Error(error.response?.data?.detail || 'Email signup failed');
     }
   };
 
@@ -120,8 +149,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Access control helpers
+  const isGuest = !user;
+  const isExplorer = user?.role === 'explorer';
+  const isSubscriber = user?.role === 'subscriber' || user?.role === 'creator' || user?.role === 'admin';
+
+  // Full content access: Subscribers, Creators, Admins
+  const canAccessFullContent = () => {
+    return user?.role === 'subscriber' || user?.role === 'creator' || user?.role === 'admin';
+  };
+
+  // Short clips access: Explorers + above
+  const canAccessShortClips = () => {
+    return user !== null; // Any logged in user
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, signup, logout, refreshUser }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      loading, 
+      isGuest,
+      isExplorer,
+      isSubscriber,
+      login, 
+      signup, 
+      emailSignup,
+      logout, 
+      refreshUser,
+      canAccessFullContent,
+      canAccessShortClips
+    }}>
       {children}
     </AuthContext.Provider>
   );
