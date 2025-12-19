@@ -302,21 +302,24 @@ async def update_profile(update_data: dict, current_user: dict = Depends(get_cur
     return {"message": "Profile updated successfully"}
 
 
+class NotificationSettings(BaseModel):
+    email_notifications: Optional[bool] = None
+    push_notifications: Optional[bool] = None
+    marketing_emails: Optional[bool] = None
+
 @router.put("/settings/notifications")
 async def update_notification_settings(
-    email_notifications: Optional[bool] = None,
-    push_notifications: Optional[bool] = None,
-    marketing_emails: Optional[bool] = None,
+    settings_data: NotificationSettings,
     current_user: dict = Depends(get_current_user)
 ):
     """Update notification settings - stored in database"""
     settings = {}
-    if email_notifications is not None:
-        settings["email_notifications"] = email_notifications
-    if push_notifications is not None:
-        settings["push_notifications"] = push_notifications
-    if marketing_emails is not None:
-        settings["marketing_emails"] = marketing_emails
+    if settings_data.email_notifications is not None:
+        settings["email_notifications"] = settings_data.email_notifications
+    if settings_data.push_notifications is not None:
+        settings["push_notifications"] = settings_data.push_notifications
+    if settings_data.marketing_emails is not None:
+        settings["marketing_emails"] = settings_data.marketing_emails
     
     if not settings:
         raise HTTPException(status_code=400, detail="No settings to update")
