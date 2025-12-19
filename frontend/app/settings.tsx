@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch, Alert, Ac
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -10,6 +11,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://mind-wellness-70.pre
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { user, token } = useAuth();
   const [emailNotifs, setEmailNotifs] = useState(true);
   const [pushNotifs, setPushNotifs] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);
@@ -21,9 +23,14 @@ export default function SettingsScreen() {
 
   const loadNotificationSettings = async () => {
     try {
-      const token = await AsyncStorage.getItem('auth_token');
+      const authToken = token || await AsyncStorage.getItem('auth_token');
+      if (!authToken) {
+        setLoading(false);
+        return;
+      }
+      
       const response = await axios.get(`${API_URL}/auth/settings/notifications`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${authToken}` }
       });
       
       setEmailNotifs(response.data.email_notifications ?? true);
@@ -38,12 +45,13 @@ export default function SettingsScreen() {
 
   const updateNotificationSetting = async (setting: string, value: boolean) => {
     try {
-      const token = await AsyncStorage.getItem('auth_token');
+      const authToken = token || await AsyncStorage.getItem('auth_token');
       await axios.put(
         `${API_URL}/auth/settings/notifications`,
         { [setting]: value },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${authToken}` } }
       );
+      Alert.alert('Success', 'Setting updated');
     } catch (error) {
       Alert.alert('Error', 'Failed to update setting');
     }
@@ -125,7 +133,6 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-
         {/* Account Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
@@ -159,55 +166,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
-
-        {/* Privacy Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Privacy</Text>
-          
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={() => router.push('/privacy')}
-          >
-            <View style={styles.settingLeft}>
-              <MaterialCommunityIcons name="shield-account" size={24} color="#14B8A6" />
-              <View style={styles.settingText}>
-                <Text style={styles.settingLabel}>Privacy Policy</Text>
-                <Text style={styles.settingDesc}>View our privacy policy</Text>
-              </View>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={() => router.push('/terms')}
-          >
-            <View style={styles.settingLeft}>
-              <MaterialCommunityIcons name="file-document" size={24} color="#14B8A6" />
-              <View style={styles.settingText}>
-                <Text style={styles.settingLabel}>Terms of Service</Text>
-                <Text style={styles.settingDesc}>Read terms and conditions</Text>
-              </View>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.settingItem}
-            onPress={() => router.push('/privacy')}
-          >
-            <View style={styles.settingLeft}>
-              <MaterialCommunityIcons name="lock" size={24} color="#14B8A6" />
-              <View style={styles.settingText}>
-                <Text style={styles.settingLabel}>Data & Privacy</Text>
-                <Text style={styles.settingDesc}>Manage your data</Text>
-              </View>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Billing Section */}
+        {/* Billing Section - Only for subscribers */}
         {user?.role === 'subscriber' && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Billing & Subscription</Text>
@@ -242,7 +201,7 @@ export default function SettingsScreen() {
                 <MaterialCommunityIcons name="cancel" size={24} color="#EF4444" />
                 <View style={styles.settingText}>
                   <Text style={[styles.settingLabel, { color: '#EF4444' }]}>Cancel Subscription</Text>
-                  <Text style={styles.settingDesc}>Access continues until {new Date().toLocaleDateString()}</Text>
+                  <Text style={styles.settingDesc}>Access continues until billing period ends</Text>
                 </View>
               </View>
               <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
@@ -250,27 +209,19 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* Account Section */}
+        {/* Privacy Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
+          <Text style={styles.sectionTitle}>Privacy</Text>
           
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => router.push('/privacy')}
+          >
             <View style={styles.settingLeft}>
-              <MaterialCommunityIcons name="account-edit" size={24} color="#14B8A6" />
+              <MaterialCommunityIcons name="shield-account" size={24} color="#14B8A6" />
               <View style={styles.settingText}>
-                <Text style={styles.settingLabel}>Edit Profile</Text>
-                <Text style={styles.settingDesc}>Change name, avatar, etc.</Text>
-              </View>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.settingItem}>
-            <View style={styles.settingLeft}>
-              <MaterialCommunityIcons name="key" size={24} color="#14B8A6" />
-              <View style={styles.settingText}>
-                <Text style={styles.settingLabel}>Change Password</Text>
-                <Text style={styles.settingDesc}>Update your password</Text>
+                <Text style={styles.settingLabel}>Privacy Policy</Text>
+                <Text style={styles.settingDesc}>View our privacy policy</Text>
               </View>
             </View>
             <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
@@ -278,7 +229,29 @@ export default function SettingsScreen() {
 
           <TouchableOpacity 
             style={styles.settingItem}
-            onPress={() => Alert.alert('Delete Account', 'This action cannot be undone. Are you sure?')}
+            onPress={() => router.push('/terms')}
+          >
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="file-document" size={24} color="#14B8A6" />
+              <View style={styles.settingText}>
+                <Text style={styles.settingLabel}>Terms of Service</Text>
+                <Text style={styles.settingDesc}>Read terms and conditions</Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Danger Zone */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Danger Zone</Text>
+          
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => Alert.alert('Delete Account', 'This action cannot be undone. Are you sure?', [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Delete', style: 'destructive', onPress: () => {} }
+            ])}
           >
             <View style={styles.settingLeft}>
               <MaterialCommunityIcons name="delete" size={24} color="#EF4444" />
@@ -290,6 +263,8 @@ export default function SettingsScreen() {
             <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
           </TouchableOpacity>
         </View>
+
+        <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
