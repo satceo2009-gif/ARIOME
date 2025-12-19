@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Text, View, StyleSheet, Image } from 'react-native';
+import { Text, View, StyleSheet } from 'react-native';
+import AriomeLogo from '@/components/AriomeLogo';
 
 export default function TabLayout() {
   return (
@@ -16,11 +17,7 @@ export default function TabLayout() {
         },
         headerTitle: () => (
           <View style={styles.headerTitle}>
-            <Image 
-              source={require('@/assets/images/ariome-logo-dark.svg')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
+            <AriomeLogo width={140} height={59} />
           </View>
         ),
         headerTintColor: '#14B8A6',
