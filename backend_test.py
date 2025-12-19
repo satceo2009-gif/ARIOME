@@ -22,23 +22,22 @@ API_BASE = f"{BACKEND_URL}/api"
 TEST_EMAIL = "subscriber@ariome-test.com"
 TEST_PASSWORD = "test123"
 
-class ARIOMEComprehensiveTester:
+class ARIOMEAPITester:
     def __init__(self):
         self.session = None
+        self.access_token = None
         self.test_results = {
-            'total_stories': 0,
-            'video_stories': 0,
-            'audio_stories': 0,
-            'video_samples': [],
-            'audio_samples': [],
-            'broken_links': [],
-            'intentions_count': {},
-            'premium_count': 0,
-            'free_count': 0,
+            'login_success': False,
+            'profile_update_success': False,
+            'notification_settings_success': False,
+            'change_password_success': False,
+            'journal_entries_success': False,
+            'journal_stats_success': False,
+            'circles_list_success': False,
+            'circles_join_success': False,
             'api_errors': [],
-            'youtube_id_errors': [],
-            'creator_format_valid': False,
-            'reflection_prompts_valid': False
+            'auth_errors': [],
+            'critical_failures': []
         }
     
     async def __aenter__(self):
