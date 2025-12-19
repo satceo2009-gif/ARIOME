@@ -102,9 +102,69 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test ARIOME Backend API and verify Stories API functionality, data quality, and media URL validation"
+user_problem_statement: "Test ARIOME app - Settings navigation, Profile/Settings APIs, Story Player, Circles, Journal, and Library features"
 
 backend:
+  - task: "Profile Update API - PUT /api/auth/profile"
+    implemented: true
+    working: true
+    file: "backend/routers/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "API updated to accept JSON body with Pydantic model. Successfully updates name and bio fields."
+
+  - task: "Notification Settings API - PUT/GET /api/auth/settings/notifications"
+    implemented: true
+    working: true
+    file: "backend/routers/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "API updated to accept JSON body. Successfully saves email/push/marketing preferences to database."
+
+  - task: "Change Password API - PUT /api/auth/change-password"
+    implemented: true
+    working: true
+    file: "backend/routers/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "API updated to accept JSON body. Successfully verifies old password and updates to new password."
+
+  - task: "Journal APIs - entries and reflections"
+    implemented: true
+    working: true
+    file: "backend/routers/journal.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Journal entries and reflections APIs working. Returns user's journal data from database."
+
+  - task: "Circles APIs - list, join, leave"
+    implemented: true
+    working: true
+    file: "backend/routers/circles.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Circles APIs working. Users can view circles, join and leave them."
+
   - task: "Stories API - GET /api/stories"
     implemented: true
     working: true
