@@ -19,6 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
 import Constants from 'expo-constants';
+import AriomeLogo from '@/components/AriomeLogo';
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || 
                 process.env.EXPO_PUBLIC_API_URL || 
@@ -105,13 +106,7 @@ export default function AuthScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.welcomeContent}>
           <View style={styles.logoSection}>
-            <Image 
-              source={require('@/assets/images/ariome-logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.logoTitle}>ARIOME</Text>
-            <Text style={styles.logoSubtitle}>Conscious Wellness</Text>
+            <AriomeLogo width={280} height={118} />
           </View>
 
           <Text style={styles.welcomeText}>
