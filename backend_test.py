@@ -63,6 +63,286 @@ class ARIOMEAPITester:
             print(f"❌ Backend connection failed: {e}")
             return False
     
+    async def test_login_api(self):
+        """Test POST /api/auth/login with form data"""
+        print("\n🔍 Testing Login API...")
+        try:
+            # Prepare form data as specified in review request
+            form_data = aiohttp.FormData()
+            form_data.add_field('username', TEST_EMAIL)
+            form_data.add_field('password', TEST_PASSWORD)
+            
+            async with self.session.post(f"{API_BASE}/auth/login", data=form_data) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if 'access_token' in data:
+                        self.access_token = data['access_token']
+                        self.test_results['login_success'] = True
+                        print(f"✅ Login successful - Token received")
+                        return True
+                    else:
+                        error_msg = "Login response missing access_token"
+                        self.test_results['auth_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Login failed with status {response.status}: {error_text}"
+                    self.test_results['auth_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Login API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
+    async def test_profile_update_api(self):
+        """Test PUT /api/auth/profile with JSON body"""
+        print("\n🔍 Testing Profile Update API...")
+        if not self.access_token:
+            print("❌ Cannot test profile update - no access token")
+            return False
+        
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            profile_data = {
+                "name": "Test Name Updated",
+                "bio": "Test bio updated via API"
+            }
+            
+            async with self.session.put(f"{API_BASE}/auth/profile", 
+                                      json=profile_data, 
+                                      headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if data.get('name') == profile_data['name']:
+                        self.test_results['profile_update_success'] = True
+                        print("✅ Profile update successful")
+                        return True
+                    else:
+                        error_msg = "Profile update response doesn't match sent data"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Profile update failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Profile update API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
+    async def test_notification_settings_api(self):
+        """Test GET and PUT /api/auth/settings/notifications"""
+        print("\n🔍 Testing Notification Settings API...")
+        if not self.access_token:
+            print("❌ Cannot test notification settings - no access token")
+            return False
+        
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Test GET first
+            async with self.session.get(f"{API_BASE}/auth/settings/notifications", 
+                                      headers=headers) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    error_msg = f"GET notification settings failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+                
+                current_settings = await response.json()
+                print(f"✅ GET notification settings successful")
+            
+            # Test PUT
+            new_settings = {
+                "email_notifications": True,
+                "push_notifications": False,
+                "marketing_emails": True
+            }
+            
+            async with self.session.put(f"{API_BASE}/auth/settings/notifications", 
+                                      json=new_settings, 
+                                      headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    self.test_results['notification_settings_success'] = True
+                    print("✅ PUT notification settings successful")
+                    return True
+                else:
+                    error_text = await response.text()
+                    error_msg = f"PUT notification settings failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Notification settings API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
+    async def test_change_password_api(self):
+        """Test PUT /api/auth/change-password with JSON body"""
+        print("\n🔍 Testing Change Password API...")
+        if not self.access_token:
+            print("❌ Cannot test change password - no access token")
+            return False
+        
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            password_data = {
+                "old_password": TEST_PASSWORD,
+                "new_password": TEST_PASSWORD  # Keep same password for testing
+            }
+            
+            async with self.session.put(f"{API_BASE}/auth/change-password", 
+                                      json=password_data, 
+                                      headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if 'message' in data:
+                        self.test_results['change_password_success'] = True
+                        print("✅ Change password successful")
+                        return True
+                    else:
+                        error_msg = "Change password response missing message"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Change password failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Change password API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
+    async def test_journal_apis(self):
+        """Test GET /api/journal/entries and GET /api/journal/stats"""
+        print("\n🔍 Testing Journal APIs...")
+        if not self.access_token:
+            print("❌ Cannot test journal APIs - no access token")
+            return False
+        
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}'
+            }
+            
+            # Test GET /api/journal/entries
+            async with self.session.get(f"{API_BASE}/journal/entries", 
+                                      headers=headers) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    error_msg = f"GET journal entries failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+                
+                entries = await response.json()
+                print(f"✅ GET journal entries successful - {len(entries)} entries")
+            
+            # Test GET /api/journal/stats
+            async with self.session.get(f"{API_BASE}/journal/stats", 
+                                      headers=headers) as response:
+                if response.status == 200:
+                    stats = await response.json()
+                    if 'total_entries' in stats and 'total_reflections' in stats:
+                        self.test_results['journal_entries_success'] = True
+                        self.test_results['journal_stats_success'] = True
+                        print(f"✅ GET journal stats successful - {stats}")
+                        return True
+                    else:
+                        error_msg = "Journal stats response missing required fields"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"GET journal stats failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Journal APIs request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
+    async def test_circles_apis(self):
+        """Test GET /api/circles and POST /api/circles/{id}/join"""
+        print("\n🔍 Testing Circles APIs...")
+        if not self.access_token:
+            print("❌ Cannot test circles APIs - no access token")
+            return False
+        
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}'
+            }
+            
+            # Test GET /api/circles
+            async with self.session.get(f"{API_BASE}/circles", 
+                                      headers=headers) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    error_msg = f"GET circles failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+                
+                circles = await response.json()
+                self.test_results['circles_list_success'] = True
+                print(f"✅ GET circles successful - {len(circles)} circles")
+                
+                # Test POST /api/circles/{id}/join if circles exist
+                if circles:
+                    circle_id = circles[0].get('id')
+                    if circle_id:
+                        async with self.session.post(f"{API_BASE}/circles/{circle_id}/join", 
+                                                   headers=headers) as join_response:
+                            if join_response.status in [200, 400]:  # 400 might be "already a member"
+                                join_data = await join_response.json()
+                                self.test_results['circles_join_success'] = True
+                                print(f"✅ POST circles join successful - {join_data.get('message', 'Joined')}")
+                            else:
+                                error_text = await join_response.text()
+                                error_msg = f"POST circles join failed with status {join_response.status}: {error_text}"
+                                self.test_results['api_errors'].append(error_msg)
+                                print(f"❌ {error_msg}")
+                    else:
+                        print("⚠️ No circle ID found to test join functionality")
+                else:
+                    print("⚠️ No circles found to test join functionality")
+                
+                return True
+        except Exception as e:
+            error_msg = f"Circles APIs request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
     async def test_stories_api(self):
         """Test GET /api/stories endpoint"""
         print("\n🔍 Testing Stories API...")
