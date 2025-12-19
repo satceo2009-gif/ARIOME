@@ -34,7 +34,7 @@ from auth import (
 )
 
 # Import routers
-from routers import auth, admin, creator, subscription, circles, journal, stories
+from routers import auth, admin, creator, subscription, circles, journal, stories, email_service
 
 app = FastAPI(title="ARIOME API", version="1.0.0")
 
@@ -55,6 +55,7 @@ app.include_router(creator.router)
 app.include_router(subscription.router)
 app.include_router(circles.router)
 app.include_router(journal.router)
+app.include_router(email_service.router)
 
 # Helper functions
 def serialize_doc(doc):
