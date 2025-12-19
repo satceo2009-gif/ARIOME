@@ -34,13 +34,13 @@ export default function MoodSelectionScreen() {
   const handleContinue = () => {
     if (selectedMoods.length > 0) {
       setSelectedMood(selectedMoods[0]); // Primary mood
-      router.replace('/(tabs)/discover');
+      router.replace('/(tabs)/for-you');
     }
   };
 
   const handleSkip = () => {
     setSelectedMood(null);
-    router.replace('/(tabs)/discover');
+    router.replace('/(tabs)/for-you');
   };
 
   return (
