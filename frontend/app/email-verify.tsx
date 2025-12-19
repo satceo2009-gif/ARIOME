@@ -101,8 +101,14 @@ export default function EmailVerifyScreen() {
     
     setResending(true);
     try {
-      await axios.post(`${API_URL}/email/send-verification`, { email });
+      const response = await axios.post(`${API_URL}/email/send-verification`, { email });
       setCountdown(60);
+      // Show dev code if available (for testing)
+      if (response.data.dev_code) {
+        setDisplayDevCode(response.data.dev_code);
+        const codeArray = response.data.dev_code.split('');
+        setCode(codeArray);
+      }
       Alert.alert('Code Sent', 'A new verification code has been sent to your email');
     } catch (error) {
       Alert.alert('Error', 'Failed to resend code. Please try again.');
