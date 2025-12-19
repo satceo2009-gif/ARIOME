@@ -15,12 +15,13 @@ const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL ||
 
 export default function EmailVerifyScreen() {
   const router = useRouter();
-  const { email } = useLocalSearchParams<{ email: string }>();
+  const { email, devCode } = useLocalSearchParams<{ email: string; devCode?: string }>();
   const { emailSignup } = useAuth();
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [displayDevCode, setDisplayDevCode] = useState<string | null>(devCode || null);
   const inputs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
@@ -29,6 +30,14 @@ export default function EmailVerifyScreen() {
       return () => clearTimeout(timer);
     }
   }, [countdown]);
+
+  // Auto-fill code if devCode is provided
+  useEffect(() => {
+    if (devCode && devCode.length === 6) {
+      const codeArray = devCode.split('');
+      setCode(codeArray);
+    }
+  }, [devCode]);
 
   const handleCodeChange = (text: string, index: number) => {
     const newCode = [...code];
