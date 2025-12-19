@@ -382,13 +382,60 @@ metadata:
   test_sequence: 2
   run_ui: false
 
+  - task: "Email Verification - Send Code API - POST /api/email/send-verification"
+    implemented: true
+    working: true
+    file: "backend/routers/email_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ Email Send Verification API tested successfully. Accepts JSON body with email field. Returns success status with verification code. Dev mode provides dev_code for testing without real email service. API working correctly."
+
+  - task: "Email Verification - Verify Code API - POST /api/email/verify-code"
+    implemented: true
+    working: true
+    file: "backend/routers/email_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ Email Verify Code API tested successfully. Accepts JSON body with email and code fields. Properly validates verification codes and returns verified=True on success. Sends welcome email after verification. API working correctly."
+
+  - task: "Signup API - POST /api/auth/signup"
+    implemented: true
+    working: true
+    file: "backend/routers/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ Signup API tested successfully. Accepts JSON body with email, name, password, role, and intentions fields. Creates new user account and returns access_token and user data. Properly handles duplicate email validation. API working correctly."
+
+  - task: "Circles API without Authentication - GET /api/circles"
+    implemented: true
+    working: true
+    file: "backend/routers/circles.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ Circles API without authentication tested successfully. Properly requires authentication and returns 401 status when no token provided. Security working as expected."
+
 test_plan:
   current_focus:
     - "3-tier Authentication Flow (Guest → Explorer → Subscriber)"
     - "Mood Selection Screen"
     - "Circles Tab (No more loading spinner)"
     - "Library Tab (Recently Played)"
-    - "Email Verification API"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
