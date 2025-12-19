@@ -10,31 +10,35 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { authAPI } from '@/services/api';
-import { useUserStore } from '@/store/userStore';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '@/contexts/AuthContext';
+import axios from 'axios';
+import Constants from 'expo-constants';
+
+const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || 
+                process.env.EXPO_PUBLIC_API_URL || 
+                'https://mind-wellness-70.preview.emergentagent.com/api';
+
+type AuthMode = 'welcome' | 'explorer' | 'login' | 'subscribe';
 
 export default function AuthScreen() {
   const router = useRouter();
-  const { setUser } = useUserStore();
-  const [isLogin, setIsLogin] = useState(true);
+  const { login, signup } = useAuth();
+  const [mode, setMode] = useState<AuthMode>('welcome');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleAuth = async () => {
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    if (!isLogin && !name) {
-      setError('Please enter your name');
+  const handleExplorerSignup = async () => {
+    if (!email) {
+      setError('Please enter your email');
       return;
     }
 
@@ -42,156 +46,382 @@ export default function AuthScreen() {
     setError('');
 
     try {
-      if (isLogin) {
-        // Login
-        const response = await authAPI.login({ email, password });
-        setUser(response.user);
-        // Go directly to discover after login
-        router.replace('/(tabs)/discover');
-      } else {
-        // Signup (Subscribe)
-        const response = await authAPI.signup({ email, password, name });
-        setUser(response.user);
-        // After subscribe, go to onboarding to select intentions
-        router.replace('/onboarding');
-      }
+      // Send verification email
+      const response = await axios.post(`${API_URL}/email/send-verification`, { email });
+      
+      // Navigate to verification screen
+      router.push({
+        pathname: '/email-verify',
+        params: { email, devCode: response.data.dev_code || '' }
+      });
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Authentication failed');
+      setError(err.response?.data?.detail || 'Failed to send verification email');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Logo */}
-          <View style={styles.logoContainer}>
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      await login(email, password);
+      router.replace('/mood-selection');
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubscribe = async () => {
+    if (!email || !password || !name) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      await signup(email, name, password, 'subscriber', []);
+      router.replace('/mood-selection');
+    } catch (err: any) {
+      setError(err.message || 'Signup failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Welcome Screen
+  if (mode === 'welcome') {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.welcomeContent}>
+          <View style={styles.logoSection}>
             <Image 
-              source={require('@/assets/images/ariome-logo-dark.svg')}
-              style={styles.logoImage}
+              source={require('@/assets/images/ariome-logo.png')}
+              style={styles.logo}
               resizeMode="contain"
             />
-            <Text style={styles.subtitle}>
-              {isLogin ? 'Login to your account' : 'Subscribe for full access'}
+            <Text style={styles.logoTitle}>ARIOME</Text>
+            <Text style={styles.logoSubtitle}>Conscious Wellness</Text>
+          </View>
+
+          <Text style={styles.welcomeText}>
+            Begin your journey to inner peace and personal growth
+          </Text>
+
+          <View style={styles.welcomeButtons}>
+            <TouchableOpacity 
+              style={styles.explorerButton}
+              onPress={() => setMode('explorer')}
+            >
+              <MaterialCommunityIcons name="compass" size={24} color="#FFF" />
+              <View style={styles.buttonTextContainer}>
+                <Text style={styles.explorerButtonTitle}>Explore Free</Text>
+                <Text style={styles.explorerButtonSubtitle}>30-second previews of all content</Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={24} color="#FFF" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.subscribeButton}
+              onPress={() => setMode('subscribe')}
+            >
+              <LinearGradient
+                colors={['#14B8A6', '#0D9488']}
+                style={styles.subscribeGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <MaterialCommunityIcons name="crown" size={24} color="#FFF" />
+                <View style={styles.buttonTextContainer}>
+                  <Text style={styles.subscribeButtonTitle}>Subscribe</Text>
+                  <Text style={styles.subscribeButtonSubtitle}>Full access to all content</Text>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={24} color="#FFF" />
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.loginLink}
+              onPress={() => setMode('login')}
+            >
+              <Text style={styles.loginLinkText}>Already have an account? </Text>
+              <Text style={styles.loginLinkHighlight}>Login</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Explorer Email Signup
+  if (mode === 'explorer') {
+    return (
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.formContent}
+        >
+          <TouchableOpacity style={styles.backButton} onPress={() => setMode('welcome')}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color="#FFF" />
+          </TouchableOpacity>
+
+          <View style={styles.formHeader}>
+            <View style={styles.formIconContainer}>
+              <MaterialCommunityIcons name="compass" size={40} color="#14B8A6" />
+            </View>
+            <Text style={styles.formTitle}>Explore ARIOME</Text>
+            <Text style={styles.formSubtitle}>
+              Enter your email to start exploring. You'll get 30-second previews of all our wellness content.
             </Text>
           </View>
 
-          {/* Auth Form */}
-          <View style={styles.formContainer}>
-            <Text style={styles.formTitle}>
-              {isLogin ? 'Welcome Back' : 'Subscribe Now'}
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+          <View style={styles.inputContainer}>
+            <MaterialCommunityIcons name="email-outline" size={20} color="#9CA3AF" />
+            <TextInput
+              style={styles.input}
+              placeholder="Your email address"
+              placeholderTextColor="#6B7280"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+
+          <TouchableOpacity 
+            style={[styles.primaryButton, loading && styles.buttonDisabled]}
+            onPress={handleExplorerSignup}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <>
+                <Text style={styles.primaryButtonText}>Continue</Text>
+                <MaterialCommunityIcons name="arrow-right" size={20} color="#FFF" />
+              </>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.infoBox}>
+            <MaterialCommunityIcons name="information" size={18} color="#14B8A6" />
+            <Text style={styles.infoText}>
+              We'll send a verification code to your email. No password needed for Explorer access.
             </Text>
-            
-            {!isLogin && (
-              <View style={styles.benefitsBox}>
-                <Text style={styles.benefitsTitle}>✨ Subscriber Benefits:</Text>
-                <Text style={styles.benefitItem}>• Full-length meditations & stories</Text>
-                <Text style={styles.benefitItem}>• Ad-free experience</Text>
-                <Text style={styles.benefitItem}>• Offline downloads</Text>
-                <Text style={styles.benefitItem}>• Premium creator content</Text>
-              </View>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.switchModeLink}
+            onPress={() => setMode('subscribe')}
+          >
+            <Text style={styles.switchModeText}>Want full access? </Text>
+            <Text style={styles.switchModeHighlight}>Subscribe instead</Text>
+          </TouchableOpacity>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    );
+  }
+
+  // Login Screen
+  if (mode === 'login') {
+    return (
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.formContent}
+        >
+          <TouchableOpacity style={styles.backButton} onPress={() => setMode('welcome')}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color="#FFF" />
+          </TouchableOpacity>
+
+          <View style={styles.formHeader}>
+            <Text style={styles.formTitle}>Welcome Back</Text>
+            <Text style={styles.formSubtitle}>Login to continue your wellness journey</Text>
+          </View>
+
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+          <View style={styles.inputContainer}>
+            <MaterialCommunityIcons name="email-outline" size={20} color="#9CA3AF" />
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor="#6B7280"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <MaterialCommunityIcons name="lock-outline" size={20} color="#9CA3AF" />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#6B7280"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+          </View>
+
+          <TouchableOpacity 
+            style={[styles.primaryButton, loading && styles.buttonDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <Text style={styles.primaryButtonText}>Login</Text>
             )}
+          </TouchableOpacity>
 
-            {!isLogin && (
-              <View style={styles.inputContainer}>
-                <MaterialCommunityIcons
-                  name="account-outline"
-                  size={20}
-                  color="#9CA3AF"
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Full Name"
-                  placeholderTextColor="#6B7280"
-                  value={name}
-                  onChangeText={setName}
-                  autoCapitalize="words"
-                />
+          <TouchableOpacity style={styles.forgotPassword}>
+            <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+          </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity 
+            style={styles.secondaryButton}
+            onPress={() => setMode('explorer')}
+          >
+            <MaterialCommunityIcons name="compass" size={20} color="#14B8A6" />
+            <Text style={styles.secondaryButtonText}>Explore as Guest</Text>
+          </TouchableOpacity>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    );
+  }
+
+  // Subscribe Screen
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.formContent}
+      >
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <TouchableOpacity style={styles.backButton} onPress={() => setMode('welcome')}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color="#FFF" />
+          </TouchableOpacity>
+
+          <View style={styles.formHeader}>
+            <View style={styles.crownBadge}>
+              <MaterialCommunityIcons name="crown" size={32} color="#F59E0B" />
+            </View>
+            <Text style={styles.formTitle}>Subscribe to ARIOME</Text>
+            <Text style={styles.formSubtitle}>Unlock your full wellness experience</Text>
+          </View>
+
+          <View style={styles.benefitsContainer}>
+            {[
+              { icon: 'infinity', text: 'Unlimited access to all content' },
+              { icon: 'download', text: 'Offline downloads' },
+              { icon: 'account-group', text: 'Full community access' },
+              { icon: 'notebook', text: 'Personal journal & reflections' },
+            ].map((benefit, index) => (
+              <View key={index} style={styles.benefitItem}>
+                <MaterialCommunityIcons name={benefit.icon as any} size={20} color="#14B8A6" />
+                <Text style={styles.benefitText}>{benefit.text}</Text>
               </View>
-            )}
+            ))}
+          </View>
 
-            <View style={styles.inputContainer}>
-              <MaterialCommunityIcons
-                name="email-outline"
-                size={20}
-                color="#9CA3AF"
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor="#6B7280"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-            <View style={styles.inputContainer}>
-              <MaterialCommunityIcons
-                name="lock-outline"
-                size={20}
-                color="#9CA3AF"
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                placeholderTextColor="#6B7280"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
-            </View>
+          <View style={styles.inputContainer}>
+            <MaterialCommunityIcons name="account-outline" size={20} color="#9CA3AF" />
+            <TextInput
+              style={styles.input}
+              placeholder="Full Name"
+              placeholderTextColor="#6B7280"
+              value={name}
+              onChangeText={setName}
+              autoCapitalize="words"
+            />
+          </View>
 
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          <View style={styles.inputContainer}>
+            <MaterialCommunityIcons name="email-outline" size={20} color="#9CA3AF" />
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor="#6B7280"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
 
-            <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={handleAuth}
-              disabled={loading}
+          <View style={styles.inputContainer}>
+            <MaterialCommunityIcons name="lock-outline" size={20} color="#9CA3AF" />
+            <TextInput
+              style={styles.input}
+              placeholder="Create Password"
+              placeholderTextColor="#6B7280"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+          </View>
+
+          <TouchableOpacity 
+            style={[styles.subscribeActionButton, loading && styles.buttonDisabled]}
+            onPress={handleSubscribe}
+            disabled={loading}
+          >
+            <LinearGradient
+              colors={['#14B8A6', '#0D9488']}
+              style={styles.subscribeActionGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
             >
               {loading ? (
                 <ActivityIndicator color="#FFF" />
               ) : (
-                <Text style={styles.buttonText}>
-                  {isLogin ? 'Log In' : 'Sign Up'}
-                </Text>
+                <>
+                  <Text style={styles.subscribeActionText}>Subscribe Now</Text>
+                  <MaterialCommunityIcons name="crown" size={20} color="#FFF" />
+                </>
               )}
-            </TouchableOpacity>
+            </LinearGradient>
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.switchButton}
-              onPress={() => {
-                setIsLogin(!isLogin);
-                setError('');
-              }}
-            >
-              <Text style={styles.switchText}>
-                {isLogin
-                  ? "Don't have an account? Sign Up"
-                  : 'Already have an account? Log In'}
-              </Text>
-            </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.switchModeLink}
+            onPress={() => setMode('explorer')}
+          >
+            <Text style={styles.switchModeText}>Just want to explore? </Text>
+            <Text style={styles.switchModeHighlight}>Try free preview</Text>
+          </TouchableOpacity>
 
-            {/* Test Account Hint */}
-            <View style={styles.hintContainer}>
-              <Text style={styles.hintText}>Test Accounts:</Text>
-              <Text style={styles.hintDetail}>explorer@ariome-test.com</Text>
-              <Text style={styles.hintDetail}>admin@ariome-test.com</Text>
-              <Text style={styles.hintDetail}>Password: test123</Text>
-            </View>
-          </View>
+          <TouchableOpacity 
+            style={styles.switchModeLink}
+            onPress={() => setMode('login')}
+          >
+            <Text style={styles.switchModeText}>Already a subscriber? </Text>
+            <Text style={styles.switchModeHighlight}>Login</Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -199,127 +429,283 @@ export default function AuthScreen() {
 }
 
 const styles = StyleSheet.create({
-  benefitsBox: {
-    backgroundColor: '#1F2937',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#14B8A6',
-  },
-  benefitsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#14B8A6',
-    marginBottom: 8,
-  },
-  benefitItem: {
-    fontSize: 13,
-    color: '#D1D5DB',
-    marginBottom: 4,
-  },
-
   container: {
     flex: 1,
     backgroundColor: '#0A0A0F',
   },
-  keyboardView: {
+  welcomeContent: {
     flex: 1,
+    padding: 24,
+    justifyContent: 'center',
   },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 40,
-  },
-  logoContainer: {
+  logoSection: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: 40,
   },
-  logoImage: {
-    width: 200,
-    height: 80,
+  logo: {
+    width: 100,
+    height: 100,
     marginBottom: 16,
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#D1D5DB',
-    textAlign: 'center',
+  logoTitle: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#FFF',
+    letterSpacing: 4,
   },
-  formContainer: {
+  logoSubtitle: {
+    fontSize: 14,
+    color: '#14B8A6',
+    marginTop: 4,
+  },
+  welcomeText: {
+    fontSize: 18,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    marginBottom: 40,
+    lineHeight: 26,
+  },
+  welcomeButtons: {
+    gap: 16,
+  },
+  explorerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1F2937',
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#374151',
+  },
+  buttonTextContainer: {
     flex: 1,
+    marginLeft: 16,
+  },
+  explorerButtonTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFF',
+  },
+  explorerButtonSubtitle: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    marginTop: 2,
+  },
+  subscribeButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  subscribeGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+  },
+  subscribeButtonTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFF',
+  },
+  subscribeButtonSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
+  },
+  loginLink: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingTop: 16,
+  },
+  loginLinkText: {
+    color: '#9CA3AF',
+    fontSize: 14,
+  },
+  loginLinkHighlight: {
+    color: '#14B8A6',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  formContent: {
+    flex: 1,
+    padding: 24,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  formHeader: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  formIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(20, 184, 166, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  crownBadge: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   formTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#FFF',
-    marginBottom: 32,
+    marginBottom: 8,
+  },
+  formSubtitle: {
+    fontSize: 14,
+    color: '#9CA3AF',
     textAlign: 'center',
+    lineHeight: 22,
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 16,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#1F2937',
     borderRadius: 12,
-    marginBottom: 16,
     paddingHorizontal: 16,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#374151',
-  },
-  inputIcon: {
-    marginRight: 12,
   },
   input: {
     flex: 1,
     color: '#FFF',
     fontSize: 16,
     paddingVertical: 16,
+    marginLeft: 12,
   },
-  button: {
+  primaryButton: {
     backgroundColor: '#14B8A6',
-    borderRadius: 12,
-    paddingVertical: 16,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
     marginTop: 8,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
-  buttonText: {
+  primaryButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
     color: '#FFF',
-    fontSize: 16,
+  },
+  infoBox: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(20, 184, 166, 0.1)',
+    borderRadius: 12,
+    padding: 16,
+    gap: 12,
+    marginTop: 24,
+  },
+  infoText: {
+    flex: 1,
+    color: '#D1D5DB',
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  switchModeLink: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingTop: 20,
+  },
+  switchModeText: {
+    color: '#9CA3AF',
+    fontSize: 14,
+  },
+  switchModeHighlight: {
+    color: '#14B8A6',
+    fontSize: 14,
     fontWeight: '600',
   },
-  switchButton: {
-    marginTop: 24,
+  forgotPassword: {
     alignItems: 'center',
+    paddingVertical: 16,
   },
-  switchText: {
+  forgotPasswordText: {
     color: '#14B8A6',
     fontSize: 14,
   },
-  errorText: {
-    color: '#EF4444',
-    fontSize: 14,
-    marginBottom: 16,
-    textAlign: 'center',
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
   },
-  hintContainer: {
-    marginTop: 40,
-    padding: 16,
-    backgroundColor: '#1F2937',
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#374151',
+  },
+  dividerText: {
+    color: '#6B7280',
+    fontSize: 14,
+    marginHorizontal: 16,
+  },
+  secondaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#374151',
+    gap: 8,
   },
-  hintText: {
-    color: '#9CA3AF',
-    fontSize: 12,
-    marginBottom: 8,
+  secondaryButtonText: {
+    fontSize: 16,
+    color: '#14B8A6',
+  },
+  benefitsContainer: {
+    backgroundColor: '#1F2937',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+  },
+  benefitItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 8,
+  },
+  benefitText: {
+    color: '#D1D5DB',
+    fontSize: 14,
+  },
+  subscribeActionButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginTop: 8,
+  },
+  subscribeActionGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    gap: 8,
+  },
+  subscribeActionText: {
+    fontSize: 18,
     fontWeight: '600',
-  },
-  hintDetail: {
-    color: '#6B7280',
-    fontSize: 11,
-    marginBottom: 2,
+    color: '#FFF',
   },
 });
