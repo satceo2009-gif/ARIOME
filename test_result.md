@@ -336,13 +336,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Profile Update API"
-    - "Notification Settings API"
-    - "Change Password API"
-    - "Settings Navigation from Profile"
-    - "Story Player with YouTube"
-    - "Circles Tab"
-    - "Journal Tab"
+    - "Admin Console with Users"
+    - "Help Center/FAQ"
+    - "3-tier Authentication Flow"
+    - "Story Player Watermark"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
