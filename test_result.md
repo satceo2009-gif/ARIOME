@@ -126,11 +126,14 @@ backend:
     file: "backend/routers/auth.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "API updated to accept JSON body. Successfully saves email/push/marketing preferences to database."
+        - working: true
+          agent: "testing"
+          comment: "✅ Notification Settings API tested successfully. GET endpoint returns current settings with defaults. PUT endpoint accepts JSON body with email_notifications, push_notifications, and marketing_emails fields. Settings properly saved to database."
 
   - task: "Change Password API - PUT /api/auth/change-password"
     implemented: true
