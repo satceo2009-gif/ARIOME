@@ -156,11 +156,14 @@ backend:
     file: "backend/routers/journal.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Journal entries and reflections APIs working. Returns user's journal data from database."
+        - working: true
+          agent: "testing"
+          comment: "✅ Journal APIs tested successfully. GET /api/journal/entries returns 2 user entries with proper structure. GET /api/journal/stats returns total_entries: 2, total_reflections: 0, current_streak: 0. Both endpoints require authentication and work correctly."
 
   - task: "Circles APIs - list, join, leave"
     implemented: true
