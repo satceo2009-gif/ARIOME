@@ -384,8 +384,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Help Center/FAQ"
-    - "Story Player Watermark"
+    - "3-tier Authentication Flow (Guest → Explorer → Subscriber)"
+    - "Mood Selection Screen"
+    - "Circles Tab (No more loading spinner)"
+    - "Library Tab (Recently Played)"
+    - "Email Verification API"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
