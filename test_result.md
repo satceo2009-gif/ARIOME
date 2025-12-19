@@ -255,6 +255,54 @@ backend:
           agent: "testing"
           comment: "✅ COMPREHENSIVE TEST COMPLETE: Found exactly 49 stories (14 video, 35 audio) as expected. All YouTube video IDs are valid 11-character format. All media URLs are Android/iOS compatible. Creator objects properly formatted with name/avatar/bio. All stories have reflection prompts. Content distributed across 7 intentions (healing:11, growth:10, gratitude:9, resilience:8, love:8, joy:7, mindfulness:7). 8 premium, 41 free stories. RECOMMENDATION: READY - Backend is production ready."
 
+  - task: "Admin Login API - POST /api/auth/login"
+    implemented: true
+    working: true
+    file: "backend/routers/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ Admin Login API tested successfully with form data (username=admin@ariome-test.com&password=test123). Returns access_token and validates admin role correctly. Admin authentication working for all subsequent admin API calls."
+
+  - task: "Admin Stats API - GET /api/admin/stats"
+    implemented: true
+    working: true
+    file: "backend/routers/admin.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ Admin Stats API tested successfully. Returns comprehensive platform statistics: total_users: 6, total_creators: 1, total_subscribers: 1, total_stories: 49, pending_reviews: 0. Requires admin role authentication and works correctly."
+
+  - task: "Admin Users List API - GET /api/admin/users"
+    implemented: true
+    working: true
+    file: "backend/routers/admin.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ Admin Users List API tested successfully. Returns all 6 users with proper structure including id, name, email, and role fields. User roles found: ['explorer', 'subscriber', 'admin', 'creator', 'evaluator', 'explorer']. Requires admin authentication and works correctly."
+
+  - task: "Email Signup API - POST /api/auth/email-signup"
+    implemented: true
+    working: true
+    file: "backend/routers/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ Email Signup API tested successfully. Accepts JSON body with email field and creates Explorer user with limited access. Returns user_id and confirmation message. No authentication required. Creates proper 3-tier auth flow: Guest → Explorer (email only) → Subscriber (full account)."
+
 frontend:
   - task: "Settings Navigation from Profile"
     implemented: true
