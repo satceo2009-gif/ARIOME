@@ -118,6 +118,8 @@ async def signup(user: UserCreate):
             "email": user.email,
             "name": user.name,
             "role": user.role,
+        }
+    }
 
 
 @router.post("/email-signup")
