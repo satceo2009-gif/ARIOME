@@ -141,11 +141,14 @@ backend:
     file: "backend/routers/auth.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "API updated to accept JSON body. Successfully verifies old password and updates to new password."
+        - working: true
+          agent: "testing"
+          comment: "✅ Change Password API tested successfully. Accepts JSON body with old_password and new_password fields. Properly verifies current password before updating. Returns success message upon completion."
 
   - task: "Journal APIs - entries and reflections"
     implemented: true
