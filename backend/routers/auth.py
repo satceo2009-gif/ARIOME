@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import datetime, timedelta
 from typing import Optional
+from pydantic import EmailStr
 import jwt
 from passlib.context import CryptContext
 from database import users_collection, creator_profiles_collection
@@ -150,9 +151,6 @@ async def email_signup(email: EmailStr):
         "message": "Verification email sent. Check your inbox!"
     }
 
-            "avatar": user_doc["avatar"]
-        }
-    }
 
 @router.post("/login")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
