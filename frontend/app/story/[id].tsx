@@ -40,7 +40,8 @@ function getYouTubeVideoId(url: string | undefined): string | null {
 export default function StoryPlayer() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const { stories, savedStories, toggleSaveStory, addResonance } = useContentStore();
+  const { stories, savedStories, toggleSaveStory, addResonance, addToRecentlyPlayed } = useContentStore();
+  const { user, canAccessFullContent } = useAuth();
   const [story, setStory] = useState<Story | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showReflection, setShowReflection] = useState(false);
@@ -48,9 +49,48 @@ export default function StoryPlayer() {
   const [beforeReflection, setBeforeReflection] = useState('');
   const [afterReflection, setAfterReflection] = useState('');
   const [showTipModal, setShowTipModal] = useState(false);
+  const [showSubscribeModal, setShowSubscribeModal] = useState(false);
+  const [previewTimeLeft, setPreviewTimeLeft] = useState(PREVIEW_DURATION_SECONDS);
+  const [previewEnded, setPreviewEnded] = useState(false);
   const videoRef = useRef<Video>(null);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
+  const previewTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Check if user is an Explorer (needs preview limit)
+  const isExplorer = user?.role === 'explorer' || (!user?.role && user?.email);
+  const hasFullAccess = canAccessFullContent();
+
+  // Preview timer effect
+  useEffect(() => {
+    if (isPlaying && isExplorer && !hasFullAccess && !previewEnded) {
+      previewTimerRef.current = setInterval(() => {
+        setPreviewTimeLeft((prev) => {
+          if (prev <= 1) {
+            // Preview ended - stop playback and show modal
+            clearInterval(previewTimerRef.current!);
+            setPreviewEnded(true);
+            setIsPlaying(false);
+            setShowSubscribeModal(true);
+            // Stop audio if playing
+            if (sound) {
+              sound.pauseAsync();
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else if (!isPlaying && previewTimerRef.current) {
+      clearInterval(previewTimerRef.current);
+    }
+
+    return () => {
+      if (previewTimerRef.current) {
+        clearInterval(previewTimerRef.current);
+      }
+    };
+  }, [isPlaying, isExplorer, hasFullAccess, previewEnded, sound]);
 
   useEffect(() => {
     const foundStory = stories.find((s) => s.id === id);
