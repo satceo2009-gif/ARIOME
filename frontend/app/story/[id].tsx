@@ -302,6 +302,36 @@ export default function StoryPlayer() {
           )}
         </View>
 
+        {/* Preview Timer for Explorers */}
+        {isExplorer && !hasFullAccess && !previewEnded && (
+          <View style={styles.previewBanner}>
+            <MaterialCommunityIcons name="clock-outline" size={18} color="#F59E0B" />
+            <Text style={styles.previewText}>
+              Preview: {previewTimeLeft}s remaining
+            </Text>
+            <TouchableOpacity 
+              style={styles.upgradeBtn}
+              onPress={() => setShowSubscribeModal(true)}
+            >
+              <Text style={styles.upgradeBtnText}>Upgrade</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Preview Ended Banner */}
+        {previewEnded && (
+          <TouchableOpacity 
+            style={styles.previewEndedBanner}
+            onPress={() => setShowSubscribeModal(true)}
+          >
+            <MaterialCommunityIcons name="lock" size={20} color="#FFF" />
+            <Text style={styles.previewEndedText}>
+              Preview ended. Subscribe for full access.
+            </Text>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#FFF" />
+          </TouchableOpacity>
+        )}
+
         {/* Story Info */}
         <View style={styles.infoContainer}>
           <Text style={styles.storyTitle}>{story.title}</Text>
