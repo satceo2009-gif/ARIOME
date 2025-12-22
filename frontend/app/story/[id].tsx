@@ -97,6 +97,7 @@ export default function StoryPlayer() {
     if (foundStory) {
       setStory(foundStory);
       setShowReflection(true);
+      addToRecentlyPlayed(foundStory.id);
       
       // Check if it's a YouTube URL
       const videoId = getYouTubeVideoId(foundStory.mediaUrl);
