@@ -22,11 +22,12 @@ import YoutubePlayer from 'react-native-youtube-iframe';
 import { useContentStore, Story } from '@/store/contentStore';
 import { INTENTIONS } from '@/constants/intentions';
 import * as Haptics from 'expo-haptics';
-import { useUserStore } from '@/store/userStore';
-import { canAccessFullContent, needsSubscription, getAccessMessage } from '@/utils/contentAccess';
+import { useAuth } from '@/contexts/AuthContext';
+import SubscribeModal from '@/components/SubscribeModal';
 
 
 const { width, height } = Dimensions.get('window');
+const PREVIEW_DURATION_SECONDS = 30; // 30-second preview for explorers
 
 // Helper to extract YouTube video ID from URL
 function getYouTubeVideoId(url: string | undefined): string | null {
