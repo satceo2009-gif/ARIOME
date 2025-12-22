@@ -16,7 +16,7 @@ export default function SubscribeModal({ visible, onClose, previewSeconds = 30 }
 
   const handleSubscribe = () => {
     onClose();
-    router.push('/auth/signup');
+    router.push('/auth');
   };
 
   return (
