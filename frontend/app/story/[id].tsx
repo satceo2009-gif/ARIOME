@@ -537,6 +537,13 @@ export default function StoryPlayer() {
           </View>
         </View>
       </Modal>
+
+      {/* Subscribe Modal */}
+      <SubscribeModal
+        visible={showSubscribeModal}
+        onClose={() => setShowSubscribeModal(false)}
+        previewSeconds={PREVIEW_DURATION_SECONDS}
+      />
     </SafeAreaView>
   );
 }
