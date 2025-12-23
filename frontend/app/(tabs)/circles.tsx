@@ -9,7 +9,7 @@ import Constants from 'expo-constants';
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || 
                 process.env.EXPO_PUBLIC_API_URL || 
-                'https://mind-wellness-70.preview.emergentagent.com/api';
+                'https://meditate-hub-3.preview.emergentagent.com/api';
 
 // Default circles data when API fails or no auth
 const DEFAULT_CIRCLES = [

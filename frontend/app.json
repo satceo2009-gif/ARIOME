@@ -61,9 +61,9 @@
     },
     "extra": {
       "router": {
-        "origin": "https://mind-wellness-70.preview.emergentagent.com"
+        "origin": "https://meditate-hub-3.preview.emergentagent.com"
       },
-      "EXPO_PUBLIC_API_URL": "https://mind-wellness-70.preview.emergentagent.com/api"
+      "EXPO_PUBLIC_API_URL": "https://meditate-hub-3.preview.emergentagent.com/api"
     }
   }
 }

@@ -23,7 +23,7 @@ import AriomeLogo from '@/components/AriomeLogo';
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || 
                 process.env.EXPO_PUBLIC_API_URL || 
-                'https://mind-wellness-70.preview.emergentagent.com/api';
+                'https://meditate-hub-3.preview.emergentagent.com/api';
 
 type AuthMode = 'welcome' | 'explorer' | 'login' | 'subscribe';
 
