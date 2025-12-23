@@ -97,7 +97,7 @@ async def leave_circle(circle_id: str, current_user: dict = Depends(get_current_
     except:
         raise HTTPException(status_code=400, detail="Invalid circle ID")
     
-    user_id = str(current_user["_id"])
+    user_id = str(current_user.get("_id", current_user.get("id")))
     await db.circles.update_one(
         {"_id": circle_oid},
         {
