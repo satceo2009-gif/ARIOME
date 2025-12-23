@@ -1161,7 +1161,7 @@ class ARIOMEAPITester:
         print(f"  Admin Users API: {'✅ PASS' if self.test_results['admin_users_success'] else '❌ FAIL'}")
         
         # Count successes
-        total_tests = 25
+        total_tests = 27
         passed_tests = sum([
             self.test_results['email_send_verification_success'],
             self.test_results['email_verify_code_success'],
