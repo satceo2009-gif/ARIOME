@@ -202,6 +202,16 @@ export default function CreatorApplicationScreen() {
   };
 
   const stopRecording = async () => {
+    // Web platform - stop Web Speech API
+    if (Platform.OS === 'web') {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsRecording(false);
+      return;
+    }
+
+    // Mobile platform - stop expo-av recording
     if (!recording) return;
 
     setIsRecording(false);
@@ -239,6 +249,8 @@ export default function CreatorApplicationScreen() {
           }
         };
         reader.readAsDataURL(blob);
+      } else {
+        setTranscribing(false);
       }
     } catch (err) {
       console.error('Failed to stop recording', err);
