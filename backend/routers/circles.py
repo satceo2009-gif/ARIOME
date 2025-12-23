@@ -32,8 +32,21 @@ async def create_circle(circle: CreateCircle, current_user: dict = Depends(get_c
         "created_at": datetime.utcnow()
     }
     result = await db.circles.insert_one(circle_doc)
-    circle_doc["id"] = str(result.inserted_id)
-    return circle_doc
+    
+    # Return serialized response
+    return {
+        "id": str(result.inserted_id),
+        "name": circle.name,
+        "description": circle.description,
+        "intention": circle.intention,
+        "is_private": circle.is_private,
+        "creator_id": user_id,
+        "creator_name": current_user.get("name", "Unknown"),
+        "members": [user_id],
+        "member_count": 1,
+        "post_count": 0,
+        "created_at": circle_doc["created_at"].isoformat()
+    }
 
 @router.get("")
 async def get_circles(
