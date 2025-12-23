@@ -57,6 +57,8 @@ app.include_router(subscription.router)
 app.include_router(circles.router)
 app.include_router(journal.router)
 app.include_router(email_service.router)
+app.include_router(creator_application.router)
+app.include_router(speech_to_text.router)
 
 # Helper functions
 def serialize_doc(doc):
