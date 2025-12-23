@@ -91,10 +91,48 @@ export default function AuthScreen() {
     setError('');
 
     try {
-      await signup(email, name, password, 'subscriber', []);
-      router.replace('/mood-selection');
-    } catch (err: any) {
-      setError(err.message || 'Signup failed');
+      // First, try to upgrade if user is an existing explorer
+      const upgradeResponse = await axios.post(`${API_URL}/auth/upgrade-to-subscriber`, {
+        email,
+        name,
+        password
+      });
+      
+      // Upgrade successful - login with the returned token
+      if (upgradeResponse.data.access_token) {
+        await login(email, password);
+        Alert.alert('Welcome!', 'Your account has been upgraded to Subscriber!');
+        router.replace('/mood-selection');
+        return;
+      }
+    } catch (upgradeErr: any) {
+      // If upgrade fails with "not found" or "already has password", try regular signup
+      const errorMsg = upgradeErr.response?.data?.detail || '';
+      
+      if (errorMsg.includes('already has a password')) {
+        // User exists with password - they should login
+        setError('This account already exists. Please login instead.');
+        setLoading(false);
+        return;
+      }
+      
+      if (!errorMsg.includes('not found')) {
+        // Some other error during upgrade
+        console.log('Upgrade error:', errorMsg);
+      }
+      
+      // If user not found as explorer, try regular signup
+      try {
+        await signup(email, name, password, 'subscriber', []);
+        router.replace('/mood-selection');
+      } catch (signupErr: any) {
+        const signupError = signupErr.message || 'Signup failed';
+        if (signupError.includes('already registered')) {
+          setError('Email already exists. If you explored before, please use the same email and we\'ll upgrade your account.');
+        } else {
+          setError(signupError);
+        }
+      }
     } finally {
       setLoading(false);
     }
