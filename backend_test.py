@@ -23,6 +23,8 @@ TEST_EMAIL = "subscriber@ariome-test.com"
 TEST_PASSWORD = "test123"
 ADMIN_EMAIL = "admin@ariome-test.com"
 ADMIN_PASSWORD = "test123"
+CREATOR_EMAIL = "testcreator@example.com"
+CREATOR_PASSWORD = "test123"
 
 class ARIOMEAPITester:
     def __init__(self):
