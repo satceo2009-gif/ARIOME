@@ -303,6 +303,18 @@ backend:
           agent: "testing"
           comment: "✅ Email Signup API tested successfully. Accepts JSON body with email field and creates Explorer user with limited access. Returns user_id and confirmation message. No authentication required. Creates proper 3-tier auth flow: Guest → Explorer (email only) → Subscriber (full account)."
 
+  - task: "Explorer to Subscriber Upgrade Flow - POST /api/auth/upgrade-to-subscriber"
+    implemented: true
+    working: true
+    file: "backend/routers/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ Explorer to Subscriber Upgrade Flow tested successfully (5/5 tests passed - 100%). FIXED CRITICAL BUG: Login endpoint was accessing user['avatar'] without default, causing 520 errors for explorer users. Now uses .get() with default avatar. All upgrade scenarios working: 1) Email signup creates explorer, 2) Upgrade to subscriber returns valid token, 3) Login after upgrade works, 4) Duplicate upgrade properly blocked with 'already has password' error, 5) Non-existent user upgrade blocked with 'not found' error. Test credentials upgrade-test@example.com / newpass123 working correctly."
+
 frontend:
   - task: "Settings Navigation from Profile"
     implemented: true
