@@ -30,7 +30,7 @@ class UpgradeFlowTester:
             'errors': [],
             'critical_failures': []
         }
-        self.new_explorer_email = "test-explorer-upgrade@ariome.com"
+        self.new_explorer_email = f"test-explorer-upgrade-{int(time.time())}@ariome.com"
         self.new_explorer_name = "Test Explorer User"
         self.new_explorer_password = "newpassword123"
     
