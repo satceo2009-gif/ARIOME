@@ -31,9 +31,11 @@ class ARIOMEAPITester:
         self.session = None
         self.access_token = None
         self.admin_token = None
+        self.creator_token = None
         self.test_results = {
             'login_success': False,
             'admin_login_success': False,
+            'creator_login_success': False,
             'admin_stats_success': False,
             'admin_users_success': False,
             'email_signup_success': False,
@@ -46,8 +48,20 @@ class ARIOMEAPITester:
             'change_password_success': False,
             'journal_entries_success': False,
             'journal_stats_success': False,
+            'journal_create_success': False,
             'circles_list_success': False,
             'circles_join_success': False,
+            'circles_create_success': False,
+            'library_save_success': False,
+            'library_unsave_success': False,
+            'library_saved_list_success': False,
+            'library_history_add_success': False,
+            'library_history_list_success': False,
+            'creator_application_apply_success': False,
+            'creator_application_pending_success': False,
+            'creator_application_approve_success': False,
+            'creator_application_reject_success': False,
+            'creator_application_stats_success': False,
             'api_errors': [],
             'auth_errors': [],
             'critical_failures': []
