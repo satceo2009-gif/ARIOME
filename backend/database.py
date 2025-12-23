@@ -21,6 +21,9 @@ creator_profiles_collection = db.creator_profiles
 admin_logs_collection = db.admin_logs
 circle_posts_collection = db.circle_posts
 journal_entries_collection = db.journal_entries
+creator_applications_collection = db.creator_applications
+saved_stories_collection = db.saved_stories
+play_history_collection = db.play_history
 
 async def init_db():
     """Initialize database with indexes and constraints"""
