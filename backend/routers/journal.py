@@ -66,14 +66,25 @@ async def get_entries(current_user: dict = Depends(get_current_user)):
 @router.post("/reflections")
 async def create_reflection(reflection: StoryReflection, current_user: dict = Depends(get_current_user)):
     """Create a story reflection"""
+    user_id = str(current_user.get("_id", current_user.get("id")))
     reflection_doc = {
-        **reflection.dict(),
-        "user_id": str(current_user["_id"]),
+        "story_id": reflection.story_id,
+        "mood": reflection.mood,
+        "before_reflection": reflection.before_reflection,
+        "after_reflection": reflection.after_reflection,
+        "user_id": user_id,
         "created_at": datetime.utcnow()
     }
     result = await db.story_reflections.insert_one(reflection_doc)
-    reflection_doc["id"] = str(result.inserted_id)
-    return reflection_doc
+    
+    return {
+        "id": str(result.inserted_id),
+        "story_id": reflection_doc["story_id"],
+        "mood": reflection_doc["mood"],
+        "before_reflection": reflection_doc["before_reflection"],
+        "after_reflection": reflection_doc["after_reflection"],
+        "created_at": reflection_doc["created_at"].isoformat()
+    }
 
 @router.get("/reflections")
 async def get_reflections(current_user: dict = Depends(get_current_user)):
