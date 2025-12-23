@@ -214,6 +214,90 @@ export const creatorAPI = {
     const { data } = await api.delete(`/creator/stories/${storyId}`);
     return data;
   },
+
+  // Creator Application
+  apply: async (application: {
+    name: string;
+    email: string;
+    password: string;
+    bio: string;
+    description: string;
+    website?: string;
+    profile_image_url?: string;
+    social_media?: {
+      instagram?: string;
+      youtube?: string;
+      twitter?: string;
+      linkedin?: string;
+      tiktok?: string;
+      facebook?: string;
+      spotify?: string;
+      soundcloud?: string;
+    };
+  }) => {
+    const { data } = await api.post('/creator-application/apply', application);
+    return data;
+  },
+
+  checkApplicationStatus: async (email: string) => {
+    const { data } = await api.get(`/creator-application/my-application?email=${email}`);
+    return data;
+  },
+};
+
+// Library API
+export const libraryAPI = {
+  getSavedStories: async () => {
+    const { data } = await api.get('/library/saved');
+    return data;
+  },
+
+  saveStory: async (storyId: string) => {
+    const { data } = await api.post('/library/save', { story_id: storyId });
+    return data;
+  },
+
+  unsaveStory: async (storyId: string) => {
+    const { data } = await api.delete(`/library/save/${storyId}`);
+    return data;
+  },
+
+  checkIfSaved: async (storyId: string) => {
+    const { data } = await api.get(`/library/check-saved/${storyId}`);
+    return data;
+  },
+
+  getPlayHistory: async (limit: number = 50) => {
+    const { data } = await api.get(`/library/history?limit=${limit}`);
+    return data;
+  },
+
+  addToHistory: async (storyId: string, progress: number = 0) => {
+    const { data } = await api.post('/library/history', { story_id: storyId, progress });
+    return data;
+  },
+
+  removeFromHistory: async (storyId: string) => {
+    const { data } = await api.delete(`/library/history/${storyId}`);
+    return data;
+  },
+
+  clearHistory: async () => {
+    const { data } = await api.delete('/library/history');
+    return data;
+  },
+};
+
+// Speech-to-Text API
+export const speechAPI = {
+  transcribe: async (audioBase64: string, fileType: string = 'mp3', language: string = 'en') => {
+    const { data } = await api.post('/speech/transcribe-base64', {
+      audio_base64: audioBase64,
+      file_type: fileType,
+      language
+    });
+    return data;
+  },
 };
 
 // AI Recommendations API
