@@ -1081,6 +1081,9 @@ class ARIOMEAPITester:
         # Test creator authentication
         await self.test_creator_login_api()
         
+        # Test admin authentication
+        await self.test_admin_login_api()
+        
         # Test email signup (no auth required)
         await self.test_email_signup_api()
         
