@@ -35,7 +35,7 @@ from auth import (
 
 # Import routers
 from routers import auth, admin, creator, subscription, circles, journal, stories, email_service
-from routers import creator_application, speech_to_text, email_templates
+from routers import creator_application, speech_to_text, email_templates, library
 
 app = FastAPI(title="ARIOME API", version="1.0.0")
 
