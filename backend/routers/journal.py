@@ -23,15 +23,26 @@ class StoryReflection(BaseModel):
 @router.post("/entries")
 async def create_entry(entry: JournalEntry, current_user: dict = Depends(get_current_user)):
     """Create a new journal entry"""
+    user_id = str(current_user.get("_id", current_user.get("id")))
     entry_doc = {
-        **entry.dict(),
-        "user_id": str(current_user["_id"]),
+        "title": entry.title,
+        "content": entry.content,
+        "mood": entry.mood,
+        "tags": entry.tags or [],
+        "user_id": user_id,
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow()
     }
     result = await db.journal_entries.insert_one(entry_doc)
-    entry_doc["id"] = str(result.inserted_id)
-    return entry_doc
+    
+    return {
+        "id": str(result.inserted_id),
+        "title": entry_doc["title"],
+        "content": entry_doc["content"],
+        "mood": entry_doc["mood"],
+        "tags": entry_doc["tags"],
+        "created_at": entry_doc["created_at"].isoformat()
+    }
 
 @router.get("/entries")
 async def get_entries(current_user: dict = Depends(get_current_user)):
