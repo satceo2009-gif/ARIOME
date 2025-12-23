@@ -1,40 +1,63 @@
-import { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput, Alert } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
-
-// Default journal entries for display
-const DEFAULT_ENTRIES = [
-  {
-    id: '1',
-    title: 'Morning Reflection',
-    content: 'Today I woke up feeling grateful for the little things in life...',
-    mood: 'grateful',
-    tags: ['morning', 'gratitude'],
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    title: 'Evening Thoughts',
-    content: 'After a long day, I found peace in meditation...',
-    mood: 'peaceful',
-    tags: ['evening', 'meditation'],
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-  },
-];
+import { journalAPI } from '@/services/api';
 
 export default function JournalScreen() {
-  const { user } = useAuth();
-  const [entries, setEntries] = useState<any[]>(DEFAULT_ENTRIES);
+  const { user, token } = useAuth();
+  const [entries, setEntries] = useState<any[]>([]);
   const [reflections, setReflections] = useState<any[]>([]);
+  const [stats, setStats] = useState({ totalEntries: 0, totalReflections: 0, streak: 0 });
   const [selectedTab, setSelectedTab] = useState('entries');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newEntry, setNewEntry] = useState({ title: '', content: '', mood: 'peaceful' });
+  const [newEntry, setNewEntry] = useState({ title: '', content: '', mood: 'peaceful', tags: '' });
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const loadData = useCallback(async () => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const [entriesData, reflectionsData, statsData] = await Promise.all([
+        journalAPI.getEntries().catch(() => []),
+        journalAPI.getReflections().catch(() => []),
+        journalAPI.getStats().catch(() => ({ total_entries: 0, total_reflections: 0, current_streak: 0 }))
+      ]);
+
+      setEntries(entriesData || []);
+      setReflections(reflectionsData || []);
+      setStats({
+        totalEntries: statsData?.total_entries || entriesData?.length || 0,
+        totalReflections: statsData?.total_reflections || reflectionsData?.length || 0,
+        streak: statsData?.current_streak || 0
+      });
+    } catch (error) {
+      console.error('Error loading journal data:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadData();
+  };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   const getMoodEmoji = (mood: string) => {
@@ -47,32 +70,63 @@ export default function JournalScreen() {
       calm: '🧘',
       excited: '🎉',
       reflective: '🤔',
+      hopeful: '✨',
+      content: '😊',
     };
-    return moods[mood] || '💭';
+    return moods[mood?.toLowerCase()] || '💭';
   };
 
-  const handleCreateEntry = () => {
-    if (!newEntry.title || !newEntry.content) {
+  const handleCreateEntry = async () => {
+    if (!newEntry.title.trim() || !newEntry.content.trim()) {
       Alert.alert('Error', 'Please fill in title and content');
       return;
     }
-    const entry = {
-      id: Date.now().toString(),
-      ...newEntry,
-      tags: [],
-      created_at: new Date().toISOString(),
-    };
-    setEntries([entry, ...entries]);
-    setNewEntry({ title: '', content: '', mood: 'peaceful' });
-    setShowCreateModal(false);
-    Alert.alert('Success', 'Journal entry created!');
+
+    if (!token) {
+      Alert.alert('Login Required', 'Please login to create journal entries');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const tagsArray = newEntry.tags
+        ? newEntry.tags.split(',').map(t => t.trim()).filter(t => t)
+        : [];
+
+      const entry = await journalAPI.createEntry({
+        title: newEntry.title.trim(),
+        content: newEntry.content.trim(),
+        mood: newEntry.mood,
+        tags: tagsArray
+      });
+
+      setEntries([entry, ...entries]);
+      setStats(prev => ({ ...prev, totalEntries: prev.totalEntries + 1 }));
+      setNewEntry({ title: '', content: '', mood: 'peaceful', tags: '' });
+      setShowCreateModal(false);
+      Alert.alert('Success', 'Journal entry saved!');
+    } catch (error: any) {
+      console.error('Error creating entry:', error);
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to save entry. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const stats = {
-    totalEntries: entries.length,
-    totalReflections: reflections.length,
-    streak: 7,
-  };
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Journal</Text>
+        </View>
+        <View style={styles.emptyState}>
+          <MaterialCommunityIcons name="notebook-outline" size={64} color="#6B7280" />
+          <Text style={styles.emptyText}>Login to access your journal</Text>
+          <Text style={styles.emptySubtext}>Your personal space for reflection awaits</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -127,49 +181,85 @@ export default function JournalScreen() {
       </View>
 
       {/* Content */}
-      <ScrollView style={styles.content}>
-        {selectedTab === 'entries' ? (
-          entries.length > 0 ? (
-            entries.map((entry) => (
-              <TouchableOpacity key={entry.id} style={styles.entryCard}>
-                <View style={styles.entryHeader}>
-                  <Text style={styles.entryMood}>{getMoodEmoji(entry.mood)}</Text>
-                  <Text style={styles.entryDate}>{formatDate(entry.created_at)}</Text>
-                </View>
-                <Text style={styles.entryTitle}>{entry.title}</Text>
-                <Text style={styles.entryContent} numberOfLines={2}>{entry.content}</Text>
-                {entry.tags?.length > 0 && (
-                  <View style={styles.tagsContainer}>
-                    {entry.tags.map((tag: string, i: number) => (
-                      <View key={i} style={styles.tag}>
-                        <Text style={styles.tagText}>#{tag}</Text>
-                      </View>
-                    ))}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#14B8A6" />
+          <Text style={styles.loadingText}>Loading your journal...</Text>
+        </View>
+      ) : (
+        <ScrollView 
+          style={styles.content}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#14B8A6" />
+          }
+        >
+          {selectedTab === 'entries' ? (
+            entries.length > 0 ? (
+              entries.map((entry) => (
+                <TouchableOpacity key={entry.id} style={styles.entryCard}>
+                  <View style={styles.entryHeader}>
+                    <Text style={styles.entryMood}>{getMoodEmoji(entry.mood)}</Text>
+                    <Text style={styles.entryDate}>{formatDate(entry.created_at)}</Text>
                   </View>
-                )}
-              </TouchableOpacity>
-            ))
+                  <Text style={styles.entryTitle}>{entry.title}</Text>
+                  <Text style={styles.entryContent} numberOfLines={3}>{entry.content}</Text>
+                  {entry.tags?.length > 0 && (
+                    <View style={styles.tagsContainer}>
+                      {entry.tags.map((tag: string, i: number) => (
+                        <View key={i} style={styles.tag}>
+                          <Text style={styles.tagText}>#{tag}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View style={styles.emptyState}>
+                <MaterialCommunityIcons name="notebook-outline" size={64} color="#6B7280" />
+                <Text style={styles.emptyText}>No entries yet</Text>
+                <Text style={styles.emptySubtext}>Start journaling your thoughts</Text>
+                <TouchableOpacity 
+                  style={styles.createEntryBtn}
+                  onPress={() => setShowCreateModal(true)}
+                >
+                  <Text style={styles.createEntryBtnText}>Create First Entry</Text>
+                </TouchableOpacity>
+              </View>
+            )
           ) : (
-            <View style={styles.emptyState}>
-              <MaterialCommunityIcons name="notebook-outline" size={64} color="#6B7280" />
-              <Text style={styles.emptyText}>No entries yet</Text>
-              <Text style={styles.emptySubtext}>Start journaling your thoughts</Text>
-              <TouchableOpacity 
-                style={styles.createEntryBtn}
-                onPress={() => setShowCreateModal(true)}
-              >
-                <Text style={styles.createEntryBtnText}>Create First Entry</Text>
-              </TouchableOpacity>
-            </View>
-          )
-        ) : (
-          <View style={styles.emptyState}>
-            <MaterialCommunityIcons name="thought-bubble-outline" size={64} color="#6B7280" />
-            <Text style={styles.emptyText}>No reflections yet</Text>
-            <Text style={styles.emptySubtext}>Reflections from stories will appear here</Text>
-          </View>
-        )}
-      </ScrollView>
+            reflections.length > 0 ? (
+              reflections.map((reflection) => (
+                <View key={reflection.id} style={styles.entryCard}>
+                  <View style={styles.entryHeader}>
+                    <Text style={styles.entryMood}>{getMoodEmoji(reflection.mood)}</Text>
+                    <Text style={styles.entryDate}>{formatDate(reflection.created_at)}</Text>
+                  </View>
+                  {reflection.before_reflection && (
+                    <View style={styles.reflectionSection}>
+                      <Text style={styles.reflectionLabel}>Before</Text>
+                      <Text style={styles.entryContent}>{reflection.before_reflection}</Text>
+                    </View>
+                  )}
+                  {reflection.after_reflection && (
+                    <View style={styles.reflectionSection}>
+                      <Text style={styles.reflectionLabel}>After</Text>
+                      <Text style={styles.entryContent}>{reflection.after_reflection}</Text>
+                    </View>
+                  )}
+                </View>
+              ))
+            ) : (
+              <View style={styles.emptyState}>
+                <MaterialCommunityIcons name="thought-bubble-outline" size={64} color="#6B7280" />
+                <Text style={styles.emptyText}>No reflections yet</Text>
+                <Text style={styles.emptySubtext}>Reflections from stories will appear here</Text>
+              </View>
+            )
+          )}
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      )}
 
       {/* Create Entry Modal */}
       <Modal
@@ -203,11 +293,20 @@ export default function JournalScreen() {
               onChangeText={(text) => setNewEntry(prev => ({ ...prev, content: text }))}
               multiline
               numberOfLines={6}
+              textAlignVertical="top"
+            />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Tags (comma separated: gratitude, morning)"
+              placeholderTextColor="#6B7280"
+              value={newEntry.tags}
+              onChangeText={(text) => setNewEntry(prev => ({ ...prev, tags: text }))}
             />
 
             <Text style={styles.moodLabel}>How are you feeling?</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.moodSelector}>
-              {['happy', 'peaceful', 'grateful', 'reflective', 'anxious', 'sad'].map((mood) => (
+              {['happy', 'peaceful', 'grateful', 'reflective', 'hopeful', 'anxious', 'sad'].map((mood) => (
                 <TouchableOpacity
                   key={mood}
                   style={[styles.moodOption, newEntry.mood === mood && styles.moodOptionActive]}
@@ -221,8 +320,16 @@ export default function JournalScreen() {
               ))}
             </ScrollView>
 
-            <TouchableOpacity style={styles.saveButton} onPress={handleCreateEntry}>
-              <Text style={styles.saveButtonText}>Save Entry</Text>
+            <TouchableOpacity 
+              style={[styles.saveButton, saving && styles.saveButtonDisabled]} 
+              onPress={handleCreateEntry}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <Text style={styles.saveButtonText}>Save Entry</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -306,6 +413,15 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
   },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    color: '#9CA3AF',
+    marginTop: 12,
+  },
   entryCard: {
     backgroundColor: '#1F2937',
     borderRadius: 12,
@@ -352,6 +468,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#14B8A6',
   },
+  reflectionSection: {
+    marginBottom: 12,
+  },
+  reflectionLabel: {
+    fontSize: 12,
+    color: '#14B8A6',
+    fontWeight: '600',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
   emptyState: {
     alignItems: 'center',
     paddingVertical: 60,
@@ -388,7 +514,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
-    maxHeight: '85%',
+    maxHeight: '90%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -449,6 +575,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
+  },
+  saveButtonDisabled: {
+    opacity: 0.7,
   },
   saveButtonText: {
     color: '#FFF',
