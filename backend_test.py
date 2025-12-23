@@ -1078,11 +1078,14 @@ class ARIOMEAPITester:
             print("❌ Cannot proceed without regular user authentication")
             return
         
-        # Test admin authentication
-        await self.test_admin_login_api()
+        # Test creator authentication
+        await self.test_creator_login_api()
         
         # Test email signup (no auth required)
         await self.test_email_signup_api()
+        
+        # Test creator application APIs (NEW DATABASE-DRIVEN FEATURES)
+        await self.test_creator_application_apis()
         
         # Test admin APIs (require admin token)
         if self.admin_token:
@@ -1093,8 +1096,17 @@ class ARIOMEAPITester:
         await self.test_profile_update_api()
         await self.test_notification_settings_api()
         await self.test_change_password_api()
+        
+        # Test database-driven Journal APIs (NEW FEATURES)
+        await self.test_journal_create_api()
         await self.test_journal_apis()
+        
+        # Test database-driven Circles APIs (NEW FEATURES)
+        await self.test_circles_create_api()
         await self.test_circles_apis()
+        
+        # Test database-driven Library APIs (NEW FEATURES)
+        await self.test_library_apis()
         
         # Print final report
         await self.print_final_report()
