@@ -56,6 +56,16 @@ export const authAPI = {
     return data;
   },
 
+  upgradeToSubscriber: async ({ email, name, password }: { email: string; name: string; password: string }) => {
+    const { data } = await api.post('/auth/upgrade-to-subscriber', {
+      email,
+      name,
+      password,
+    });
+    await AsyncStorage.setItem('auth_token', data.access_token);
+    return data;
+  },
+
   getMe: async () => {
     const { data } = await api.get('/auth/me');
     return data;
