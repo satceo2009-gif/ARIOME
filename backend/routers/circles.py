@@ -21,11 +21,12 @@ class CreatePost(BaseModel):
 @router.post("")
 async def create_circle(circle: CreateCircle, current_user: dict = Depends(get_current_user)):
     """Create a new circle"""
+    user_id = str(current_user.get("_id", current_user.get("id")))
     circle_doc = {
         **circle.dict(),
-        "creator_id": str(current_user["_id"]),
+        "creator_id": user_id,
         "creator_name": current_user.get("name", "Unknown"),
-        "members": [str(current_user["_id"])],
+        "members": [user_id],
         "member_count": 1,
         "post_count": 0,
         "created_at": datetime.utcnow()
