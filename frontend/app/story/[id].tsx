@@ -178,9 +178,16 @@ export default function StoryPlayer() {
 
   const handlePlayPause = async () => {
     try {
+      // When starting playback, register with media player context
+      // This will automatically stop any other playing media
+      if (!isPlaying) {
+        playMedia(mediaId, stopPlayback);
+      }
+      
       if (story?.format === 'video' && videoRef.current) {
         if (isPlaying) {
           await videoRef.current.pauseAsync();
+          stopMedia(mediaId);
         } else {
           await videoRef.current.playAsync();
         }
@@ -208,6 +215,7 @@ export default function StoryPlayer() {
         } else {
           if (isPlaying) {
             await sound.pauseAsync();
+            stopMedia(mediaId);
           } else {
             await sound.playAsync();
           }
