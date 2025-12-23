@@ -528,6 +528,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  creatorLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 16,
+    gap: 4,
+  },
+  creatorLinkText: {
+    color: '#9CA3AF',
+    fontSize: 14,
+  },
+  creatorLinkHighlight: {
+    color: '#14B8A6',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   formContent: {
     flex: 1,
     padding: 24,
