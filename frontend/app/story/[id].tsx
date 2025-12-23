@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Video, ResizeMode } from 'expo-av';
 import { Audio } from 'expo-av';
 import YoutubePlayer from 'react-native-youtube-iframe';
@@ -24,6 +24,7 @@ import { INTENTIONS } from '@/constants/intentions';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/contexts/AuthContext';
 import SubscribeModal from '@/components/SubscribeModal';
+import { useMediaPlayer } from '@/contexts/MediaPlayerContext';
 
 
 const { width, height } = Dimensions.get('window');
@@ -40,8 +41,10 @@ function getYouTubeVideoId(url: string | undefined): string | null {
 export default function StoryPlayer() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
+  const mediaId = `story-${id}`;
   const { stories, savedStories, toggleSaveStory, addResonance, addToRecentlyPlayed } = useContentStore();
   const { user, canAccessFullContent } = useAuth();
+  const { playMedia, stopMedia, currentPlayingId } = useMediaPlayer();
   const [story, setStory] = useState<Story | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showReflection, setShowReflection] = useState(false);
@@ -56,6 +59,51 @@ export default function StoryPlayer() {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const previewTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Stop playback when another media starts playing
+  useEffect(() => {
+    if (currentPlayingId && currentPlayingId !== mediaId && isPlaying) {
+      // Another media started playing - stop this one
+      stopPlayback();
+    }
+  }, [currentPlayingId, mediaId, isPlaying]);
+
+  // Stop playback when navigating away
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        // Cleanup when screen loses focus
+        stopPlayback();
+      };
+    }, [])
+  );
+
+  // Function to stop all playback for this story
+  const stopPlayback = useCallback(async () => {
+    setIsPlaying(false);
+    
+    // Stop video
+    if (videoRef.current) {
+      try {
+        await videoRef.current.pauseAsync();
+      } catch (e) {}
+    }
+    
+    // Stop audio
+    if (sound) {
+      try {
+        await sound.pauseAsync();
+      } catch (e) {}
+    }
+    
+    // Clear preview timer
+    if (previewTimerRef.current) {
+      clearInterval(previewTimerRef.current);
+    }
+    
+    // Notify media player context
+    stopMedia(mediaId);
+  }, [sound, mediaId, stopMedia]);
 
   // Check if user is an Explorer (needs preview limit)
   const isExplorer = user?.role === 'explorer' || (!user?.role && user?.email);
