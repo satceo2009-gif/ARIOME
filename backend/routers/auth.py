@@ -184,7 +184,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             "email": user["email"],
             "name": user["name"],
             "role": user["role"],
-            "avatar": user["avatar"],
+            "avatar": user.get("avatar", f"https://i.pravatar.cc/150?u={user['email']}"),
             "subscription_status": user.get("subscription_status", "free")
         }
     }
