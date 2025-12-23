@@ -155,8 +155,28 @@ export default function CreatorApplicationScreen() {
     if (step > 1) setStep(step - 1);
   };
 
-  // Voice Recording Functions
+  // Voice Recording Functions - Web uses Web Speech API, Mobile uses expo-av
   const startRecording = async () => {
+    if (!speechSupported) {
+      Alert.alert('Not Supported', 'Speech recognition is not supported on this device/browser.');
+      return;
+    }
+
+    // Web platform - use Web Speech API
+    if (Platform.OS === 'web') {
+      try {
+        if (recognitionRef.current) {
+          recognitionRef.current.start();
+          setIsRecording(true);
+        }
+      } catch (err) {
+        console.error('Failed to start speech recognition', err);
+        Alert.alert('Error', 'Failed to start speech recognition. Make sure you allow microphone access.');
+      }
+      return;
+    }
+
+    // Mobile platform - use expo-av
     try {
       const permission = await Audio.requestPermissionsAsync();
       if (permission.status !== 'granted') {
