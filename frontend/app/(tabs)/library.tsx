@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,31 +6,57 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useContentStore } from '@/store/contentStore';
-import { INTENTIONS } from '@/constants/intentions';
+import { useAuth } from '@/contexts/AuthContext';
+import { libraryAPI } from '@/services/api';
 
 export default function Library() {
   const router = useRouter();
-  const { stories, savedStories, recentlyPlayed } = useContentStore();
+  const { user, token } = useAuth();
   const [activeTab, setActiveTab] = useState<'saved' | 'recent'>('saved');
+  const [savedStories, setSavedStories] = useState<any[]>([]);
+  const [recentStories, setRecentStories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const mySavedStories = stories.filter((story) =>
-    savedStories.includes(story.id)
-  );
+  const loadLibrary = useCallback(async () => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
-  // Get recently played stories with their data
-  const recentlyPlayedStories = recentlyPlayed
-    .map(r => {
-      const story = stories.find(s => s.id === r.storyId);
-      return story ? { ...story, playedAt: r.playedAt, progress: r.progress } : null;
-    })
-    .filter((s): s is NonNullable<typeof s> => s !== null);
+    try {
+      const [saved, history] = await Promise.all([
+        libraryAPI.getSavedStories().catch(() => []),
+        libraryAPI.getPlayHistory().catch(() => [])
+      ]);
+
+      setSavedStories(saved || []);
+      setRecentStories(history || []);
+    } catch (error) {
+      console.error('Error loading library:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    loadLibrary();
+  }, [loadLibrary]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadLibrary();
+  };
 
   const formatTimeAgo = (dateString: string) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
@@ -42,6 +68,21 @@ export default function Library() {
     if (hours < 24) return `${hours}h ago`;
     return `${days}d ago`;
   };
+
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <Text style={styles.title}>My Library</Text>
+        </View>
+        <View style={styles.emptyState}>
+          <MaterialCommunityIcons name="bookshelf" size={64} color="#6B7280" />
+          <Text style={styles.emptyTitle}>Login to access your library</Text>
+          <Text style={styles.emptySubtitle}>Save stories and track your listening history</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -57,7 +98,7 @@ export default function Library() {
           <Text
             style={[styles.tabText, activeTab === 'saved' && styles.tabTextActive]}
           >
-            Saved Stories ({mySavedStories.length})
+            Saved Stories ({savedStories.length})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -70,141 +111,162 @@ export default function Library() {
               activeTab === 'recent' && styles.tabTextActive,
             ]}
           >
-            Recently Played ({recentlyPlayedStories.length})
+            Recently Played ({recentStories.length})
           </Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {activeTab === 'saved' ? (
-          mySavedStories.length > 0 ? (
-            mySavedStories.map((story) => (
-              <TouchableOpacity
-                key={story.id}
-                style={styles.storyCard}
-                onPress={() => router.push(`/story/${story.id}`)}
-                activeOpacity={0.8}
-              >
-                <Image
-                  source={{ uri: story.thumbnailUrl }}
-                  style={styles.storyImage}
-                />
-                <View style={styles.storyContent}>
-                  <Text style={styles.storyTitle} numberOfLines={2}>
-                    {story.title}
-                  </Text>
-                  <View style={styles.creatorInfo}>
-                    <Image
-                      source={{ uri: story.creator.avatar }}
-                      style={styles.creatorAvatar}
-                    />
-                    <Text style={styles.creatorName}>{story.creator.name}</Text>
-                  </View>
-                  <View style={styles.storyMeta}>
-                    <MaterialCommunityIcons
-                      name={story.format === 'video' ? 'video' : 'music-note'}
-                      size={14}
-                      color="#9CA3AF"
-                    />
-                    <Text style={styles.metaText}>
-                      {Math.floor(story.duration / 60)} min
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#14B8A6" />
+          <Text style={styles.loadingText}>Loading your library...</Text>
+        </View>
+      ) : (
+        <ScrollView 
+          style={styles.scrollView} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#14B8A6" />
+          }
+        >
+          {activeTab === 'saved' ? (
+            savedStories.length > 0 ? (
+              savedStories.map((story) => (
+                <TouchableOpacity
+                  key={story.id}
+                  style={styles.storyCard}
+                  onPress={() => router.push(`/story/${story.id}`)}
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={{ uri: story.thumbnailUrl || 'https://via.placeholder.com/100' }}
+                    style={styles.storyImage}
+                  />
+                  <View style={styles.storyContent}>
+                    <Text style={styles.storyTitle} numberOfLines={2}>
+                      {story.title}
                     </Text>
-                    <MaterialCommunityIcons
-                      name="heart"
-                      size={14}
-                      color="#EC4899"
-                    />
-                    <Text style={styles.metaText}>{story.resonanceCount}</Text>
+                    <View style={styles.creatorInfo}>
+                      <Image
+                        source={{ uri: story.creator?.avatar || 'https://i.pravatar.cc/150?img=1' }}
+                        style={styles.creatorAvatar}
+                      />
+                      <Text style={styles.creatorName}>{story.creator?.name || 'Unknown'}</Text>
+                    </View>
+                    <View style={styles.storyMeta}>
+                      <MaterialCommunityIcons
+                        name={story.format === 'video' ? 'video' : 'music-note'}
+                        size={14}
+                        color="#9CA3AF"
+                      />
+                      <Text style={styles.metaText}>
+                        {Math.floor((story.duration || 0) / 60)} min
+                      </Text>
+                      <MaterialCommunityIcons
+                        name="heart"
+                        size={14}
+                        color="#EC4899"
+                      />
+                      <Text style={styles.metaText}>{story.resonanceCount || 0}</Text>
+                    </View>
                   </View>
-                </View>
-                <View style={styles.savedBadge}>
-                  <MaterialCommunityIcons name="bookmark" size={20} color="#14B8A6" />
-                </View>
-              </TouchableOpacity>
-            ))
-          ) : (
-            <View style={styles.emptyState}>
-              <MaterialCommunityIcons
-                name="bookmark-outline"
-                size={64}
-                color="#4B5563"
-              />
-              <Text style={styles.emptyTitle}>No Saved Stories</Text>
-              <Text style={styles.emptySubtitle}>
-                Stories you save will appear here
-              </Text>
-              <TouchableOpacity
-                style={styles.exploreButton}
-                onPress={() => router.push('/(tabs)/discover')}
-              >
-                <Text style={styles.exploreButtonText}>Explore Stories</Text>
-              </TouchableOpacity>
-            </View>
-          )
-        ) : (
-          recentlyPlayedStories.length > 0 ? (
-            recentlyPlayedStories.map((story) => (
-              <TouchableOpacity
-                key={story.id}
-                style={styles.storyCard}
-                onPress={() => router.push(`/story/${story.id}`)}
-                activeOpacity={0.8}
-              >
-                <Image
-                  source={{ uri: story.thumbnailUrl }}
-                  style={styles.storyImage}
+                  <View style={styles.savedBadge}>
+                    <MaterialCommunityIcons name="bookmark" size={20} color="#14B8A6" />
+                  </View>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View style={styles.emptyState}>
+                <MaterialCommunityIcons
+                  name="bookmark-outline"
+                  size={64}
+                  color="#4B5563"
                 />
-                {story.progress > 0 && (
-                  <View style={styles.progressBar}>
-                    <View style={[styles.progressFill, { width: `${story.progress}%` }]} />
-                  </View>
-                )}
-                <View style={styles.storyContent}>
-                  <Text style={styles.storyTitle} numberOfLines={2}>
-                    {story.title}
-                  </Text>
-                  <View style={styles.creatorInfo}>
-                    <Image
-                      source={{ uri: story.creator.avatar }}
-                      style={styles.creatorAvatar}
-                    />
-                    <Text style={styles.creatorName}>{story.creator.name}</Text>
-                  </View>
-                  <View style={styles.storyMeta}>
-                    <MaterialCommunityIcons
-                      name={story.format === 'video' ? 'video' : 'music-note'}
-                      size={14}
-                      color="#9CA3AF"
-                    />
-                    <Text style={styles.metaText}>
-                      {Math.floor(story.duration / 60)} min
-                    </Text>
-                    <Text style={styles.timeAgo}>{formatTimeAgo(story.playedAt)}</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))
+                <Text style={styles.emptyTitle}>No Saved Stories</Text>
+                <Text style={styles.emptySubtitle}>
+                  Stories you save will appear here
+                </Text>
+                <TouchableOpacity
+                  style={styles.exploreButton}
+                  onPress={() => router.push('/(tabs)/discover')}
+                >
+                  <Text style={styles.exploreButtonText}>Explore Stories</Text>
+                </TouchableOpacity>
+              </View>
+            )
           ) : (
-            <View style={styles.emptyState}>
-              <MaterialCommunityIcons
-                name="history"
-                size={64}
-                color="#4B5563"
-              />
-              <Text style={styles.emptyTitle}>No Recent Stories</Text>
-              <Text style={styles.emptySubtitle}>
-                Stories you listen to will appear here
-              </Text>
-              <TouchableOpacity
-                style={styles.exploreButton}
-                onPress={() => router.push('/(tabs)/discover')}
-              >
-                <Text style={styles.exploreButtonText}>Start Listening</Text>
-              </TouchableOpacity>
-            </View>
-          )
-        )}
-      </ScrollView>
+            recentStories.length > 0 ? (
+              recentStories.map((story) => (
+                <TouchableOpacity
+                  key={story.id}
+                  style={styles.storyCard}
+                  onPress={() => router.push(`/story/${story.id}`)}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.imageContainer}>
+                    <Image
+                      source={{ uri: story.thumbnailUrl || 'https://via.placeholder.com/100' }}
+                      style={styles.storyImage}
+                    />
+                    {story.progress > 0 && (
+                      <View style={styles.progressBar}>
+                        <View style={[styles.progressFill, { width: `${story.progress}%` }]} />
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.storyContent}>
+                    <Text style={styles.storyTitle} numberOfLines={2}>
+                      {story.title}
+                    </Text>
+                    <View style={styles.creatorInfo}>
+                      <Image
+                        source={{ uri: story.creator?.avatar || 'https://i.pravatar.cc/150?img=1' }}
+                        style={styles.creatorAvatar}
+                      />
+                      <Text style={styles.creatorName}>{story.creator?.name || 'Unknown'}</Text>
+                    </View>
+                    <View style={styles.storyMeta}>
+                      <MaterialCommunityIcons
+                        name={story.format === 'video' ? 'video' : 'music-note'}
+                        size={14}
+                        color="#9CA3AF"
+                      />
+                      <Text style={styles.metaText}>
+                        {Math.floor((story.duration || 0) / 60)} min
+                      </Text>
+                      <Text style={styles.timeAgo}>{formatTimeAgo(story.playedAt)}</Text>
+                    </View>
+                  </View>
+                  {story.playCount > 1 && (
+                    <View style={styles.playCountBadge}>
+                      <Text style={styles.playCountText}>{story.playCount}x</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View style={styles.emptyState}>
+                <MaterialCommunityIcons
+                  name="history"
+                  size={64}
+                  color="#4B5563"
+                />
+                <Text style={styles.emptyTitle}>No Recent Stories</Text>
+                <Text style={styles.emptySubtitle}>
+                  Stories you listen to will appear here
+                </Text>
+                <TouchableOpacity
+                  style={styles.exploreButton}
+                  onPress={() => router.push('/(tabs)/discover')}
+                >
+                  <Text style={styles.exploreButtonText}>Start Listening</Text>
+                </TouchableOpacity>
+              </View>
+            )
+          )}
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -247,6 +309,15 @@ const styles = StyleSheet.create({
     color: '#14B8A6',
     fontWeight: '700',
   },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    color: '#9CA3AF',
+    marginTop: 12,
+  },
   scrollView: {
     flex: 1,
   },
@@ -257,6 +328,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 16,
     overflow: 'hidden',
+    position: 'relative',
+  },
+  imageContainer: {
     position: 'relative',
   },
   storyImage: {
@@ -320,6 +394,20 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
+  },
+  playCountBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#14B8A6',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  playCountText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#FFF',
   },
   emptyState: {
     flex: 1,
