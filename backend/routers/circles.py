@@ -121,7 +121,7 @@ async def get_circle_posts(circle_id: str, current_user: dict = Depends(get_curr
     if not circle:
         raise HTTPException(status_code=404, detail="Circle not found")
     
-    user_id = str(current_user["_id"])
+    user_id = str(current_user.get("_id", current_user.get("id")))
     if user_id not in circle.get("members", []):
         raise HTTPException(status_code=403, detail="Not a member of this circle")
     
