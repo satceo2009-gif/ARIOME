@@ -1,124 +1,46 @@
-import { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator, Modal } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator, Modal, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { INTENTIONS } from '@/constants/intentions';
-import axios from 'axios';
-import Constants from 'expo-constants';
-
-const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || 
-                process.env.EXPO_PUBLIC_API_URL || 
-                'https://meditate-hub-3.preview.emergentagent.com/api';
-
-// Default circles data when API fails or no auth
-const DEFAULT_CIRCLES = [
-  {
-    id: 'default-1',
-    name: 'Healing Hearts',
-    description: 'A supportive community for those on their healing journey. Share your experiences and find comfort in others who understand.',
-    intention: 'healing',
-    creator_name: 'ARIOME',
-    member_count: 156,
-    post_count: 42,
-    is_member: false
-  },
-  {
-    id: 'default-2',
-    name: 'Mindful Moments',
-    description: 'Daily mindfulness practices and meditation discussions. Learn techniques to stay present and find inner peace.',
-    intention: 'mindfulness',
-    creator_name: 'ARIOME',
-    member_count: 234,
-    post_count: 89,
-    is_member: false
-  },
-  {
-    id: 'default-3',
-    name: 'Growth Seekers',
-    description: 'For those committed to personal development. Share goals, celebrate wins, and support each other\'s growth.',
-    intention: 'growth',
-    creator_name: 'ARIOME',
-    member_count: 189,
-    post_count: 67,
-    is_member: false
-  },
-  {
-    id: 'default-4',
-    name: 'Gratitude Circle',
-    description: 'A space to share what you\'re grateful for. Cultivate appreciation and positivity together.',
-    intention: 'gratitude',
-    creator_name: 'ARIOME',
-    member_count: 312,
-    post_count: 156,
-    is_member: false
-  },
-  {
-    id: 'default-5',
-    name: 'Love & Connection',
-    description: 'Explore themes of love, relationships, and human connection. Build meaningful bonds with like-minded souls.',
-    intention: 'love',
-    creator_name: 'ARIOME',
-    member_count: 145,
-    post_count: 38,
-    is_member: false
-  },
-  {
-    id: 'default-6',
-    name: 'Resilience Warriors',
-    description: 'Building strength through adversity. Share stories of overcoming challenges and inspire others.',
-    intention: 'resilience',
-    creator_name: 'ARIOME',
-    member_count: 98,
-    post_count: 29,
-    is_member: false
-  },
-];
+import { circlesAPI } from '@/services/api';
 
 export default function CirclesScreen() {
   const { token, user } = useAuth();
   const [circles, setCircles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedIntention, setSelectedIntention] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newCircle, setNewCircle] = useState({ name: '', description: '', intention: '' });
+  const [creating, setCreating] = useState(false);
+  const [joiningId, setJoiningId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadCircles();
-  }, [selectedIntention]);
-
-  const loadCircles = async () => {
-    setLoading(true);
+  const loadCircles = useCallback(async () => {
     try {
       if (token) {
-        const params = selectedIntention ? { intention: selectedIntention } : {};
-        const response = await axios.get(`${API_URL}/circles`, {
-          params,
-          headers: { Authorization: `Bearer ${token}` },
-          timeout: 5000
-        });
-        if (response.data && response.data.length > 0) {
-          setCircles(response.data);
-        } else {
-          // Use default circles if API returns empty
-          setCircles(filterCircles(DEFAULT_CIRCLES));
-        }
+        const data = await circlesAPI.getAll(selectedIntention || undefined);
+        setCircles(data || []);
       } else {
-        // No auth - use default circles
-        setCircles(filterCircles(DEFAULT_CIRCLES));
+        setCircles([]);
       }
     } catch (error) {
       console.error('Error loading circles:', error);
-      // Fallback to default circles on error
-      setCircles(filterCircles(DEFAULT_CIRCLES));
+      setCircles([]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, [token, selectedIntention]);
 
-  const filterCircles = (circleList: any[]) => {
-    if (!selectedIntention) return circleList;
-    return circleList.filter(c => c.intention === selectedIntention);
+  useEffect(() => {
+    loadCircles();
+  }, [loadCircles]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadCircles();
   };
 
   const handleJoinCircle = async (circleId: string) => {
@@ -127,43 +49,57 @@ export default function CirclesScreen() {
       return;
     }
     
+    setJoiningId(circleId);
     try {
-      if (circleId.startsWith('default-')) {
-        // For default circles, just update local state
-        setCircles(prev => prev.map(c => 
-          c.id === circleId ? { ...c, is_member: true, member_count: c.member_count + 1 } : c
-        ));
-        Alert.alert('Success', 'You have joined the circle!');
-      } else {
-        await axios.post(
-          `${API_URL}/circles/${circleId}/join`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        Alert.alert('Success', 'Joined circle');
-        loadCircles();
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to join circle');
+      await circlesAPI.join(circleId);
+      Alert.alert('Success', 'You have joined the circle!');
+      loadCircles();
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to join circle');
+    } finally {
+      setJoiningId(null);
     }
   };
 
   const handleLeaveCircle = async (circleId: string) => {
-    if (circleId.startsWith('default-')) {
-      setCircles(prev => prev.map(c => 
-        c.id === circleId ? { ...c, is_member: false, member_count: Math.max(0, c.member_count - 1) } : c
-      ));
-    } else {
-      try {
-        await axios.post(
-          `${API_URL}/circles/${circleId}/leave`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        loadCircles();
-      } catch (error) {
-        Alert.alert('Error', 'Failed to leave circle');
-      }
+    setJoiningId(circleId);
+    try {
+      await circlesAPI.leave(circleId);
+      loadCircles();
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to leave circle');
+    } finally {
+      setJoiningId(null);
+    }
+  };
+
+  const handleCreateCircle = async () => {
+    if (!user) {
+      Alert.alert('Login Required', 'Please login to create circles');
+      return;
+    }
+
+    if (!newCircle.name.trim() || !newCircle.description.trim() || !newCircle.intention) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    setCreating(true);
+    try {
+      await circlesAPI.create({
+        name: newCircle.name.trim(),
+        description: newCircle.description.trim(),
+        intention: newCircle.intention,
+        is_private: false
+      });
+      Alert.alert('Success', 'Circle created successfully!');
+      setNewCircle({ name: '', description: '', intention: '' });
+      setShowCreateModal(false);
+      loadCircles();
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to create circle');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -179,6 +115,21 @@ export default function CirclesScreen() {
     };
     return colors[intention] || '#14B8A6';
   };
+
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Community Circles</Text>
+        </View>
+        <View style={styles.emptyState}>
+          <MaterialCommunityIcons name="account-group" size={64} color="#6B7280" />
+          <Text style={styles.emptyText}>Login to access circles</Text>
+          <Text style={styles.emptySubtext}>Join communities that resonate with your journey</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -235,7 +186,12 @@ export default function CirclesScreen() {
           <Text style={styles.loadingText}>Loading circles...</Text>
         </View>
       ) : (
-        <ScrollView style={styles.circlesContainer}>
+        <ScrollView 
+          style={styles.circlesContainer}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#14B8A6" />
+          }
+        >
           {circles.length === 0 ? (
             <View style={styles.emptyState}>
               <MaterialCommunityIcons name="account-group" size={64} color="#9CA3AF" />
@@ -282,7 +238,11 @@ export default function CirclesScreen() {
                     </View>
                   </View>
                   
-                  {circle.is_member ? (
+                  {joiningId === circle.id ? (
+                    <View style={[styles.joinButton, styles.joinedButton]}>
+                      <ActivityIndicator size="small" color="#14B8A6" />
+                    </View>
+                  ) : circle.is_member ? (
                     <TouchableOpacity 
                       style={[styles.joinButton, styles.joinedButton]}
                       onPress={() => handleLeaveCircle(circle.id)}
@@ -332,12 +292,13 @@ export default function CirclesScreen() {
             
             <TextInput
               style={[styles.input, styles.textArea]}
-              placeholder="Description"
+              placeholder="Description - What is this circle about?"
               placeholderTextColor="#6B7280"
               value={newCircle.description}
               onChangeText={(text) => setNewCircle(prev => ({ ...prev, description: text }))}
               multiline
               numberOfLines={4}
+              textAlignVertical="top"
             />
             
             <Text style={styles.inputLabel}>Select Intention</Text>
@@ -362,17 +323,15 @@ export default function CirclesScreen() {
             </ScrollView>
             
             <TouchableOpacity 
-              style={styles.createModalButton}
-              onPress={() => {
-                if (!user) {
-                  Alert.alert('Login Required', 'Please login to create circles');
-                  return;
-                }
-                Alert.alert('Coming Soon', 'Circle creation will be available soon!');
-                setShowCreateModal(false);
-              }}
+              style={[styles.createModalButton, creating && styles.createModalButtonDisabled]}
+              onPress={handleCreateCircle}
+              disabled={creating}
             >
-              <Text style={styles.createModalButtonText}>Create Circle</Text>
+              {creating ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <Text style={styles.createModalButtonText}>Create Circle</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -527,6 +486,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    minWidth: 80,
+    justifyContent: 'center',
   },
   joinedButton: {
     backgroundColor: 'transparent',
@@ -559,6 +520,7 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     marginTop: 8,
     marginBottom: 24,
+    textAlign: 'center',
   },
   createCircleButton: {
     backgroundColor: '#14B8A6',
@@ -630,6 +592,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
+  },
+  createModalButtonDisabled: {
+    opacity: 0.7,
   },
   createModalButtonText: {
     color: '#FFF',
