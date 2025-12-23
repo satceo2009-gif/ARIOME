@@ -47,8 +47,9 @@ async def create_entry(entry: JournalEntry, current_user: dict = Depends(get_cur
 @router.get("/entries")
 async def get_entries(current_user: dict = Depends(get_current_user)):
     """Get all journal entries for current user"""
+    user_id = str(current_user.get("_id", current_user.get("id")))
     entries = await db.journal_entries.find(
-        {"user_id": str(current_user["_id"])}
+        {"user_id": user_id}
     ).sort("created_at", -1).to_list(100)
     
     return [
