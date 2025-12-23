@@ -152,6 +152,15 @@ export default function AuthScreen() {
               <Text style={styles.loginLinkText}>Already have an account? </Text>
               <Text style={styles.loginLinkHighlight}>Login</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.creatorLink}
+              onPress={() => router.push('/creator-apply')}
+            >
+              <MaterialCommunityIcons name="brush" size={18} color="#14B8A6" />
+              <Text style={styles.creatorLinkText}>Want to create content? </Text>
+              <Text style={styles.creatorLinkHighlight}>Apply as Creator</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </SafeAreaView>
