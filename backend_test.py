@@ -1125,10 +1125,24 @@ class ARIOMEAPITester:
         print(f"  Login API: {'✅ PASS' if self.test_results['login_success'] else '❌ FAIL'}")
         print(f"  Signup API: {'✅ PASS' if self.test_results['signup_success'] else '❌ FAIL'}")
         print(f"  Admin Login API: {'✅ PASS' if self.test_results['admin_login_success'] else '❌ FAIL'}")
+        print(f"  Creator Login API: {'✅ PASS' if self.test_results['creator_login_success'] else '❌ FAIL'}")
         print(f"  Email Signup API: {'✅ PASS' if self.test_results['email_signup_success'] else '❌ FAIL'}")
         
-        print(f"\n👥 CIRCLES & COMMUNITY:")
+        print(f"\n🎨 CREATOR APPLICATION SYSTEM (DATABASE-DRIVEN):")
+        print(f"  Creator Application Submit: {'✅ PASS' if self.test_results['creator_application_apply_success'] else '❌ FAIL'}")
+        print(f"  Admin Pending Applications: {'✅ PASS' if self.test_results['creator_application_pending_success'] else '❌ FAIL'}")
+        print(f"  Admin Application Stats: {'✅ PASS' if self.test_results['creator_application_stats_success'] else '❌ FAIL'}")
+        
+        print(f"\n📚 LIBRARY SYSTEM (DATABASE-DRIVEN):")
+        print(f"  Save Story API: {'✅ PASS' if self.test_results['library_save_success'] else '❌ FAIL'}")
+        print(f"  Unsave Story API: {'✅ PASS' if self.test_results['library_unsave_success'] else '❌ FAIL'}")
+        print(f"  Get Saved Stories API: {'✅ PASS' if self.test_results['library_saved_list_success'] else '❌ FAIL'}")
+        print(f"  Add Play History API: {'✅ PASS' if self.test_results['library_history_add_success'] else '❌ FAIL'}")
+        print(f"  Get Play History API: {'✅ PASS' if self.test_results['library_history_list_success'] else '❌ FAIL'}")
+        
+        print(f"\n👥 CIRCLES & COMMUNITY (DATABASE-DRIVEN):")
         print(f"  Circles (No Auth) API: {'✅ PASS' if self.test_results['circles_no_auth_success'] else '❌ FAIL'}")
+        print(f"  Circles Create API: {'✅ PASS' if self.test_results['circles_create_success'] else '❌ FAIL'}")
         print(f"  Circles List API: {'✅ PASS' if self.test_results['circles_list_success'] else '❌ FAIL'}")
         print(f"  Circles Join API: {'✅ PASS' if self.test_results['circles_join_success'] else '❌ FAIL'}")
         
@@ -1137,7 +1151,8 @@ class ARIOMEAPITester:
         print(f"  Notification Settings API: {'✅ PASS' if self.test_results['notification_settings_success'] else '❌ FAIL'}")
         print(f"  Change Password API: {'✅ PASS' if self.test_results['change_password_success'] else '❌ FAIL'}")
         
-        print(f"\n📖 JOURNAL & CONTENT:")
+        print(f"\n📖 JOURNAL & CONTENT (DATABASE-DRIVEN):")
+        print(f"  Journal Create Entry API: {'✅ PASS' if self.test_results['journal_create_success'] else '❌ FAIL'}")
         print(f"  Journal Entries API: {'✅ PASS' if self.test_results['journal_entries_success'] else '❌ FAIL'}")
         print(f"  Journal Stats API: {'✅ PASS' if self.test_results['journal_stats_success'] else '❌ FAIL'}")
         
@@ -1146,20 +1161,31 @@ class ARIOMEAPITester:
         print(f"  Admin Users API: {'✅ PASS' if self.test_results['admin_users_success'] else '❌ FAIL'}")
         
         # Count successes
-        total_tests = 16
+        total_tests = 25
         passed_tests = sum([
             self.test_results['email_send_verification_success'],
             self.test_results['email_verify_code_success'],
             self.test_results['login_success'],
             self.test_results['signup_success'],
             self.test_results['admin_login_success'],
+            self.test_results['creator_login_success'],
             self.test_results['email_signup_success'],
+            self.test_results['creator_application_apply_success'],
+            self.test_results['creator_application_pending_success'],
+            self.test_results['creator_application_stats_success'],
+            self.test_results['library_save_success'],
+            self.test_results['library_unsave_success'],
+            self.test_results['library_saved_list_success'],
+            self.test_results['library_history_add_success'],
+            self.test_results['library_history_list_success'],
             self.test_results['circles_no_auth_success'],
+            self.test_results['circles_create_success'],
             self.test_results['circles_list_success'],
             self.test_results['circles_join_success'],
             self.test_results['profile_update_success'],
             self.test_results['notification_settings_success'],
             self.test_results['change_password_success'],
+            self.test_results['journal_create_success'],
             self.test_results['journal_entries_success'],
             self.test_results['journal_stats_success'],
             self.test_results['admin_stats_success'],
