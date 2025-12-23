@@ -90,8 +90,9 @@ async def create_reflection(reflection: StoryReflection, current_user: dict = De
 @router.get("/reflections")
 async def get_reflections(current_user: dict = Depends(get_current_user)):
     """Get all story reflections for current user"""
+    user_id = str(current_user.get("_id", current_user.get("id")))
     reflections = await db.story_reflections.find(
-        {"user_id": str(current_user["_id"])}
+        {"user_id": user_id}
     ).sort("created_at", -1).to_list(100)
     
     return [
@@ -109,11 +110,12 @@ async def get_reflections(current_user: dict = Depends(get_current_user)):
 @router.get("/stats")
 async def get_stats(current_user: dict = Depends(get_current_user)):
     """Get journal stats for current user"""
+    user_id = str(current_user.get("_id", current_user.get("id")))
     total_entries = await db.journal_entries.count_documents(
-        {"user_id": str(current_user["_id"])}
+        {"user_id": user_id}
     )
     total_reflections = await db.story_reflections.count_documents(
-        {"user_id": str(current_user["_id"])}
+        {"user_id": user_id}
     )
     
     return {
