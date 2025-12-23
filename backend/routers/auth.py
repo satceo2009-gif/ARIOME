@@ -265,7 +265,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "email": current_user["email"],
         "name": current_user["name"],
         "role": current_user["role"],
-        "avatar": current_user["avatar"],
+        "avatar": current_user.get("avatar", f"https://i.pravatar.cc/150?u={current_user['email']}"),
         "intentions": current_user.get("intentions", []),
         "subscription_status": current_user.get("subscription_status", "free"),
         "subscription_expires_at": current_user.get("subscription_expires_at")
