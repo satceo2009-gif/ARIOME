@@ -189,6 +189,75 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         }
     }
 
+
+class UpgradeToSubscriberRequest(BaseModel):
+    email: EmailStr
+    name: str
+    password: str
+
+
+@router.post("/upgrade-to-subscriber")
+async def upgrade_to_subscriber(request: UpgradeToSubscriberRequest):
+    """
+    Upgrade an Explorer to a Subscriber
+    - Explorer has email only (no password)
+    - This allows them to set a password and become a full subscriber
+    """
+    # Find the existing explorer user
+    existing_user = await users_collection.find_one({"email": request.email})
+    
+    if not existing_user:
+        raise HTTPException(status_code=404, detail="User not found. Please sign up first.")
+    
+    # Check if user is already a subscriber (has password)
+    if existing_user.get("password_hash") or existing_user.get("password"):
+        # User already has password - they should login instead
+        raise HTTPException(
+            status_code=400, 
+            detail="This account already has a password. Please login instead."
+        )
+    
+    # Check if user is an explorer
+    if existing_user.get("role") not in ["explorer", None, ""]:
+        raise HTTPException(
+            status_code=400,
+            detail="This account cannot be upgraded. Please contact support."
+        )
+    
+    # Upgrade the user: set password and change role to subscriber
+    hashed_password = hash_password(request.password)
+    
+    await users_collection.update_one(
+        {"_id": existing_user["_id"]},
+        {
+            "$set": {
+                "name": request.name,
+                "password_hash": hashed_password,
+                "role": "subscriber",
+                "subscription_status": "active",
+                "upgraded_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+        }
+    )
+    
+    # Create access token
+    access_token = create_access_token(data={"sub": request.email, "role": "subscriber"})
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": str(existing_user["_id"]),
+            "email": request.email,
+            "name": request.name,
+            "role": "subscriber",
+            "subscription_status": "active"
+        },
+        "message": "Successfully upgraded to Subscriber! You now have full access."
+    }
+
+
 @router.get("/me")
 async def get_me(current_user: dict = Depends(get_current_user)):
     return {
