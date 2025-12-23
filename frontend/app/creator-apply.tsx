@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -27,6 +27,14 @@ const SOCIAL_PLATFORMS = [
   { id: 'soundcloud', label: 'SoundCloud', icon: 'soundcloud', placeholder: 'Profile URL' },
 ];
 
+// Web Speech Recognition types
+declare global {
+  interface Window {
+    webkitSpeechRecognition: any;
+    SpeechRecognition: any;
+  }
+}
+
 export default function CreatorApplicationScreen() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -34,6 +42,52 @@ export default function CreatorApplicationScreen() {
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  // Check for Web Speech API support on web platform
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        setSpeechSupported(true);
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.lang = 'en-US';
+        
+        recognitionRef.current.onresult = (event: any) => {
+          let finalTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript;
+            }
+          }
+          if (finalTranscript) {
+            setFormData(prev => ({
+              ...prev,
+              description: prev.description ? `${prev.description} ${finalTranscript}` : finalTranscript
+            }));
+          }
+        };
+        
+        recognitionRef.current.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          setIsRecording(false);
+          if (event.error === 'not-allowed') {
+            Alert.alert('Permission Denied', 'Please allow microphone access to use voice input.');
+          }
+        };
+        
+        recognitionRef.current.onend = () => {
+          setIsRecording(false);
+        };
+      }
+    } else {
+      // Mobile - expo-av is supported
+      setSpeechSupported(true);
+    }
+  }, []);
 
   const [formData, setFormData] = useState({
     name: '',
