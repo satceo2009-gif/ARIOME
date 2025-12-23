@@ -75,7 +75,7 @@ async def join_circle(circle_id: str, current_user: dict = Depends(get_current_u
     if not circle:
         raise HTTPException(status_code=404, detail="Circle not found")
     
-    user_id = str(current_user["_id"])
+    user_id = str(current_user.get("_id", current_user.get("id")))
     if user_id in circle.get("members", []):
         raise HTTPException(status_code=400, detail="Already a member")
     
