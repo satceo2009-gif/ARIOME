@@ -153,7 +153,7 @@ async def create_post(circle_id: str, post: CreatePost, current_user: dict = Dep
     if not circle:
         raise HTTPException(status_code=404, detail="Circle not found")
     
-    user_id = str(current_user["_id"])
+    user_id = str(current_user.get("_id", current_user.get("id")))
     if user_id not in circle.get("members", []):
         raise HTTPException(status_code=403, detail="Not a member of this circle")
     
