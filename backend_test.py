@@ -683,6 +683,379 @@ class ARIOMEAPITester:
             print(f"❌ {error_msg}")
             return False
     
+    async def test_creator_login_api(self):
+        """Test POST /api/auth/login with creator credentials"""
+        print("\n🔍 Testing Creator Login API...")
+        try:
+            # Prepare form data for creator login
+            form_data = aiohttp.FormData()
+            form_data.add_field('username', CREATOR_EMAIL)
+            form_data.add_field('password', CREATOR_PASSWORD)
+            
+            async with self.session.post(f"{API_BASE}/auth/login", data=form_data) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if 'access_token' in data and data.get('user', {}).get('role') == 'creator':
+                        self.creator_token = data['access_token']
+                        self.test_results['creator_login_success'] = True
+                        print(f"✅ Creator login successful - Creator token received")
+                        return True
+                    else:
+                        error_msg = "Creator login response missing access_token or user is not creator"
+                        self.test_results['auth_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Creator login failed with status {response.status}: {error_text}"
+                    self.test_results['auth_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Creator login API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
+    async def test_creator_application_apis(self):
+        """Test Creator Application APIs"""
+        print("\n🔍 Testing Creator Application APIs...")
+        
+        # Test POST /api/creator-application/apply
+        try:
+            headers = {'Content-Type': 'application/json'}
+            
+            application_data = {
+                "name": "Test Creator Application",
+                "email": "test-creator-app@ariome.com",
+                "password": "test123",
+                "bio": "Experienced meditation teacher with 10+ years of practice",
+                "description": "I create guided meditations focused on stress relief and mindfulness",
+                "website": "https://testcreator.com",
+                "social_media": {
+                    "instagram": "@testcreator",
+                    "youtube": "TestCreatorChannel"
+                }
+            }
+            
+            async with self.session.post(f"{API_BASE}/creator-application/apply", 
+                                       json=application_data, 
+                                       headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if data.get('status') == 'success' and 'application_id' in data:
+                        self.test_results['creator_application_apply_success'] = True
+                        self.application_id = data['application_id']
+                        print("✅ Creator application submit successful")
+                    else:
+                        error_msg = "Creator application response missing success status or application_id"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                elif response.status == 400:
+                    # Application might already exist
+                    error_text = await response.text()
+                    if "already" in error_text.lower():
+                        self.test_results['creator_application_apply_success'] = True
+                        print("✅ Creator application API working - Application already exists (expected)")
+                    else:
+                        error_msg = f"Creator application failed with unexpected 400: {error_text}"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Creator application failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Creator application API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+        
+        # Test admin endpoints if admin token available
+        if not self.admin_token:
+            print("⚠️ Cannot test admin creator application endpoints - no admin token")
+            return True
+        
+        admin_headers = {
+            'Authorization': f'Bearer {self.admin_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Test GET /api/creator-application/admin/pending
+        try:
+            async with self.session.get(f"{API_BASE}/creator-application/admin/pending", 
+                                      headers=admin_headers) as response:
+                if response.status == 200:
+                    applications = await response.json()
+                    self.test_results['creator_application_pending_success'] = True
+                    print(f"✅ GET pending applications successful - {len(applications)} pending")
+                else:
+                    error_text = await response.text()
+                    error_msg = f"GET pending applications failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+        except Exception as e:
+            error_msg = f"GET pending applications request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+        
+        # Test GET /api/creator-application/admin/stats
+        try:
+            async with self.session.get(f"{API_BASE}/creator-application/admin/stats", 
+                                      headers=admin_headers) as response:
+                if response.status == 200:
+                    stats = await response.json()
+                    required_fields = ['total', 'pending', 'approved', 'rejected']
+                    if all(field in stats for field in required_fields):
+                        self.test_results['creator_application_stats_success'] = True
+                        print(f"✅ GET application stats successful - {stats}")
+                    else:
+                        error_msg = f"Application stats response missing required fields: {required_fields}"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                else:
+                    error_text = await response.text()
+                    error_msg = f"GET application stats failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+        except Exception as e:
+            error_msg = f"GET application stats request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+        
+        return True
+    
+    async def test_library_apis(self):
+        """Test Library APIs - Save/Unsave stories and Play History"""
+        print("\n🔍 Testing Library APIs...")
+        if not self.access_token:
+            print("❌ Cannot test library APIs - no access token")
+            return False
+        
+        headers = {
+            'Authorization': f'Bearer {self.access_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # First get a story ID to use for testing
+        story_id = None
+        try:
+            async with self.session.get(f"{API_BASE}/stories") as response:
+                if response.status == 200:
+                    stories = await response.json()
+                    if stories:
+                        story_id = stories[0].get('id')
+                        print(f"   Using story ID for testing: {story_id}")
+        except Exception as e:
+            print(f"⚠️ Could not get story ID for library testing: {e}")
+            return False
+        
+        if not story_id:
+            print("⚠️ No stories available for library testing")
+            return False
+        
+        # Test POST /api/library/save
+        try:
+            save_data = {"story_id": story_id}
+            async with self.session.post(f"{API_BASE}/library/save", 
+                                       json=save_data, 
+                                       headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if data.get('status') in ['success', 'already_saved']:
+                        self.test_results['library_save_success'] = True
+                        print("✅ Library save story successful")
+                    else:
+                        error_msg = "Library save response missing success status"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Library save failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+        except Exception as e:
+            error_msg = f"Library save API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+        
+        # Test GET /api/library/saved
+        try:
+            async with self.session.get(f"{API_BASE}/library/saved", 
+                                      headers=headers) as response:
+                if response.status == 200:
+                    saved_stories = await response.json()
+                    self.test_results['library_saved_list_success'] = True
+                    print(f"✅ GET saved stories successful - {len(saved_stories)} saved")
+                else:
+                    error_text = await response.text()
+                    error_msg = f"GET saved stories failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+        except Exception as e:
+            error_msg = f"GET saved stories request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+        
+        # Test POST /api/library/history
+        try:
+            history_data = {"story_id": story_id, "progress": 75.5}
+            async with self.session.post(f"{API_BASE}/library/history", 
+                                       json=history_data, 
+                                       headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if data.get('status') == 'success':
+                        self.test_results['library_history_add_success'] = True
+                        print("✅ Library add to history successful")
+                    else:
+                        error_msg = "Library history response missing success status"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Library add history failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+        except Exception as e:
+            error_msg = f"Library add history API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+        
+        # Test GET /api/library/history
+        try:
+            async with self.session.get(f"{API_BASE}/library/history", 
+                                      headers=headers) as response:
+                if response.status == 200:
+                    history = await response.json()
+                    self.test_results['library_history_list_success'] = True
+                    print(f"✅ GET play history successful - {len(history)} items")
+                else:
+                    error_text = await response.text()
+                    error_msg = f"GET play history failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+        except Exception as e:
+            error_msg = f"GET play history request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+        
+        # Test DELETE /api/library/save/{story_id}
+        try:
+            async with self.session.delete(f"{API_BASE}/library/save/{story_id}", 
+                                         headers=headers) as response:
+                if response.status in [200, 404]:  # 404 is OK if not saved
+                    data = await response.json()
+                    self.test_results['library_unsave_success'] = True
+                    print("✅ Library unsave story successful")
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Library unsave failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+        except Exception as e:
+            error_msg = f"Library unsave API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+        
+        return True
+    
+    async def test_journal_create_api(self):
+        """Test POST /api/journal/entries - Create journal entry"""
+        print("\n🔍 Testing Journal Create Entry API...")
+        if not self.access_token:
+            print("❌ Cannot test journal create - no access token")
+            return False
+        
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            entry_data = {
+                "title": "Test Journal Entry",
+                "content": "This is a test journal entry created via API testing. Feeling grateful today.",
+                "mood": "grateful",
+                "tags": ["testing", "gratitude", "api"]
+            }
+            
+            async with self.session.post(f"{API_BASE}/journal/entries", 
+                                       json=entry_data, 
+                                       headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if 'id' in data and data.get('title') == entry_data['title']:
+                        self.test_results['journal_create_success'] = True
+                        print("✅ Journal create entry successful")
+                        return True
+                    else:
+                        error_msg = "Journal create response missing id or incorrect data"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Journal create failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Journal create API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
+    async def test_circles_create_api(self):
+        """Test POST /api/circles - Create new circle"""
+        print("\n🔍 Testing Circles Create API...")
+        if not self.access_token:
+            print("❌ Cannot test circles create - no access token")
+            return False
+        
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            circle_data = {
+                "name": "Test Circle API",
+                "description": "A test circle created via API testing for mindfulness practice",
+                "intention": "mindfulness",
+                "is_private": False
+            }
+            
+            async with self.session.post(f"{API_BASE}/circles", 
+                                       json=circle_data, 
+                                       headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if 'id' in data and data.get('name') == circle_data['name']:
+                        self.test_results['circles_create_success'] = True
+                        print("✅ Circles create successful")
+                        return True
+                    else:
+                        error_msg = "Circles create response missing id or incorrect data"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Circles create failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Circles create API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
     async def run_api_tests(self):
         """Run all API tests"""
         print("🚀 Starting ARIOME Backend API Testing\n")
