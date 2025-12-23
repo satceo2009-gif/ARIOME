@@ -46,7 +46,7 @@ async def get_circles(
         query["intention"] = intention
     
     circles = await db.circles.find(query).sort("created_at", -1).to_list(100)
-    user_id = str(current_user["_id"])
+    user_id = str(current_user.get("_id", current_user.get("id")))
     
     return [
         {
