@@ -8,6 +8,7 @@ import asyncio
 import aiohttp
 import json
 import os
+import time
 from typing import Dict, Any
 
 # Get backend URL from environment
