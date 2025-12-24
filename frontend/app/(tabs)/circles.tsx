@@ -37,7 +37,7 @@ export default function CirclesScreen() {
       // Try public endpoint as fallback
       try {
         const response = await fetch(
-          `https://logohomelink.preview.emergentagent.com/api/circles/public${selectedIntention ? `?intention=${selectedIntention}` : ''}`
+          `https://reflection-first.preview.emergentagent.com/api/circles/public${selectedIntention ? `?intention=${selectedIntention}` : ''}`
         );
         const publicData = await response.json();
         setCircles(publicData || []);
