@@ -53,7 +53,7 @@ async def get_circles(
     intention: Optional[str] = Query(None),
     current_user: dict = Depends(get_current_user)
 ):
-    """Get all circles (optionally filtered by intention)"""
+    """Get all circles (optionally filtered by intention) - authenticated user"""
     query = {}
     if intention:
         query["intention"] = intention
