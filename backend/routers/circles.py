@@ -48,6 +48,32 @@ async def create_circle(circle: CreateCircle, current_user: dict = Depends(get_c
         "created_at": circle_doc["created_at"].isoformat()
     }
 
+
+@router.get("/public")
+async def get_public_circles(intention: Optional[str] = Query(None)):
+    """Get all public circles - no authentication required (for explorers/guests)"""
+    query = {"is_private": {"$ne": True}}  # Only public circles
+    if intention:
+        query["intention"] = intention
+    
+    circles = await db.circles.find(query).sort("created_at", -1).to_list(100)
+    
+    return [
+        {
+            "id": str(c["_id"]),
+            "name": c.get("name"),
+            "description": c.get("description"),
+            "intention": c.get("intention"),
+            "creator_name": c.get("creator_name"),
+            "member_count": c.get("member_count", 0),
+            "post_count": c.get("post_count", 0),
+            "is_member": False,  # Not logged in, can't be a member
+            "is_private": c.get("is_private", False)
+        }
+        for c in circles
+    ]
+
+
 @router.get("")
 async def get_circles(
     intention: Optional[str] = Query(None),
