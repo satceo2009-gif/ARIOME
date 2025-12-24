@@ -2,11 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert, ActivityIndicator, Modal, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { INTENTIONS } from '@/constants/intentions';
 import { circlesAPI } from '@/services/api';
+import AriomeLogo from '@/components/AriomeLogo';
 
 export default function CirclesScreen() {
+  const router = useRouter();
   const { token, user } = useAuth();
   const [circles, setCircles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,6 +19,11 @@ export default function CirclesScreen() {
   const [newCircle, setNewCircle] = useState({ name: '', description: '', intention: '' });
   const [creating, setCreating] = useState(false);
   const [joiningId, setJoiningId] = useState<string | null>(null);
+
+  // Role-based permissions
+  const userRole = user?.role || 'explorer';
+  const canCreateCircle = ['subscriber', 'creator', 'admin'].includes(userRole);
+  const canJoinCircle = ['subscriber', 'creator', 'admin'].includes(userRole);
 
   const loadCircles = useCallback(async () => {
     try {
@@ -49,6 +57,18 @@ export default function CirclesScreen() {
       return;
     }
     
+    if (!canJoinCircle) {
+      Alert.alert(
+        'Upgrade Required', 
+        'Subscribe to ARIOME to join circles and connect with the community.',
+        [
+          { text: 'Later', style: 'cancel' },
+          { text: 'Subscribe', onPress: () => router.push('/auth') }
+        ]
+      );
+      return;
+    }
+    
     setJoiningId(circleId);
     try {
       await circlesAPI.join(circleId);
@@ -79,6 +99,18 @@ export default function CirclesScreen() {
       return;
     }
 
+    if (!canCreateCircle) {
+      Alert.alert(
+        'Upgrade Required', 
+        'Subscribe to ARIOME to create your own circles.',
+        [
+          { text: 'Later', style: 'cancel' },
+          { text: 'Subscribe', onPress: () => router.push('/auth') }
+        ]
+      );
+      return;
+    }
+
     if (!newCircle.name.trim() || !newCircle.description.trim() || !newCircle.intention) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -103,6 +135,21 @@ export default function CirclesScreen() {
     }
   };
 
+  const handleCreateButtonPress = () => {
+    if (!canCreateCircle) {
+      Alert.alert(
+        'Upgrade Required', 
+        'Subscribe to ARIOME to create your own circles and build community.',
+        [
+          { text: 'Later', style: 'cancel' },
+          { text: 'Subscribe', onPress: () => router.push('/auth') }
+        ]
+      );
+      return;
+    }
+    setShowCreateModal(true);
+  };
+
   const getIntentionColor = (intention: string) => {
     const colors: any = {
       healing: '#EC4899',
@@ -120,7 +167,11 @@ export default function CirclesScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/discover')}>
+            <AriomeLogo width={100} height={42} />
+          </TouchableOpacity>
           <Text style={styles.title}>Community Circles</Text>
+          <View style={{ width: 24 }} />
         </View>
         <View style={styles.emptyState}>
           <MaterialCommunityIcons name="account-group" size={64} color="#6B7280" />
@@ -135,14 +186,31 @@ export default function CirclesScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Community Circles</Text>
-        <TouchableOpacity 
-          style={styles.createButton}
-          onPress={() => setShowCreateModal(true)}
-        >
-          <MaterialCommunityIcons name="plus" size={24} color="#FFF" />
+        <TouchableOpacity onPress={() => router.push('/(tabs)/discover')}>
+          <AriomeLogo width={100} height={42} />
         </TouchableOpacity>
+        <Text style={styles.headerTitle}>Circles</Text>
+        {canCreateCircle ? (
+          <TouchableOpacity 
+            style={styles.createButton}
+            onPress={handleCreateButtonPress}
+          >
+            <MaterialCommunityIcons name="plus" size={24} color="#FFF" />
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 48 }} />
+        )}
       </View>
+
+      {/* Explorer notice */}
+      {userRole === 'explorer' && (
+        <View style={styles.explorerNotice}>
+          <MaterialCommunityIcons name="information" size={18} color="#F59E0B" />
+          <Text style={styles.explorerNoticeText}>
+            Explorers can view circles. Subscribe to join & create!
+          </Text>
+        </View>
+      )}
 
       {/* Intention Filter */}
       <ScrollView 
@@ -196,13 +264,17 @@ export default function CirclesScreen() {
             <View style={styles.emptyState}>
               <MaterialCommunityIcons name="account-group" size={64} color="#9CA3AF" />
               <Text style={styles.emptyText}>No circles found</Text>
-              <Text style={styles.emptySubtext}>Be the first to create one!</Text>
-              <TouchableOpacity 
-                style={styles.createCircleButton}
-                onPress={() => setShowCreateModal(true)}
-              >
-                <Text style={styles.createCircleButtonText}>Create Circle</Text>
-              </TouchableOpacity>
+              <Text style={styles.emptySubtext}>
+                {canCreateCircle ? 'Be the first to create one!' : 'Check back soon for new circles!'}
+              </Text>
+              {canCreateCircle && (
+                <TouchableOpacity 
+                  style={styles.createCircleButton}
+                  onPress={handleCreateButtonPress}
+                >
+                  <Text style={styles.createCircleButtonText}>Create Circle</Text>
+                </TouchableOpacity>
+              )}
             </View>
           ) : (
             circles.map((circle) => (
@@ -250,12 +322,20 @@ export default function CirclesScreen() {
                       <MaterialCommunityIcons name="check" size={16} color="#14B8A6" />
                       <Text style={styles.joinedButtonText}>Joined</Text>
                     </TouchableOpacity>
-                  ) : (
+                  ) : canJoinCircle ? (
                     <TouchableOpacity 
                       style={styles.joinButton}
                       onPress={() => handleJoinCircle(circle.id)}
                     >
                       <Text style={styles.joinButtonText}>Join</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity 
+                      style={[styles.joinButton, styles.viewOnlyButton]}
+                      onPress={() => handleJoinCircle(circle.id)}
+                    >
+                      <MaterialCommunityIcons name="lock" size={14} color="#9CA3AF" />
+                      <Text style={styles.viewOnlyButtonText}>View</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -349,10 +429,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   title: {
     fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  headerTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#FFF',
   },
@@ -364,11 +450,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  explorerNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#78350F',
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 8,
+  },
+  explorerNoticeText: {
+    color: '#FDE68A',
+    fontSize: 12,
+    flex: 1,
+  },
   filterContainer: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   filterContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     gap: 8,
   },
   filterChip: {
@@ -404,7 +506,7 @@ const styles = StyleSheet.create({
   },
   circlesContainer: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
   },
   circleCard: {
     backgroundColor: '#1F2937',
@@ -494,6 +596,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#14B8A6',
   },
+  viewOnlyButton: {
+    backgroundColor: '#374151',
+    borderWidth: 0,
+  },
   joinButtonText: {
     color: '#FFF',
     fontSize: 14,
@@ -501,6 +607,11 @@ const styles = StyleSheet.create({
   },
   joinedButtonText: {
     color: '#14B8A6',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  viewOnlyButtonText: {
+    color: '#9CA3AF',
     fontSize: 14,
     fontWeight: '600',
   },
