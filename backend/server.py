@@ -485,7 +485,8 @@ async def create_reflection(reflection: ReflectionCreate, request: Request):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.reflections.insert_one(reflection_doc)
-    del reflection_doc["_id"] if "_id" in reflection_doc else None
+    if "_id" in reflection_doc:
+        del reflection_doc["_id"]
     return reflection_doc
 
 @app.get("/api/reflections", response_model=List[ReflectionResponse])
