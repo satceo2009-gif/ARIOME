@@ -269,15 +269,17 @@ async def create_guest(guest_data: GuestCreate, response: Response):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user)
+    user.pop("_id", None)  # Remove MongoDB ObjectId before returning
     
     # Create session
     session_token = f"guest_{uuid4().hex}"
-    await db.user_sessions.insert_one({
+    session_doc = {
         "user_id": user_id,
         "session_token": session_token,
         "expires_at": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
         "created_at": datetime.now(timezone.utc).isoformat()
-    })
+    }
+    await db.user_sessions.insert_one(session_doc)
     
     response.set_cookie(
         key="session_token",
