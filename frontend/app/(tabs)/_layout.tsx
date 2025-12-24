@@ -1,9 +1,9 @@
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import AriomeLogo from '@/components/AriomeLogo';
-import { ARIOME_COLORS } from '@/constants/ariomeTheme';
+import { ARIOME_COLORS } from '@/constants/theme';
 
 export default function TabLayout() {
   const router = useRouter();
@@ -20,14 +20,14 @@ export default function TabLayout() {
           borderBottomColor: 'rgba(255,255,255,0.05)',
         },
         headerTitle: () => (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.headerTitle}
             onPress={() => router.push('/')}
             activeOpacity={0.7}
             accessibilityLabel="AriOme Home"
             accessibilityRole="button"
           >
-            <AriomeLogo width={120} height={50} />
+            <AriomeLogo width={110} height={45} />
           </TouchableOpacity>
         ),
         headerTintColor: ARIOME_COLORS.consciousness.teal,
@@ -47,38 +47,29 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="self-ariome"
+        name="reflect"
         options={{
-          title: 'Self',
+          title: 'Reflect',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="thought-bubble-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="practices"
+        options={{
+          title: 'Practices',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="meditation" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="discover"
-        options={{
-          title: 'Discover',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="compass-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="for-you"
+        name="wisdom"
         options={{
           title: 'Wisdom',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="book-open-page-variant-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="circles"
-        options={{
-          title: 'Circles',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account-group-outline" size={size} color={color} />
           ),
         }}
       />
@@ -89,18 +80,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="notebook-outline" size={size} color={color} />
           ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="library"
-        options={{
-          href: null,
         }}
       />
     </Tabs>
