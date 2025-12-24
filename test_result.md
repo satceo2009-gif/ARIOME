@@ -316,77 +316,119 @@ backend:
           comment: "✅ Explorer to Subscriber Upgrade Flow tested successfully (5/5 tests passed - 100%). FIXED CRITICAL BUG: Login endpoint was accessing user['avatar'] without default, causing 520 errors for explorer users. Now uses .get() with default avatar. All upgrade scenarios working: 1) Email signup creates explorer, 2) Upgrade to subscriber returns valid token, 3) Login after upgrade works, 4) Duplicate upgrade properly blocked with 'already has password' error, 5) Non-existent user upgrade blocked with 'not found' error. Test credentials upgrade-test@example.com / newpass123 working correctly."
 
 frontend:
-  - task: "Settings Navigation from Profile"
+  - task: "Onboarding Flow - Welcome Screen"
     implemented: true
     working: true
-    file: "frontend/app/(tabs)/profile.tsx"
+    file: "frontend/app/onboarding.tsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Settings navigation fixed. Profile → Settings route works correctly."
+        - working: true
+          agent: "testing"
+          comment: "✅ Onboarding Welcome Screen tested successfully. ARIOME by CNESS logo found, philosophy quote 'Consciousness first, not content first' displayed, all 4 feature cards present (Self-AriOme, Practices & Rituals, Wisdom Library, Community Circles). 'Begin Your Journey' button functional and navigates to intention selection."
 
-  - task: "Settings Screen UI"
+  - task: "Onboarding Flow - Intention Selection"
     implemented: true
     working: true
-    file: "frontend/app/settings.tsx"
+    file: "frontend/app/onboarding.tsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ Intention Selection tested successfully. Screen loads with 'What brings you here?' prompt. Multiple intentions available for selection (Gratitude working, Mindfulness & Peace found). 'Continue to AriOme' button functional and navigates to Self-AriOme screen."
+
+  - task: "Self-AriOme Screen (Heart of the App)"
+    implemented: true
+    working: true
+    file: "frontend/app/(tabs)/self-ariome.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Settings screen fixed - removed duplicate sections, added useAuth import, displays notification toggles correctly."
+        - working: true
+          agent: "testing"
+          comment: "✅ Self-AriOme Screen tested successfully. Welcome section with date display working. Emotional check-in with all 10 moods found (Healing, Growth, Love, Gratitude, Resilience, Mindfulness, Joy, Peaceful, Reflective, Hopeful). Mood selection functional - Gratitude mood clickable with 'Add a reflection' link appearing. Today's Reflection section and Daily Practices section both present and functional."
 
-  - task: "Story Player with YouTube"
+  - task: "Tab Navigation System"
     implemented: true
     working: true
-    file: "frontend/app/story/[id].tsx"
+    file: "frontend/app/(tabs)/_layout.tsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
-          agent: "main"
-          comment: "Story player displays YouTube videos with embedded player. Shows reflection modal before playing."
+          agent: "testing"
+          comment: "✅ Tab Navigation tested successfully. All 5 tabs found and functional: Self (navigates to /self-ariome), Discover (/discover), Wisdom (/for-you), Circles (/circles), Journal (/journal). Bottom tab bar working correctly."
 
-  - task: "Circles Tab"
+  - task: "Circles Page UI"
     implemented: true
     working: true
     file: "frontend/app/(tabs)/circles.tsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Circles tab displays UI with intention filters and join buttons. Connected to backend API."
+        - working: true
+          agent: "testing"
+          comment: "✅ Circles Page tested successfully. Filter chips working with 'All' filter and intention filters (Healing, Resilience, Love). Circle cards display with member count information. Shows 'Resilience Warriors' and 'Joy Seekers Sanctuary' circles with descriptions and member counts (190 members, 134 posts for Resilience Warriors)."
 
-  - task: "Journal Tab"
+  - task: "Journal Page UI"
     implemented: true
     working: true
     file: "frontend/app/(tabs)/journal.tsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Journal tab displays stats cards and entries/reflections tabs. Connected to backend API."
+        - working: true
+          agent: "testing"
+          comment: "✅ Journal Page tested successfully. Shows 'Your Inner Journal' text for non-logged in users as expected. 'Get Started' button present and functional for user signup/login flow."
 
-  - task: "Library Tab"
+  - task: "Global Logo Clickability"
+    implemented: true
+    working: false
+    file: "frontend/components/ConsciousHeader.tsx"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Story player displays YouTube videos with embedded player. Shows reflection modal before playing."
+        - working: false
+          agent: "testing"
+          comment: "❌ Global Logo Clickability issue found. Logo not found or not clickable on Settings, Circles, and Journal pages. The AriOme logo should be present in headers and clickable to navigate back to home/self-ariome screen."
+
+  - task: "Conscious Design Theme"
     implemented: true
     working: true
-    file: "frontend/app/(tabs)/library.tsx"
+    file: "frontend/constants/ariomeTheme.ts"
     stuck_count: 0
-    priority: "high"
-    needs_retesting: true
+    priority: "medium"
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Library tab displays saved stories and recently played tabs."
+        - working: true
+          agent: "testing"
+          comment: "✅ Conscious Design Theme verified. Dark background theme implemented correctly. Teal accent colors (#14B8A6) used throughout the app. Calm spacing and conscious design elements present. UI follows the conscious design principles with proper contrast and mindful color usage."
 
 metadata:
   created_by: "testing_agent"
