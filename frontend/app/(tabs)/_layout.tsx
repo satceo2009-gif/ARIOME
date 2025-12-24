@@ -1,47 +1,55 @@
 import { Tabs } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Text, View, StyleSheet } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import AriomeLogo from '@/components/AriomeLogo';
+import { ARIOME_COLORS } from '@/constants/ariomeTheme';
 
 export default function TabLayout() {
+  const router = useRouter();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: true,
         headerStyle: {
-          backgroundColor: '#0A0A0F',
+          backgroundColor: ARIOME_COLORS.background.deep,
           elevation: 0,
           shadowOpacity: 0,
           borderBottomWidth: 1,
-          borderBottomColor: '#1F2937',
+          borderBottomColor: 'rgba(255,255,255,0.05)',
         },
         headerTitle: () => (
-          <View style={styles.headerTitle}>
-            <AriomeLogo width={140} height={59} />
-          </View>
+          <TouchableOpacity 
+            style={styles.headerTitle}
+            onPress={() => router.push('/')}
+            activeOpacity={0.7}
+          >
+            <AriomeLogo width={120} height={50} />
+          </TouchableOpacity>
         ),
-        headerTintColor: '#14B8A6',
+        headerTintColor: ARIOME_COLORS.consciousness.teal,
         tabBarStyle: {
-          backgroundColor: '#1A1A24',
+          backgroundColor: ARIOME_COLORS.background.secondary,
           borderTopWidth: 0,
           height: 70,
           paddingBottom: 10,
           paddingTop: 10,
         },
-        tabBarActiveTintColor: '#14B8A6',
-        tabBarInactiveTintColor: '#6B7280',
+        tabBarActiveTintColor: ARIOME_COLORS.consciousness.teal,
+        tabBarInactiveTintColor: ARIOME_COLORS.text.subtle,
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '600',
+          fontWeight: '500',
         },
       }}
     >
       <Tabs.Screen
-        name="for-you"
+        name="self-ariome"
         options={{
-          title: 'For You',
+          title: 'Self',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="heart-outline" size={size} color={color} />
+            <MaterialCommunityIcons name="meditation" size={size} color={color} />
           ),
         }}
       />
@@ -51,6 +59,15 @@ export default function TabLayout() {
           title: 'Discover',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="compass-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="for-you"
+        options={{
+          title: 'Wisdom',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="book-open-page-variant-outline" size={size} color={color} />
           ),
         }}
       />
@@ -75,10 +92,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account-circle-outline" size={size} color={color} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen
