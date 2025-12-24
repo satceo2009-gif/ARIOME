@@ -45,6 +45,8 @@ export default function ConsciousHeader({
         style={styles.logoContainer}
         onPress={handleLogoPress}
         activeOpacity={0.7}
+        accessibilityLabel="AriOme Home"
+        accessibilityRole="button"
       >
         <AriomeLogo width={120} height={50} />
       </TouchableOpacity>
