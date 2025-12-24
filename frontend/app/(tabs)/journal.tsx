@@ -2,10 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { journalAPI } from '@/services/api';
+import AriomeLogo from '@/components/AriomeLogo';
 
 export default function JournalScreen() {
+  const router = useRouter();
   const { user, token } = useAuth();
   const [entries, setEntries] = useState<any[]>([]);
   const [reflections, setReflections] = useState<any[]>([]);
@@ -16,6 +19,9 @@ export default function JournalScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // All logged-in users (including explorers) can use journal
+  const canUseJournal = !!token;
 
   const loadData = useCallback(async () => {
     if (!token) {
@@ -104,7 +110,7 @@ export default function JournalScreen() {
       setStats(prev => ({ ...prev, totalEntries: prev.totalEntries + 1 }));
       setNewEntry({ title: '', content: '', mood: 'peaceful', tags: '' });
       setShowCreateModal(false);
-      Alert.alert('Success', 'Journal entry saved!');
+      Alert.alert('Success', 'Journal entry saved to your account!');
     } catch (error: any) {
       console.error('Error creating entry:', error);
       Alert.alert('Error', error.response?.data?.detail || 'Failed to save entry. Please try again.');
@@ -113,16 +119,27 @@ export default function JournalScreen() {
     }
   };
 
-  if (!user) {
+  // Not logged in at all - show signup prompt
+  if (!user && !token) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
-          <Text style={styles.title}>Journal</Text>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/discover')}>
+            <AriomeLogo width={100} height={42} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Journal</Text>
+          <View style={{ width: 44 }} />
         </View>
         <View style={styles.emptyState}>
           <MaterialCommunityIcons name="notebook-outline" size={64} color="#6B7280" />
-          <Text style={styles.emptyText}>Login to access your journal</Text>
-          <Text style={styles.emptySubtext}>Your personal space for reflection awaits</Text>
+          <Text style={styles.emptyText}>Your Personal Journal</Text>
+          <Text style={styles.emptySubtext}>Sign up to start journaling your thoughts and reflections</Text>
+          <TouchableOpacity 
+            style={styles.signupButton}
+            onPress={() => router.push('/auth')}
+          >
+            <Text style={styles.signupButtonText}>Get Started</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -132,7 +149,10 @@ export default function JournalScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Journal</Text>
+        <TouchableOpacity onPress={() => router.push('/(tabs)/discover')}>
+          <AriomeLogo width={100} height={42} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Journal</Text>
         <TouchableOpacity 
           style={styles.createButton}
           onPress={() => setShowCreateModal(true)}
@@ -140,6 +160,16 @@ export default function JournalScreen() {
           <MaterialCommunityIcons name="plus" size={24} color="#FFF" />
         </TouchableOpacity>
       </View>
+
+      {/* Explorer notice */}
+      {user?.role === 'explorer' && (
+        <View style={styles.explorerNotice}>
+          <MaterialCommunityIcons name="notebook-heart" size={18} color="#14B8A6" />
+          <Text style={styles.explorerNoticeText}>
+            Your journal entries are saved to your account!
+          </Text>
+        </View>
+      )}
 
       {/* Stats Cards */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statsContainer}>
@@ -347,11 +377,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
-  title: {
-    fontSize: 28,
+  headerTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#FFF',
   },
@@ -363,8 +393,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  explorerNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#064E3B',
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 8,
+  },
+  explorerNoticeText: {
+    color: '#6EE7B7',
+    fontSize: 12,
+    flex: 1,
+  },
   statsContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     marginBottom: 20,
   },
   statCard: {
@@ -388,7 +434,7 @@ const styles = StyleSheet.create({
   },
   tabs: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     marginBottom: 16,
   },
   tab: {
@@ -411,7 +457,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
   },
   loadingContainer: {
     flex: 1,
@@ -492,6 +538,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#9CA3AF',
     marginTop: 8,
+    textAlign: 'center',
+  },
+  signupButton: {
+    backgroundColor: '#14B8A6',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginTop: 24,
+  },
+  signupButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   createEntryBtn: {
     backgroundColor: '#14B8A6',
