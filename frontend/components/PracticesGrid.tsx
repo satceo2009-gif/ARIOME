@@ -39,7 +39,7 @@ export default function PracticesGrid({ onSelectPractice, activePractice }: Prac
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <MaterialCommunityIcons name="lotus" size={24} color={ARIOME_COLORS.consciousness.teal} />
+        <MaterialCommunityIcons name="flower-tulip-outline" size={24} color={ARIOME_COLORS.consciousness.teal} />
         <Text style={styles.title}>Daily Practices</Text>
       </View>
       <Text style={styles.subtitle}>Choose a practice to nurture your inner growth</Text>

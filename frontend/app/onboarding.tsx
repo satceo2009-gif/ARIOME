@@ -68,7 +68,7 @@ export default function Onboarding() {
               
               <View style={styles.sacredDivider}>
                 <View style={styles.dividerLine} />
-                <MaterialCommunityIcons name="lotus" size={24} color={ARIOME_COLORS.consciousness.teal} />
+                <MaterialCommunityIcons name="flower-tulip-outline" size={24} color={ARIOME_COLORS.consciousness.teal} />
                 <View style={styles.dividerLine} />
               </View>
               
