@@ -61,12 +61,16 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.title}>Settings</Text>
-        <View style={{ width: 24 }} />
+        <TouchableOpacity onPress={() => router.push('/(tabs)/discover')}>
+          <AriomeLogo width={100} height={42} />
+        </TouchableOpacity>
+        <View style={{ width: 40 }} />
       </View>
+
+      <Text style={styles.pageTitle}>Settings</Text>
 
       <ScrollView style={styles.scrollView}>
         {/* Notifications Section */}
