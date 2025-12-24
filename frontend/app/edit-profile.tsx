@@ -14,13 +14,20 @@ import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { authAPI } from '@/services/api';
 import { useUserStore } from '@/store/userStore';
+import { useAuth } from '@/contexts/AuthContext';
+import AriomeLogo from '@/components/AriomeLogo';
 
 export default function EditProfileScreen() {
   const router = useRouter();
+  const { user: authUser } = useAuth();
   const { user, setUser } = useUserStore();
-  const [name, setName] = useState(user?.name || '');
+  const [name, setName] = useState(user?.name || authUser?.name || '');
   const [bio, setBio] = useState(user?.bio || '');
   const [loading, setLoading] = useState(false);
+
+  // Get email from auth context or user store
+  const userEmail = authUser?.email || user?.email || '';
+  const userRole = authUser?.role || user?.role || 'explorer';
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -30,17 +37,35 @@ export default function EditProfileScreen() {
 
     setLoading(true);
     try {
-      await authAPI.updateProfile({ name, bio });
+      await authAPI.updateProfile({ name: name.trim(), bio: bio.trim() });
       
       // Update local user store
-      setUser({ ...user, name, bio });
+      setUser({ ...user, name: name.trim(), bio: bio.trim() });
       
-      Alert.alert('Success', 'Profile updated successfully');
-      router.back();
+      // Show success message and navigate to home
+      Alert.alert(
+        'Success', 
+        'Profile changes saved successfully!',
+        [
+          { 
+            text: 'OK', 
+            onPress: () => router.replace('/(tabs)/discover')
+          }
+        ]
+      );
     } catch (error: any) {
       Alert.alert('Error', error.response?.data?.detail || 'Failed to update profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case 'admin': return '#EF4444';
+      case 'creator': return '#8B5CF6';
+      case 'subscriber': return '#14B8A6';
+      default: return '#6B7280';
     }
   };
 
@@ -50,11 +75,27 @@ export default function EditProfileScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.title}>Edit Profile</Text>
+        <TouchableOpacity onPress={() => router.push('/(tabs)/discover')}>
+          <AriomeLogo width={100} height={42} />
+        </TouchableOpacity>
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.pageTitle}>Edit Profile</Text>
+        
+        {/* Role Badge */}
+        <View style={styles.roleBadgeContainer}>
+          <View style={[styles.roleBadge, { backgroundColor: getRoleBadgeColor(userRole) }]}>
+            <MaterialCommunityIcons 
+              name={userRole === 'admin' ? 'shield-crown' : userRole === 'creator' ? 'brush' : userRole === 'subscriber' ? 'crown' : 'compass'} 
+              size={14} 
+              color="#FFF" 
+            />
+            <Text style={styles.roleBadgeText}>{userRole.charAt(0).toUpperCase() + userRole.slice(1)}</Text>
+          </View>
+        </View>
+
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Full Name *</Text>
           <TextInput
@@ -81,11 +122,10 @@ export default function EditProfileScreen() {
 
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={[styles.input, styles.disabledInput]}
-            value={user?.email}
-            editable={false}
-          />
+          <View style={styles.emailContainer}>
+            <MaterialCommunityIcons name="email-outline" size={20} color="#6B7280" />
+            <Text style={styles.emailText}>{userEmail}</Text>
+          </View>
           <Text style={styles.helperText}>Email cannot be changed</Text>
         </View>
 
@@ -97,7 +137,10 @@ export default function EditProfileScreen() {
           {loading ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={styles.saveButtonText}>Save Changes</Text>
+            <>
+              <MaterialCommunityIcons name="content-save" size={20} color="#FFF" />
+              <Text style={styles.saveButtonText}>Save Changes</Text>
+            </>
           )}
         </TouchableOpacity>
       </ScrollView>
@@ -115,19 +158,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#1F2937',
   },
-  title: {
-    fontSize: 20,
+  pageTitle: {
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#FFF',
+    marginBottom: 24,
   },
   content: {
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 24,
+  },
+  roleBadgeContainer: {
+    marginBottom: 24,
+  },
+  roleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 6,
+  },
+  roleBadgeText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '600',
   },
   inputContainer: {
     marginBottom: 24,
@@ -151,19 +212,36 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: 'top',
   },
-  disabledInput: {
-    opacity: 0.6,
+  emailContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1F2937',
+    borderRadius: 12,
+    padding: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#374151',
+    opacity: 0.7,
+  },
+  emailText: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    flex: 1,
   },
   helperText: {
     fontSize: 12,
     color: '#6B7280',
-    marginTop: 4,
+    marginTop: 6,
+    fontStyle: 'italic',
   },
   saveButton: {
     backgroundColor: '#14B8A6',
     borderRadius: 12,
     padding: 16,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     marginTop: 8,
     marginBottom: 32,
   },
