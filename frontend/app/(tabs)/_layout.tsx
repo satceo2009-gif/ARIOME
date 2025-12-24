@@ -24,6 +24,8 @@ export default function TabLayout() {
             style={styles.headerTitle}
             onPress={() => router.push('/')}
             activeOpacity={0.7}
+            accessibilityLabel="AriOme Home"
+            accessibilityRole="button"
           >
             <AriomeLogo width={120} height={50} />
           </TouchableOpacity>
