@@ -177,14 +177,115 @@ export default function CirclesScreen() {
           <TouchableOpacity onPress={() => router.push('/(tabs)/discover')}>
             <AriomeLogo width={100} height={42} />
           </TouchableOpacity>
-          <Text style={styles.title}>Community Circles</Text>
+          <Text style={styles.headerTitle}>Circles</Text>
           <View style={{ width: 24 }} />
         </View>
-        <View style={styles.emptyState}>
-          <MaterialCommunityIcons name="account-group" size={64} color="#6B7280" />
-          <Text style={styles.emptyText}>Login to access circles</Text>
-          <Text style={styles.emptySubtext}>Join communities that resonate with your journey</Text>
+
+        {/* Guest notice */}
+        <View style={styles.explorerNotice}>
+          <MaterialCommunityIcons name="information" size={18} color="#F59E0B" />
+          <Text style={styles.explorerNoticeText}>
+            Sign up to join circles and connect with the community!
+          </Text>
         </View>
+
+        {/* Intention Filter */}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterContainer}
+          contentContainerStyle={styles.filterContent}
+        >
+          <TouchableOpacity
+            style={[styles.filterChip, !selectedIntention && styles.filterChipActive]}
+            onPress={() => setSelectedIntention(null)}
+          >
+            <Text style={[styles.filterText, !selectedIntention && styles.filterTextActive]}>All</Text>
+          </TouchableOpacity>
+          {INTENTIONS.map((intention) => (
+            <TouchableOpacity
+              key={intention.id}
+              style={[
+                styles.filterChip,
+                selectedIntention === intention.id && styles.filterChipActive,
+                selectedIntention === intention.id && { backgroundColor: getIntentionColor(intention.id) }
+              ]}
+              onPress={() => setSelectedIntention(intention.id)}
+            >
+              <Text style={[styles.filterText, selectedIntention === intention.id && styles.filterTextActive]}>
+                {intention.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Circles List (view only) */}
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#14B8A6" />
+            <Text style={styles.loadingText}>Loading circles...</Text>
+          </View>
+        ) : (
+          <ScrollView 
+            style={styles.circlesContainer}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#14B8A6" />
+            }
+          >
+            {circles.length === 0 ? (
+              <View style={styles.emptyState}>
+                <MaterialCommunityIcons name="account-group" size={64} color="#9CA3AF" />
+                <Text style={styles.emptyText}>No circles found</Text>
+                <Text style={styles.emptySubtext}>Check back soon for new circles!</Text>
+              </View>
+            ) : (
+              circles.map((circle) => (
+                <View key={circle.id} style={styles.circleCard}>
+                  <View style={styles.circleHeader}>
+                    <View style={[styles.circleIcon, { backgroundColor: `${getIntentionColor(circle.intention)}20` }]}>
+                      <MaterialCommunityIcons name="account-group" size={32} color={getIntentionColor(circle.intention)} />
+                    </View>
+                    <View style={styles.circleInfo}>
+                      <Text style={styles.circleName}>{circle.name}</Text>
+                      <Text style={styles.circleCreator}>by {circle.creator_name}</Text>
+                    </View>
+                  </View>
+                  
+                  <Text style={styles.circleDescription}>{circle.description}</Text>
+                  
+                  <View style={styles.intentionBadge}>
+                    <View style={[styles.intentionDot, { backgroundColor: getIntentionColor(circle.intention) }]} />
+                    <Text style={[styles.intentionText, { color: getIntentionColor(circle.intention) }]}>
+                      {circle.intention}
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.circleFooter}>
+                    <View style={styles.circleStats}>
+                      <View style={styles.statItem}>
+                        <MaterialCommunityIcons name="account-multiple" size={16} color="#9CA3AF" />
+                        <Text style={styles.statText}>{circle.member_count} members</Text>
+                      </View>
+                      <View style={styles.statItem}>
+                        <MaterialCommunityIcons name="message-text" size={16} color="#9CA3AF" />
+                        <Text style={styles.statText}>{circle.post_count} posts</Text>
+                      </View>
+                    </View>
+                    
+                    <TouchableOpacity 
+                      style={[styles.joinButton, styles.viewOnlyButton]}
+                      onPress={() => router.push('/auth')}
+                    >
+                      <MaterialCommunityIcons name="lock" size={14} color="#9CA3AF" />
+                      <Text style={styles.viewOnlyButtonText}>Join</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+            )}
+            <View style={{ height: 20 }} />
+          </ScrollView>
+        )}
       </SafeAreaView>
     );
   }
