@@ -16,9 +16,9 @@ export default function Index() {
     );
   }
 
-  // If user exists (including explorers), go to main app
+  // If user exists (including explorers), go to main app (Self-AriOme is the heart)
   if (user) {
-    return <Redirect href="/(tabs)/discover" />;
+    return <Redirect href="/(tabs)/self-ariome" />;
   }
 
   // No user - go to auth

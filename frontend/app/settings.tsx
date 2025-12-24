@@ -4,9 +4,10 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
-import AriomeLogo from '@/components/AriomeLogo';
+import ConsciousHeader from '@/components/ConsciousHeader';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/ariomeTheme';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://logohomelink.preview.emergentagent.com/api';
 
@@ -60,15 +61,7 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push('/(tabs)/discover')}>
-          <AriomeLogo width={100} height={42} />
-        </TouchableOpacity>
-        <View style={{ width: 40 }} />
-      </View>
+      <ConsciousHeader showBack />
 
       <Text style={styles.pageTitle}>Settings</Text>
 
