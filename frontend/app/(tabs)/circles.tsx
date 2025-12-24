@@ -27,20 +27,27 @@ export default function CirclesScreen() {
 
   const loadCircles = useCallback(async () => {
     try {
-      if (token) {
-        const data = await circlesAPI.getAll(selectedIntention || undefined);
-        setCircles(data || []);
-      } else {
-        setCircles([]);
-      }
+      // Use public endpoint for explorers or unauthenticated users
+      // Use authenticated endpoint for subscribers/creators/admins
+      const data = await circlesAPI.getAll(selectedIntention || undefined);
+      setCircles(data || []);
     } catch (error) {
       console.error('Error loading circles:', error);
-      setCircles([]);
+      // Try public endpoint as fallback
+      try {
+        const response = await fetch(
+          `https://meditate-hub-3.preview.emergentagent.com/api/circles/public${selectedIntention ? `?intention=${selectedIntention}` : ''}`
+        );
+        const publicData = await response.json();
+        setCircles(publicData || []);
+      } catch (e) {
+        setCircles([]);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [token, selectedIntention]);
+  }, [selectedIntention]);
 
   useEffect(() => {
     loadCircles();
