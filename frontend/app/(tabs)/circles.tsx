@@ -6,7 +6,8 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { INTENTIONS } from '@/constants/intentions';
 import { circlesAPI } from '@/services/api';
-import AriomeLogo from '@/components/AriomeLogo';
+import ConsciousHeader from '@/components/ConsciousHeader';
+import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/ariomeTheme';
 
 export default function CirclesScreen() {
   const router = useRouter();
@@ -173,17 +174,11 @@ export default function CirclesScreen() {
   if (!user) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/discover')}>
-            <AriomeLogo width={100} height={42} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Circles</Text>
-          <View style={{ width: 24 }} />
-        </View>
+        <ConsciousHeader />
 
         {/* Guest notice */}
         <View style={styles.explorerNotice}>
-          <MaterialCommunityIcons name="information" size={18} color="#F59E0B" />
+          <MaterialCommunityIcons name="information" size={18} color={ARIOME_COLORS.accent.amber} />
           <Text style={styles.explorerNoticeText}>
             Sign up to join circles and connect with the community!
           </Text>
@@ -292,23 +287,17 @@ export default function CirclesScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push('/(tabs)/discover')}>
-          <AriomeLogo width={100} height={42} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Circles</Text>
-        {canCreateCircle ? (
+      {/* Header with Create Button */}
+      <ConsciousHeader 
+        rightComponent={canCreateCircle ? (
           <TouchableOpacity 
             style={styles.createButton}
             onPress={handleCreateButtonPress}
           >
             <MaterialCommunityIcons name="plus" size={24} color="#FFF" />
           </TouchableOpacity>
-        ) : (
-          <View style={{ width: 48 }} />
-        )}
-      </View>
+        ) : undefined}
+      />
 
       {/* Explorer notice */}
       {userRole === 'explorer' && (
