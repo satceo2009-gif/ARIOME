@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
+import AriomeLogo from '@/components/AriomeLogo';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
