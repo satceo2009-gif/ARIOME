@@ -492,13 +492,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "3-tier Authentication Flow (Guest → Explorer → Subscriber)"
-    - "Mood Selection Screen"
-    - "Circles Tab (No more loading spinner)"
-    - "Library Tab (Recently Played)"
+    - "Review Request Testing Complete - All 4 flows verified"
+    - "Frontend UI Testing (if needed)"
   stuck_tasks: []
-  test_all: true
-  test_priority: "high_first"
+  test_all: false
+  test_priority: "review_request_complete"
 
 agent_communication:
     - agent: "testing"
