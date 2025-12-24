@@ -292,8 +292,38 @@ export default function SettingsScreen() {
 
         {/* Danger Zone */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Danger Zone</Text>
+          <Text style={styles.sectionTitle}>Account</Text>
           
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => {
+              Alert.alert(
+                'Logout',
+                'Are you sure you want to logout?',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { 
+                    text: 'Logout', 
+                    style: 'destructive',
+                    onPress: async () => {
+                      await logout();
+                      router.replace('/auth');
+                    }
+                  }
+                ]
+              );
+            }}
+          >
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="logout" size={24} color="#F59E0B" />
+              <View style={styles.settingText}>
+                <Text style={styles.settingLabel}>Logout</Text>
+                <Text style={styles.settingDesc}>Sign out of your account</Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+          </TouchableOpacity>
+
           <TouchableOpacity 
             style={styles.settingItem}
             onPress={() => Alert.alert('Delete Account', 'This action cannot be undone. Are you sure?', [
