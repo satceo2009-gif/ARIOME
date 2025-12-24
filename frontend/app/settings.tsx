@@ -12,7 +12,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://meditate-hub-3.previ
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
   const [emailNotifs, setEmailNotifs] = useState(true);
   const [pushNotifs, setPushNotifs] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);
