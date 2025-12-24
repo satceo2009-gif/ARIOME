@@ -45,7 +45,7 @@ export default function MoodSelector({
               ]}>
                 {mood.label}
               </Text>
-            </TouchalOpacity>
+            </TouchableOpacity>
           );
         })}
       </ScrollView>
