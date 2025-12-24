@@ -1,33 +1,48 @@
-import { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Dimensions,
-} from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useUserStore } from '@/store/userStore';
-import { INTENTIONS } from '@/constants/intentions';
-import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/ariomeTheme';
-import * as Haptics from 'expo-haptics';
+import { useAuth } from '@/contexts/AuthContext';
+import { contentAPI } from '@/services/api';
+import AriomeLogo from '@/components/AriomeLogo';
+import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/theme';
 
 const { width } = Dimensions.get('window');
 
-export default function Onboarding() {
+interface Intention {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  description: string;
+}
+
+export default function OnboardingScreen() {
   const router = useRouter();
-  const { setUser, setIntentions, completeOnboarding } = useUserStore();
+  const { loginAsGuest } = useAuth();
   const [step, setStep] = useState(0);
   const [selectedIntentions, setSelectedIntentions] = useState<string[]>([]);
+  const [intentions, setIntentions] = useState<Intention[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleIntentionToggle = (intentionId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedIntentions((prev) =>
+  useEffect(() => {
+    loadIntentions();
+  }, []);
+
+  const loadIntentions = async () => {
+    try {
+      const data = await contentAPI.getIntentions();
+      setIntentions(data);
+    } catch (error) {
+      console.error('Error loading intentions:', error);
+    }
+  };
+
+  const toggleIntention = (intentionId: string) => {
+    setSelectedIntentions(prev =>
       prev.includes(intentionId)
-        ? prev.filter((id) => id !== intentionId)
+        ? prev.filter(id => id !== intentionId)
         : [...prev, intentionId]
     );
   };
@@ -36,181 +51,166 @@ export default function Onboarding() {
     if (step === 0) {
       setStep(1);
     } else {
-      const guestUser = {
-        id: 'guest_' + Date.now(),
-        name: 'Explorer',
-        email: '',
-        role: 'explorer',
-        intentions: selectedIntentions,
-      };
-      setUser(guestUser);
-      setIntentions(selectedIntentions);
-      await completeOnboarding();
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(tabs)/self-ariome');
+      setLoading(true);
+      try {
+        await loginAsGuest(selectedIntentions);
+        router.replace('/(tabs)/reflect');
+      } catch (error) {
+        console.error('Error creating guest:', error);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
-  return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      {step === 0 ? (
-        <View style={styles.welcomeWrapper}>
-          <ScrollView 
-            style={styles.welcomeScroll}
-            contentContainerStyle={styles.welcomeScrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Sacred Header */}
-            <View style={styles.header}>
-              <View style={styles.logoGlow} />
-              <Text style={styles.logoText}>ARIOME</Text>
-              <Text style={styles.logoTagline}>by CNESS</Text>
-              
-              <View style={styles.sacredDivider}>
-                <View style={styles.dividerLine} />
-                <MaterialCommunityIcons name="flower-tulip-outline" size={24} color={ARIOME_COLORS.consciousness.teal} />
-                <View style={styles.dividerLine} />
-              </View>
-              
-              <Text style={styles.welcomeTitle}>Welcome to Your{"\n"}Inner Journey</Text>
-              <Text style={styles.welcomeSubtitle}>
-                A space for conscious living, reflection, and inner growth
-              </Text>
-            </View>
+  const handleSkip = async () => {
+    setLoading(true);
+    try {
+      await loginAsGuest([]);
+      router.replace('/(tabs)/reflect');
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            {/* Philosophy Section */}
-            <View style={styles.philosophySection}>
-              <Text style={styles.philosophyQuote}>
-                "Consciousness first, not content first"
-              </Text>
-              <Text style={styles.philosophyText}>
-                AriOme is not just an app. It's a companion for your inner evolution.
-              </Text>
+  if (step === 0) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.welcomeContent} showsVerticalScrollIndicator={false}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.logoGlow} />
+            <AriomeLogo width={160} height={66} />
+            
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <MaterialCommunityIcons name="flower-tulip-outline" size={20} color={ARIOME_COLORS.consciousness.teal} />
+              <View style={styles.dividerLine} />
             </View>
-
-            {/* Features */}
-            <View style={styles.featuresContainer}>
-              <FeatureItem
-                icon="heart-pulse"
-                title="Self-AriOme"
-                description="Daily reflections, emotional check-ins, and conscious practices"
-                color={ARIOME_COLORS.accent.rose}
-              />
-              <FeatureItem
-                icon="meditation"
-                title="Practices & Rituals"
-                description="Breath awareness, stillness, gratitude, and intention setting"
-                color={ARIOME_COLORS.accent.lavender}
-              />
-              <FeatureItem
-                icon="book-open-page-variant-outline"
-                title="Wisdom Library"
-                description="Curated insights for reflection, not consumption"
-                color={ARIOME_COLORS.consciousness.teal}
-              />
-              <FeatureItem
-                icon="account-group-outline"
-                title="Community Circles"
-                description="Connect in shared intentions, not debates"
-                color={ARIOME_COLORS.accent.amber}
-              />
-            </View>
-
-            {/* What we are NOT */}
-            <View style={styles.notSection}>
-              <Text style={styles.notTitle}>What AriOme is NOT</Text>
-              <View style={styles.notItems}>
-                <NotItem text="Not social media" />
-                <NotItem text="No dopamine-driven gamification" />
-                <NotItem text="No ego-based comparison" />
-                <NotItem text="No infinite scroll" />
-              </View>
-            </View>
-          </ScrollView>
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={handleContinue}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.primaryButtonText}>Begin Your Journey</Text>
-              <MaterialCommunityIcons name="arrow-right" size={24} color="#FFF" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      ) : (
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.intentionsContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.intentionsHeader}>
-            <MaterialCommunityIcons name="compass-outline" size={40} color={ARIOME_COLORS.consciousness.teal} />
-            <Text style={styles.intentionsTitle}>What brings you here?</Text>
-            <Text style={styles.intentionsSubtitle}>
-              Select the intentions that resonate with you
-            </Text>
+            
+            <Text style={styles.welcomeTitle}>Welcome to Your{"\n"}Inner Journey</Text>
+            <Text style={styles.welcomeSubtitle}>A space for conscious living, reflection, and inner growth</Text>
           </View>
 
-          <View style={styles.intentionsGrid}>
-            {INTENTIONS.map((intention) => (
-              <IntentionCard
-                key={intention.id}
-                intention={intention}
-                isSelected={selectedIntentions.includes(intention.id)}
-                onPress={() => handleIntentionToggle(intention.id)}
-              />
-            ))}
+          {/* What AriOme Is */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>What is AriOme?</Text>
+            
+            <FeatureCard
+              icon="thought-bubble-outline"
+              title="Self-Reflection Engine"
+              description="Daily prompts, journaling, and mood check-ins to deepen self-awareness"
+              color={ARIOME_COLORS.accent.lavender}
+            />
+            <FeatureCard
+              icon="meditation"
+              title="Practices & Rituals"
+              description="Breathwork, stillness, gratitude rituals without gamified pressure"
+              color={ARIOME_COLORS.accent.rose}
+            />
+            <FeatureCard
+              icon="book-open-page-variant-outline"
+              title="Wisdom Library"
+              description="Curated wisdom with reflect-after-consume prompts"
+              color={ARIOME_COLORS.consciousness.teal}
+            />
           </View>
 
-          <TouchableOpacity
-            style={[
-              styles.primaryButton,
-              selectedIntentions.length === 0 && styles.primaryButtonDisabled,
-            ]}
-            onPress={handleContinue}
-            disabled={selectedIntentions.length === 0}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.primaryButtonText}>Continue to AriOme</Text>
-            <MaterialCommunityIcons name="check" size={24} color="#FFF" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.skipButton}
-            onPress={() => {
-              setIntentions([]);
-              router.replace('/(tabs)/self-ariome');
-            }}
-          >
-            <Text style={styles.skipButtonText}>Skip for now</Text>
-          </TouchableOpacity>
+          {/* What AriOme Is NOT */}
+          <View style={styles.notSection}>
+            <Text style={styles.notTitle}>What AriOme is NOT</Text>
+            <View style={styles.notItems}>
+              <NotItem text="Not social media" />
+              <NotItem text="No gamification" />
+              <NotItem text="No content overload" />
+              <NotItem text="No comparison" />
+            </View>
+          </View>
         </ScrollView>
-      )}
+
+        <View style={styles.footer}>
+          <TouchableOpacity style={styles.primaryButton} onPress={handleContinue}>
+            <Text style={styles.primaryButtonText}>Begin Your Journey</Text>
+            <MaterialCommunityIcons name="arrow-right" size={20} color="#FFF" />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Step 1: Intention Selection
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.intentionContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.intentionHeader}>
+          <MaterialCommunityIcons name="compass-outline" size={40} color={ARIOME_COLORS.consciousness.teal} />
+          <Text style={styles.intentionTitle}>What brings you here?</Text>
+          <Text style={styles.intentionSubtitle}>Select the intentions that resonate with you</Text>
+        </View>
+
+        <View style={styles.intentionGrid}>
+          {intentions.map((intention) => (
+            <TouchableOpacity
+              key={intention.id}
+              style={[
+                styles.intentionCard,
+                selectedIntentions.includes(intention.id) && {
+                  borderColor: intention.color,
+                  backgroundColor: `${intention.color}15`,
+                },
+              ]}
+              onPress={() => toggleIntention(intention.id)}
+            >
+              <View style={[styles.intentionIcon, { backgroundColor: `${intention.color}20` }]}>
+                <MaterialCommunityIcons name={intention.icon as any} size={28} color={intention.color} />
+              </View>
+              <Text style={styles.intentionName}>{intention.name}</Text>
+              <Text style={styles.intentionDesc}>{intention.description}</Text>
+              {selectedIntentions.includes(intention.id) && (
+                <View style={[styles.checkBadge, { backgroundColor: intention.color }]}>
+                  <MaterialCommunityIcons name="check" size={14} color="#FFF" />
+                </View>
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={[styles.primaryButton, loading && styles.buttonDisabled]}
+          onPress={handleContinue}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <>
+              <Text style={styles.primaryButtonText}>Continue to AriOme</Text>
+              <MaterialCommunityIcons name="check" size={20} color="#FFF" />
+            </>
+          )}
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.skipButton} onPress={handleSkip} disabled={loading}>
+          <Text style={styles.skipButtonText}>Skip for now</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
 
-function FeatureItem({
-  icon,
-  title,
-  description,
-  color,
-}: {
-  icon: string;
-  title: string;
-  description: string;
-  color: string;
-}) {
+function FeatureCard({ icon, title, description, color }: { icon: string; title: string; description: string; color: string }) {
   return (
-    <View style={styles.featureItem}>
-      <View style={[styles.featureIconContainer, { backgroundColor: `${color}15` }]}>
+    <View style={styles.featureCard}>
+      <View style={[styles.featureIcon, { backgroundColor: `${color}15` }]}>
         <MaterialCommunityIcons name={icon as any} size={26} color={color} />
       </View>
       <View style={styles.featureContent}>
         <Text style={styles.featureTitle}>{title}</Text>
-        <Text style={styles.featureDescription}>{description}</Text>
+        <Text style={styles.featureDesc}>{description}</Text>
       </View>
     </View>
   );
@@ -219,50 +219,9 @@ function FeatureItem({
 function NotItem({ text }: { text: string }) {
   return (
     <View style={styles.notItem}>
-      <MaterialCommunityIcons name="close-circle-outline" size={18} color={ARIOME_COLORS.text.subtle} />
+      <MaterialCommunityIcons name="close-circle-outline" size={16} color={ARIOME_COLORS.text.subtle} />
       <Text style={styles.notItemText}>{text}</Text>
     </View>
-  );
-}
-
-function IntentionCard({
-  intention,
-  isSelected,
-  onPress,
-}: {
-  intention: any;
-  isSelected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity
-      style={[
-        styles.intentionCard,
-        isSelected && {
-          borderColor: intention.color,
-          backgroundColor: `${intention.color}15`,
-        },
-      ]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <View style={[styles.intentionIcon, { backgroundColor: `${intention.color}20` }]}>
-        <MaterialCommunityIcons
-          name={intention.icon as any}
-          size={28}
-          color={intention.color}
-        />
-      </View>
-      <Text style={styles.intentionName}>{intention.name}</Text>
-      <Text style={styles.intentionDescription}>{intention.description}</Text>
-      {isSelected && (
-        <View
-          style={[styles.checkBadge, { backgroundColor: intention.color }]}
-        >
-          <MaterialCommunityIcons name="check" size={14} color="#FFF" />
-        </View>
-      )}
-    </TouchableOpacity>
   );
 }
 
@@ -271,107 +230,65 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: ARIOME_COLORS.background.deep,
   },
-  welcomeWrapper: {
-    flex: 1,
-  },
-  welcomeScroll: {
-    flex: 1,
-  },
-  welcomeScrollContent: {
-    paddingHorizontal: ARIOME_SPACING.lg,
-    paddingBottom: ARIOME_SPACING.xl,
-  },
-  buttonContainer: {
-    paddingHorizontal: ARIOME_SPACING.lg,
-    paddingVertical: ARIOME_SPACING.md,
-    paddingBottom: ARIOME_SPACING.lg,
-    backgroundColor: ARIOME_COLORS.background.deep,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
+  welcomeContent: {
+    padding: ARIOME_SPACING.lg,
+    paddingBottom: 100,
   },
   header: {
     alignItems: 'center',
-    marginTop: ARIOME_SPACING.xl,
-    marginBottom: ARIOME_SPACING.lg,
+    marginBottom: ARIOME_SPACING.xl,
   },
   logoGlow: {
     position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
     backgroundColor: ARIOME_COLORS.consciousness.tealMuted,
     opacity: 0.3,
   },
-  logoText: {
-    fontSize: 42,
-    fontWeight: '200',
-    color: ARIOME_COLORS.consciousness.teal,
-    letterSpacing: 8,
-    marginBottom: 4,
-  },
-  logoTagline: {
-    fontSize: 12,
-    color: ARIOME_COLORS.text.muted,
-    letterSpacing: 4,
-    marginBottom: ARIOME_SPACING.lg,
-  },
-  sacredDivider: {
+  divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: ARIOME_SPACING.lg,
+    marginTop: ARIOME_SPACING.lg,
     gap: ARIOME_SPACING.md,
   },
   dividerLine: {
-    width: 50,
+    width: 40,
     height: 1,
     backgroundColor: 'rgba(255,255,255,0.1)',
   },
   welcomeTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '300',
     color: ARIOME_COLORS.text.primary,
     textAlign: 'center',
-    lineHeight: 36,
-    marginBottom: ARIOME_SPACING.sm,
+    lineHeight: 34,
+    marginTop: ARIOME_SPACING.lg,
   },
   welcomeSubtitle: {
-    fontSize: 15,
-    color: ARIOME_COLORS.text.muted,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  philosophySection: {
-    backgroundColor: ARIOME_COLORS.background.secondary,
-    borderRadius: ARIOME_BORDERS.radiusLarge,
-    padding: ARIOME_SPACING.lg,
-    marginBottom: ARIOME_SPACING.lg,
-    borderLeftWidth: 3,
-    borderLeftColor: ARIOME_COLORS.consciousness.teal,
-  },
-  philosophyQuote: {
-    fontSize: 18,
-    fontStyle: 'italic',
-    fontWeight: '300',
-    color: ARIOME_COLORS.consciousness.teal,
-    marginBottom: ARIOME_SPACING.sm,
-  },
-  philosophyText: {
     fontSize: 14,
     color: ARIOME_COLORS.text.muted,
-    lineHeight: 20,
+    textAlign: 'center',
+    marginTop: ARIOME_SPACING.sm,
   },
-  featuresContainer: {
-    marginBottom: ARIOME_SPACING.lg,
+  section: {
+    marginBottom: ARIOME_SPACING.xl,
   },
-  featureItem: {
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: ARIOME_COLORS.text.primary,
+    marginBottom: ARIOME_SPACING.md,
+  },
+  featureCard: {
     flexDirection: 'row',
-    marginBottom: ARIOME_SPACING.lg,
     alignItems: 'flex-start',
+    marginBottom: ARIOME_SPACING.lg,
   },
-  featureIconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+  featureIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: ARIOME_SPACING.md,
@@ -385,7 +302,7 @@ const styles = StyleSheet.create({
     color: ARIOME_COLORS.text.primary,
     marginBottom: 4,
   },
-  featureDescription: {
+  featureDesc: {
     fontSize: 14,
     color: ARIOME_COLORS.text.muted,
     lineHeight: 20,
@@ -396,7 +313,7 @@ const styles = StyleSheet.create({
     padding: ARIOME_SPACING.md,
   },
   notTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: ARIOME_COLORS.text.muted,
     marginBottom: ARIOME_SPACING.sm,
@@ -417,53 +334,67 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: ARIOME_COLORS.text.subtle,
   },
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: ARIOME_SPACING.lg,
+    paddingBottom: ARIOME_SPACING.xl,
+    backgroundColor: ARIOME_COLORS.background.deep,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.05)',
+  },
   primaryButton: {
     backgroundColor: ARIOME_COLORS.consciousness.teal,
     paddingVertical: ARIOME_SPACING.md,
-    paddingHorizontal: ARIOME_SPACING.lg,
     borderRadius: ARIOME_BORDERS.radiusMedium,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: ARIOME_SPACING.sm,
   },
-  primaryButtonDisabled: {
-    backgroundColor: ARIOME_COLORS.text.disabled,
-    opacity: 0.5,
+  buttonDisabled: {
+    opacity: 0.6,
   },
   primaryButtonText: {
+    color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFF',
   },
-  scrollView: {
-    flex: 1,
+  skipButton: {
+    alignItems: 'center',
+    paddingVertical: ARIOME_SPACING.md,
+    marginTop: ARIOME_SPACING.sm,
   },
-  intentionsContainer: {
+  skipButtonText: {
+    color: ARIOME_COLORS.text.muted,
+    fontSize: 14,
+  },
+  // Intention selection
+  intentionContent: {
     padding: ARIOME_SPACING.lg,
-    paddingBottom: ARIOME_SPACING.sacred,
+    paddingBottom: 160,
   },
-  intentionsHeader: {
+  intentionHeader: {
     alignItems: 'center',
     marginBottom: ARIOME_SPACING.xl,
   },
-  intentionsTitle: {
-    fontSize: 26,
+  intentionTitle: {
+    fontSize: 24,
     fontWeight: '300',
     color: ARIOME_COLORS.text.primary,
     marginTop: ARIOME_SPACING.md,
-    marginBottom: ARIOME_SPACING.xs,
   },
-  intentionsSubtitle: {
-    fontSize: 15,
+  intentionSubtitle: {
+    fontSize: 14,
     color: ARIOME_COLORS.text.muted,
-    textAlign: 'center',
+    marginTop: ARIOME_SPACING.xs,
   },
-  intentionsGrid: {
+  intentionGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: ARIOME_SPACING.lg,
   },
   intentionCard: {
     width: (width - 56) / 2,
@@ -473,7 +404,7 @@ const styles = StyleSheet.create({
     marginBottom: ARIOME_SPACING.md,
     borderWidth: 2,
     borderColor: 'transparent',
-    minHeight: 150,
+    position: 'relative',
   },
   intentionIcon: {
     width: 48,
@@ -489,7 +420,7 @@ const styles = StyleSheet.create({
     color: ARIOME_COLORS.text.primary,
     marginBottom: 4,
   },
-  intentionDescription: {
+  intentionDesc: {
     fontSize: 12,
     color: ARIOME_COLORS.text.muted,
     lineHeight: 16,
@@ -503,14 +434,5 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  skipButton: {
-    alignItems: 'center',
-    paddingVertical: ARIOME_SPACING.md,
-    marginTop: ARIOME_SPACING.sm,
-  },
-  skipButtonText: {
-    fontSize: 14,
-    color: ARIOME_COLORS.text.muted,
   },
 });
