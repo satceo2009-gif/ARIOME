@@ -242,6 +242,53 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Support & Feedback Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Support & Feedback</Text>
+          
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => router.push('/feedback')}
+          >
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="message-draw" size={24} color="#F59E0B" />
+              <View style={styles.settingText}>
+                <Text style={styles.settingLabel}>Share Feedback</Text>
+                <Text style={styles.settingDesc}>Help us improve ARIOME</Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => router.push('/help')}
+          >
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="help-circle" size={24} color="#14B8A6" />
+              <View style={styles.settingText}>
+                <Text style={styles.settingLabel}>Help Center</Text>
+                <Text style={styles.settingDesc}>FAQs and support</Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={() => router.push('/about')}
+          >
+            <View style={styles.settingLeft}>
+              <MaterialCommunityIcons name="information" size={24} color="#14B8A6" />
+              <View style={styles.settingText}>
+                <Text style={styles.settingLabel}>About ARIOME</Text>
+                <Text style={styles.settingDesc}>Learn about our mission</Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#6B7280" />
+          </TouchableOpacity>
+        </View>
+
         {/* Danger Zone */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Danger Zone</Text>
