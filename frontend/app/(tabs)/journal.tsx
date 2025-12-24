@@ -151,7 +151,7 @@ export default function JournalScreen() {
       {/* Explorer notice */}
       {user?.role === 'explorer' && (
         <View style={styles.explorerNotice}>
-          <MaterialCommunityIcons name="notebook-heart" size={18} color="#14B8A6" />
+          <MaterialCommunityIcons name="notebook-edit-outline" size={18} color={ARIOME_COLORS.consciousness.teal} />
           <Text style={styles.explorerNoticeText}>
             Your journal entries are saved to your account!
           </Text>
@@ -161,7 +161,7 @@ export default function JournalScreen() {
       {/* Stats Cards */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statsContainer}>
         <View style={styles.statCard}>
-          <MaterialCommunityIcons name="notebook" size={24} color="#14B8A6" />
+          <MaterialCommunityIcons name="notebook" size={24} color={ARIOME_COLORS.consciousness.teal} />
           <Text style={styles.statValue}>{stats.totalEntries}</Text>
           <Text style={styles.statLabel}>Entries</Text>
         </View>
