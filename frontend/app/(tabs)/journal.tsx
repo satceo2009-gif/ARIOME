@@ -1,133 +1,206 @@
-import { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TextInput, Alert, ActivityIndicator, RefreshControl } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Modal, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { journalAPI } from '@/services/api';
-import ConsciousHeader from '@/components/ConsciousHeader';
-import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS, ARIOME_MOODS } from '@/constants/ariomeTheme';
+import { contentAPI, reflectionAPI, transcribeAPI } from '@/services/api';
+import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/theme';
+
+interface Mood {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  description: string;
+}
+
+interface Reflection {
+  id: string;
+  content: string;
+  mood_before?: string;
+  mood_after?: string;
+  created_at: string;
+}
 
 export default function JournalScreen() {
   const router = useRouter();
-  const { user, token } = useAuth();
-  const [entries, setEntries] = useState<any[]>([]);
-  const [reflections, setReflections] = useState<any[]>([]);
-  const [stats, setStats] = useState({ totalEntries: 0, totalReflections: 0, streak: 0 });
-  const [selectedTab, setSelectedTab] = useState('entries');
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newEntry, setNewEntry] = useState({ title: '', content: '', mood: 'peaceful', tags: '' });
+  const params = useLocalSearchParams();
+  const { user } = useAuth();
+  const [reflections, setReflections] = useState<Reflection[]>([]);
+  const [moods, setMoods] = useState<Mood[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  
+  // New reflection form state
+  const [content, setContent] = useState('');
+  const [moodBefore, setMoodBefore] = useState<string | null>(params.mood as string || null);
+  const [moodAfter, setMoodAfter] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
-  // All logged-in users (including explorers) can use journal
-  const canUseJournal = !!token;
-
-  const loadData = useCallback(async () => {
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const [entriesData, reflectionsData, statsData] = await Promise.all([
-        journalAPI.getEntries().catch(() => []),
-        journalAPI.getReflections().catch(() => []),
-        journalAPI.getStats().catch(() => ({ total_entries: 0, total_reflections: 0, current_streak: 0 }))
-      ]);
-
-      setEntries(entriesData || []);
-      setReflections(reflectionsData || []);
-      setStats({
-        totalEntries: statsData?.total_entries || entriesData?.length || 0,
-        totalReflections: statsData?.total_reflections || reflectionsData?.length || 0,
-        streak: statsData?.current_streak || 0
-      });
-    } catch (error) {
-      console.error('Error loading journal data:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [token]);
+  
+  // Voice recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+    // If coming from reflect screen with prompt
+    if (params.prompt) {
+      setContent(`Reflecting on: "${params.prompt}"\n\n`);
+      setShowModal(true);
+    }
+  }, []);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadData();
+  const loadData = async () => {
+    try {
+      const [moodsData, reflectionsData] = await Promise.all([
+        contentAPI.getMoods().catch(() => []),
+        reflectionAPI.getAll().catch(() => []),
+      ]);
+      setMoods(moodsData);
+      setReflections(reflectionsData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const getMoodInfo = (moodId: string) => moods.find(m => m.id === moodId);
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short',
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
-  const getMoodEmoji = (mood: string) => {
-    const moodInfo = ARIOME_MOODS.find(m => m.id === mood?.toLowerCase());
-    return moodInfo ? moodInfo.icon : 'thought-bubble';
-  };
+  // Voice Recording Functions
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
 
-  const getMoodColor = (mood: string) => {
-    const moodInfo = ARIOME_MOODS.find(m => m.id === mood?.toLowerCase());
-    return moodInfo ? moodInfo.color : ARIOME_COLORS.text.muted;
-  };
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
 
-  const handleCreateEntry = async () => {
-    if (!newEntry.title.trim() || !newEntry.content.trim()) {
-      Alert.alert('Error', 'Please fill in title and content');
-      return;
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(track => track.stop());
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        await transcribeAudio(audioBlob);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      Alert.alert('Error', 'Could not access microphone. Please check permissions.');
     }
+  };
 
-    if (!token) {
-      Alert.alert('Login Required', 'Please login to create journal entries');
-      return;
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
     }
+  };
+
+  const transcribeAudio = async (audioBlob: Blob) => {
+    setIsTranscribing(true);
+    try {
+      // First try OpenAI Whisper via backend
+      const result = await transcribeAPI.transcribe(audioBlob);
+      if (result.success && result.text) {
+        setContent(prev => prev + result.text + ' ');
+      }
+    } catch (error) {
+      console.error('Whisper transcription failed, trying Web Speech API:', error);
+      // Fallback to Web Speech API
+      try {
+        const text = await useWebSpeechAPI();
+        setContent(prev => prev + text + ' ');
+      } catch (webError) {
+        console.error('Web Speech API also failed:', webError);
+        Alert.alert('Transcription Failed', 'Could not transcribe audio. Please type your reflection.');
+      }
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
+  const useWebSpeechAPI = (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        reject(new Error('Speech recognition not supported'));
+        return;
+      }
+
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        resolve(transcript);
+      };
+
+      recognition.onerror = (event: any) => {
+        reject(new Error(event.error));
+      };
+
+      recognition.start();
+    });
+  };
+
+  const handleSaveReflection = async () => {
+    if (!content.trim()) return;
 
     setSaving(true);
     try {
-      const tagsArray = newEntry.tags
-        ? newEntry.tags.split(',').map(t => t.trim()).filter(t => t)
-        : [];
-
-      const entry = await journalAPI.createEntry({
-        title: newEntry.title.trim(),
-        content: newEntry.content.trim(),
-        mood: newEntry.mood,
-        tags: tagsArray
+      await reflectionAPI.create({
+        content: content.trim(),
+        mood_before: moodBefore || undefined,
+        mood_after: moodAfter || undefined,
+        prompt_id: params.promptId as string || undefined,
+        intent_tags: user?.intentions || [],
       });
-
-      setEntries([entry, ...entries]);
-      setStats(prev => ({ ...prev, totalEntries: prev.totalEntries + 1 }));
-      setNewEntry({ title: '', content: '', mood: 'peaceful', tags: '' });
-      setShowCreateModal(false);
-      Alert.alert('Success', 'Journal entry saved to your account!');
-    } catch (error: any) {
-      console.error('Error creating entry:', error);
-      Alert.alert('Error', error.response?.data?.detail || 'Failed to save entry. Please try again.');
+      
+      // Reset and close
+      setContent('');
+      setMoodBefore(null);
+      setMoodAfter(null);
+      setShowModal(false);
+      loadData();
+    } catch (error) {
+      console.error('Error saving reflection:', error);
+      Alert.alert('Error', 'Failed to save reflection. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
-  // Not logged in at all - show signup prompt
-  if (!user && !token) {
+  if (!user) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <ConsciousHeader />
+      <SafeAreaView style={styles.container} edges={['bottom']}>
         <View style={styles.emptyState}>
           <MaterialCommunityIcons name="notebook-outline" size={64} color={ARIOME_COLORS.text.subtle} />
-          <Text style={styles.emptyText}>Your Inner Journal</Text>
-          <Text style={styles.emptySubtext}>Sign up to start journaling your reflections and growth</Text>
-          <TouchableOpacity 
-            style={styles.signupButton}
-            onPress={() => router.push('/auth')}
-          >
-            <Text style={styles.signupButtonText}>Get Started</Text>
+          <Text style={styles.emptyTitle}>Your Inner Journal</Text>
+          <Text style={styles.emptySubtitle}>Sign in to start journaling your reflections</Text>
+          <TouchableOpacity style={styles.signInButton} onPress={() => router.push('/auth')}>
+            <Text style={styles.signInButtonText}>Sign In</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -135,225 +208,178 @@ export default function JournalScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header with Create Button */}
-      <ConsciousHeader 
-        rightComponent={
-          <TouchableOpacity 
-            style={styles.createButton}
-            onPress={() => setShowCreateModal(true)}
-          >
+    <SafeAreaView style={styles.container} edges={['bottom']}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.headerTitle}>Your Journal</Text>
+            <Text style={styles.headerSubtitle}>Private space for your reflections</Text>
+          </View>
+          <TouchableOpacity style={styles.addButton} onPress={() => setShowModal(true)}>
             <MaterialCommunityIcons name="plus" size={24} color="#FFF" />
           </TouchableOpacity>
-        }
-      />
+        </View>
 
-      {/* Explorer notice */}
-      {user?.role === 'explorer' && (
-        <View style={styles.explorerNotice}>
-          <MaterialCommunityIcons name="notebook-edit-outline" size={18} color={ARIOME_COLORS.consciousness.teal} />
-          <Text style={styles.explorerNoticeText}>
-            Your journal entries are saved to your account!
-          </Text>
-        </View>
-      )}
-
-      {/* Stats Cards */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <MaterialCommunityIcons name="notebook" size={24} color={ARIOME_COLORS.consciousness.teal} />
-          <Text style={styles.statValue}>{stats.totalEntries}</Text>
-          <Text style={styles.statLabel}>Entries</Text>
-        </View>
-        <View style={styles.statCard}>
-          <MaterialCommunityIcons name="thought-bubble" size={24} color="#F59E0B" />
-          <Text style={styles.statValue}>{stats.totalReflections}</Text>
-          <Text style={styles.statLabel}>Reflections</Text>
-        </View>
-        <View style={styles.statCard}>
-          <MaterialCommunityIcons name="fire" size={24} color="#EF4444" />
-          <Text style={styles.statValue}>{stats.streak}</Text>
-          <Text style={styles.statLabel}>Day Streak</Text>
-        </View>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={ARIOME_COLORS.consciousness.teal} />
+          </View>
+        ) : reflections.length === 0 ? (
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="notebook-edit-outline" size={64} color={ARIOME_COLORS.text.subtle} />
+            <Text style={styles.emptyTitle}>No reflections yet</Text>
+            <Text style={styles.emptySubtitle}>Start your inner journey by writing your first reflection</Text>
+            <TouchableOpacity style={styles.createButton} onPress={() => setShowModal(true)}>
+              <MaterialCommunityIcons name="pencil" size={20} color="#FFF" />
+              <Text style={styles.createButtonText}>Write Reflection</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.reflectionsList}>
+            {reflections.map((reflection) => (
+              <View key={reflection.id} style={styles.reflectionCard}>
+                <View style={styles.reflectionHeader}>
+                  {reflection.mood_before && (
+                    <View style={[styles.moodBadge, { backgroundColor: `${getMoodInfo(reflection.mood_before)?.color}20` }]}>
+                      <MaterialCommunityIcons
+                        name={getMoodInfo(reflection.mood_before)?.icon as any}
+                        size={16}
+                        color={getMoodInfo(reflection.mood_before)?.color}
+                      />
+                    </View>
+                  )}
+                  {reflection.mood_after && reflection.mood_before !== reflection.mood_after && (
+                    <>
+                      <MaterialCommunityIcons name="arrow-right" size={14} color={ARIOME_COLORS.text.subtle} />
+                      <View style={[styles.moodBadge, { backgroundColor: `${getMoodInfo(reflection.mood_after)?.color}20` }]}>
+                        <MaterialCommunityIcons
+                          name={getMoodInfo(reflection.mood_after)?.icon as any}
+                          size={16}
+                          color={getMoodInfo(reflection.mood_after)?.color}
+                        />
+                      </View>
+                    </>
+                  )}
+                  <Text style={styles.reflectionDate}>{formatDate(reflection.created_at)}</Text>
+                </View>
+                <Text style={styles.reflectionContent}>{reflection.content}</Text>
+              </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
 
-      {/* Tabs */}
-      <View style={styles.tabs}>
-        <TouchableOpacity 
-          style={[styles.tab, selectedTab === 'entries' && styles.tabActive]}
-          onPress={() => setSelectedTab('entries')}
-        >
-          <Text style={[styles.tabText, selectedTab === 'entries' && styles.tabTextActive]}>
-            My Entries
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tab, selectedTab === 'reflections' && styles.tabActive]}
-          onPress={() => setSelectedTab('reflections')}
-        >
-          <Text style={[styles.tabText, selectedTab === 'reflections' && styles.tabTextActive]}>
-            Reflections
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Content */}
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#14B8A6" />
-          <Text style={styles.loadingText}>Loading your journal...</Text>
-        </View>
-      ) : (
-        <ScrollView 
-          style={styles.content}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#14B8A6" />
-          }
-        >
-          {selectedTab === 'entries' ? (
-            entries.length > 0 ? (
-              entries.map((entry) => (
-                <TouchableOpacity key={entry.id} style={styles.entryCard}>
-                  <View style={styles.entryHeader}>
-                    <MaterialCommunityIcons 
-                      name={getMoodEmoji(entry.mood) as any} 
-                      size={24} 
-                      color={getMoodColor(entry.mood)} 
-                    />
-                    <Text style={styles.entryDate}>{formatDate(entry.created_at)}</Text>
-                  </View>
-                  <Text style={styles.entryTitle}>{entry.title}</Text>
-                  <Text style={styles.entryContent} numberOfLines={3}>{entry.content}</Text>
-                  {entry.tags?.length > 0 && (
-                    <View style={styles.tagsContainer}>
-                      {entry.tags.map((tag: string, i: number) => (
-                        <View key={i} style={styles.tag}>
-                          <Text style={styles.tagText}>#{tag}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                </TouchableOpacity>
-              ))
-            ) : (
-              <View style={styles.emptyState}>
-                <MaterialCommunityIcons name="notebook-outline" size={64} color="#6B7280" />
-                <Text style={styles.emptyText}>No entries yet</Text>
-                <Text style={styles.emptySubtext}>Start journaling your thoughts</Text>
-                <TouchableOpacity 
-                  style={styles.createEntryBtn}
-                  onPress={() => setShowCreateModal(true)}
-                >
-                  <Text style={styles.createEntryBtnText}>Create First Entry</Text>
-                </TouchableOpacity>
-              </View>
-            )
-          ) : (
-            reflections.length > 0 ? (
-              reflections.map((reflection) => (
-                <View key={reflection.id} style={styles.entryCard}>
-                  <View style={styles.entryHeader}>
-                    <MaterialCommunityIcons 
-                      name={getMoodEmoji(reflection.mood) as any} 
-                      size={24} 
-                      color={getMoodColor(reflection.mood)} 
-                    />
-                    <Text style={styles.entryDate}>{formatDate(reflection.created_at)}</Text>
-                  </View>
-                  {reflection.before_reflection && (
-                    <View style={styles.reflectionSection}>
-                      <Text style={styles.reflectionLabel}>Before</Text>
-                      <Text style={styles.entryContent}>{reflection.before_reflection}</Text>
-                    </View>
-                  )}
-                  {reflection.after_reflection && (
-                    <View style={styles.reflectionSection}>
-                      <Text style={styles.reflectionLabel}>After</Text>
-                      <Text style={styles.entryContent}>{reflection.after_reflection}</Text>
-                    </View>
-                  )}
-                </View>
-              ))
-            ) : (
-              <View style={styles.emptyState}>
-                <MaterialCommunityIcons name="thought-bubble-outline" size={64} color="#6B7280" />
-                <Text style={styles.emptyText}>No reflections yet</Text>
-                <Text style={styles.emptySubtext}>Reflections from stories will appear here</Text>
-              </View>
-            )
-          )}
-          <View style={{ height: 40 }} />
-        </ScrollView>
-      )}
-
-      {/* Create Entry Modal */}
-      <Modal
-        visible={showCreateModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowCreateModal(false)}
-      >
+      {/* Create Reflection Modal */}
+      <Modal visible={showModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
+            {/* Modal Header */}
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>New Journal Entry</Text>
-              <TouchableOpacity onPress={() => setShowCreateModal(false)}>
-                <MaterialCommunityIcons name="close" size={24} color="#FFF" />
+              <Text style={styles.modalTitle}>New Reflection</Text>
+              <TouchableOpacity onPress={() => setShowModal(false)}>
+                <MaterialCommunityIcons name="close" size={24} color={ARIOME_COLORS.text.muted} />
               </TouchableOpacity>
             </View>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Entry title"
-              placeholderTextColor="#6B7280"
-              value={newEntry.title}
-              onChangeText={(text) => setNewEntry(prev => ({ ...prev, title: text }))}
-            />
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Pre-reflection Mood */}
+              <Text style={styles.moodSectionLabel}>How are you feeling before reflecting?</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.moodScroll}>
+                {moods.map((mood) => (
+                  <TouchableOpacity
+                    key={mood.id}
+                    style={[
+                      styles.moodChip,
+                      moodBefore === mood.id && { backgroundColor: `${mood.color}20`, borderColor: mood.color },
+                    ]}
+                    onPress={() => setMoodBefore(mood.id)}
+                  >
+                    <MaterialCommunityIcons
+                      name={mood.icon as any}
+                      size={20}
+                      color={moodBefore === mood.id ? mood.color : ARIOME_COLORS.text.muted}
+                    />
+                    <Text style={[styles.moodChipText, moodBefore === mood.id && { color: mood.color }]}>
+                      {mood.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
 
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder="What's on your mind?"
-              placeholderTextColor="#6B7280"
-              value={newEntry.content}
-              onChangeText={(text) => setNewEntry(prev => ({ ...prev, content: text }))}
-              multiline
-              numberOfLines={6}
-              textAlignVertical="top"
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Tags (comma separated: gratitude, morning)"
-              placeholderTextColor="#6B7280"
-              value={newEntry.tags}
-              onChangeText={(text) => setNewEntry(prev => ({ ...prev, tags: text }))}
-            />
-
-            <Text style={styles.moodLabel}>How are you feeling?</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.moodSelector}>
-              {['happy', 'peaceful', 'grateful', 'reflective', 'hopeful', 'anxious', 'sad'].map((mood) => (
+              {/* Content Input */}
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Let your thoughts flow..."
+                  placeholderTextColor={ARIOME_COLORS.text.disabled}
+                  value={content}
+                  onChangeText={setContent}
+                  multiline
+                  numberOfLines={8}
+                  textAlignVertical="top"
+                />
+                
+                {/* Voice Input Button */}
                 <TouchableOpacity
-                  key={mood}
-                  style={[styles.moodOption, newEntry.mood === mood && styles.moodOptionActive]}
-                  onPress={() => setNewEntry(prev => ({ ...prev, mood }))}
+                  style={[styles.voiceButton, isRecording && styles.voiceButtonActive]}
+                  onPress={isRecording ? stopRecording : startRecording}
+                  disabled={isTranscribing}
                 >
-                  <Text style={styles.moodOptionEmoji}>{getMoodEmoji(mood)}</Text>
-                  <Text style={[styles.moodOptionText, newEntry.mood === mood && styles.moodOptionTextActive]}>
-                    {mood}
-                  </Text>
+                  {isTranscribing ? (
+                    <ActivityIndicator size="small" color={ARIOME_COLORS.consciousness.teal} />
+                  ) : (
+                    <MaterialCommunityIcons
+                      name={isRecording ? 'stop' : 'microphone'}
+                      size={24}
+                      color={isRecording ? ARIOME_COLORS.semantic.error : ARIOME_COLORS.consciousness.teal}
+                    />
+                  )}
                 </TouchableOpacity>
-              ))}
+              </View>
+
+              {isRecording && (
+                <Text style={styles.recordingText}>Recording... Tap stop when finished</Text>
+              )}
+
+              {/* Post-reflection Mood */}
+              <Text style={styles.moodSectionLabel}>How do you feel after reflecting?</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.moodScroll}>
+                {moods.map((mood) => (
+                  <TouchableOpacity
+                    key={mood.id}
+                    style={[
+                      styles.moodChip,
+                      moodAfter === mood.id && { backgroundColor: `${mood.color}20`, borderColor: mood.color },
+                    ]}
+                    onPress={() => setMoodAfter(mood.id)}
+                  >
+                    <MaterialCommunityIcons
+                      name={mood.icon as any}
+                      size={20}
+                      color={moodAfter === mood.id ? mood.color : ARIOME_COLORS.text.muted}
+                    />
+                    <Text style={[styles.moodChipText, moodAfter === mood.id && { color: mood.color }]}>
+                      {mood.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </ScrollView>
 
-            <TouchableOpacity 
-              style={[styles.saveButton, saving && styles.saveButtonDisabled]} 
-              onPress={handleCreateEntry}
-              disabled={saving}
+            {/* Save Button */}
+            <TouchableOpacity
+              style={[styles.saveButton, (!content.trim() || saving) && styles.saveButtonDisabled]}
+              onPress={handleSaveReflection}
+              disabled={!content.trim() || saving}
             >
               {saving ? (
                 <ActivityIndicator color="#FFF" />
               ) : (
-                <Text style={styles.saveButtonText}>Save Entry</Text>
+                <>
+                  <MaterialCommunityIcons name="check" size={20} color="#FFF" />
+                  <Text style={styles.saveButtonText}>Save Reflection</Text>
+                </>
               )}
             </TouchableOpacity>
           </View>
@@ -368,183 +394,118 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: ARIOME_COLORS.background.deep,
   },
-  createButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: ARIOME_COLORS.consciousness.teal,
-    alignItems: 'center',
-    justifyContent: 'center',
+  content: {
+    padding: ARIOME_SPACING.lg,
   },
-  explorerNotice: {
+  header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: ARIOME_COLORS.consciousness.tealMuted,
-    marginHorizontal: ARIOME_SPACING.md,
-    marginBottom: ARIOME_SPACING.md,
-    paddingHorizontal: ARIOME_SPACING.md,
-    paddingVertical: ARIOME_SPACING.sm,
-    borderRadius: ARIOME_BORDERS.radiusSmall,
-    gap: ARIOME_SPACING.sm,
-  },
-  explorerNoticeText: {
-    color: ARIOME_COLORS.consciousness.teal,
-    fontSize: 12,
-    flex: 1,
-  },
-  statsContainer: {
-    paddingHorizontal: ARIOME_SPACING.md,
     marginBottom: ARIOME_SPACING.lg,
   },
-  statCard: {
-    backgroundColor: ARIOME_COLORS.background.secondary,
-    borderRadius: ARIOME_BORDERS.radiusMedium,
-    padding: ARIOME_SPACING.md,
-    marginRight: ARIOME_SPACING.md,
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  statValue: {
+  headerTitle: {
     fontSize: 24,
-    fontWeight: '600',
+    fontWeight: '300',
     color: ARIOME_COLORS.text.primary,
-    marginTop: ARIOME_SPACING.sm,
+    letterSpacing: 0.5,
   },
-  statLabel: {
-    fontSize: 12,
+  headerSubtitle: {
+    fontSize: 14,
     color: ARIOME_COLORS.text.muted,
     marginTop: 4,
   },
-  tabs: {
-    flexDirection: 'row',
-    paddingHorizontal: ARIOME_SPACING.md,
-    marginBottom: ARIOME_SPACING.md,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: ARIOME_SPACING.md,
+  addButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: ARIOME_COLORS.consciousness.teal,
     alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  tabActive: {
-    borderBottomColor: ARIOME_COLORS.consciousness.teal,
-  },
-  tabText: {
-    fontSize: 15,
-    color: ARIOME_COLORS.text.muted,
-  },
-  tabTextActive: {
-    color: ARIOME_COLORS.consciousness.teal,
-    fontWeight: '600',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: ARIOME_SPACING.md,
+    justifyContent: 'center',
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  loadingText: {
-    color: ARIOME_COLORS.text.muted,
-    marginTop: ARIOME_SPACING.md,
-  },
-  entryCard: {
-    backgroundColor: ARIOME_COLORS.background.secondary,
-    borderRadius: ARIOME_BORDERS.radiusMedium,
-    padding: ARIOME_SPACING.md,
-    marginBottom: ARIOME_SPACING.md,
-  },
-  entryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: ARIOME_SPACING.md,
-  },
-  entryDate: {
-    fontSize: 12,
-    color: ARIOME_COLORS.text.muted,
-  },
-  entryTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: ARIOME_COLORS.text.primary,
-    marginBottom: ARIOME_SPACING.sm,
-  },
-  entryContent: {
-    fontSize: 14,
-    color: ARIOME_COLORS.text.secondary,
-    lineHeight: 20,
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: ARIOME_SPACING.md,
-    gap: ARIOME_SPACING.sm,
-  },
-  tag: {
-    backgroundColor: ARIOME_COLORS.consciousness.tealMuted,
-    paddingHorizontal: ARIOME_SPACING.sm,
-    paddingVertical: 4,
-    borderRadius: ARIOME_BORDERS.radiusSmall,
-  },
-  tagText: {
-    fontSize: 12,
-    color: ARIOME_COLORS.consciousness.teal,
-  },
-  reflectionSection: {
-    marginBottom: ARIOME_SPACING.md,
-  },
-  reflectionLabel: {
-    fontSize: 12,
-    color: ARIOME_COLORS.consciousness.teal,
-    fontWeight: '600',
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  emptyState: {
-    alignItems: 'center',
     paddingVertical: ARIOME_SPACING.sacred,
   },
-  emptyText: {
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: ARIOME_SPACING.sacred,
+  },
+  emptyTitle: {
     fontSize: 20,
     fontWeight: '500',
     color: ARIOME_COLORS.text.primary,
     marginTop: ARIOME_SPACING.md,
   },
-  emptySubtext: {
+  emptySubtitle: {
     fontSize: 14,
     color: ARIOME_COLORS.text.muted,
     marginTop: ARIOME_SPACING.sm,
     textAlign: 'center',
     paddingHorizontal: ARIOME_SPACING.xl,
   },
-  signupButton: {
+  signInButton: {
     backgroundColor: ARIOME_COLORS.consciousness.teal,
     paddingHorizontal: ARIOME_SPACING.xl,
     paddingVertical: ARIOME_SPACING.md,
     borderRadius: ARIOME_BORDERS.radiusMedium,
     marginTop: ARIOME_SPACING.lg,
   },
-  signupButtonText: {
+  signInButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
   },
-  createEntryBtn: {
+  createButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: ARIOME_COLORS.consciousness.teal,
     paddingHorizontal: ARIOME_SPACING.lg,
     paddingVertical: ARIOME_SPACING.md,
-    borderRadius: ARIOME_BORDERS.radiusSmall,
+    borderRadius: ARIOME_BORDERS.radiusMedium,
     marginTop: ARIOME_SPACING.lg,
+    gap: ARIOME_SPACING.sm,
   },
-  createEntryBtnText: {
+  createButtonText: {
     color: '#FFF',
+    fontSize: 16,
     fontWeight: '600',
   },
+  reflectionsList: {
+    gap: ARIOME_SPACING.md,
+  },
+  reflectionCard: {
+    backgroundColor: ARIOME_COLORS.background.secondary,
+    borderRadius: ARIOME_BORDERS.radiusLarge,
+    padding: ARIOME_SPACING.md,
+  },
+  reflectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: ARIOME_SPACING.sm,
+    marginBottom: ARIOME_SPACING.sm,
+  },
+  moodBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reflectionDate: {
+    fontSize: 12,
+    color: ARIOME_COLORS.text.muted,
+    marginLeft: 'auto',
+  },
+  reflectionContent: {
+    fontSize: 15,
+    color: ARIOME_COLORS.text.secondary,
+    lineHeight: 22,
+  },
+  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.85)',
@@ -568,57 +529,77 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: ARIOME_COLORS.text.primary,
   },
-  input: {
+  moodSectionLabel: {
+    fontSize: 14,
+    color: ARIOME_COLORS.text.muted,
+    marginBottom: ARIOME_SPACING.sm,
+    marginTop: ARIOME_SPACING.md,
+  },
+  moodScroll: {
+    marginBottom: ARIOME_SPACING.md,
+  },
+  moodChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: ARIOME_SPACING.md,
+    paddingVertical: ARIOME_SPACING.sm,
+    borderRadius: ARIOME_BORDERS.radiusRound,
+    backgroundColor: ARIOME_COLORS.background.primary,
+    marginRight: ARIOME_SPACING.sm,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    gap: 6,
+  },
+  moodChipText: {
+    fontSize: 13,
+    color: ARIOME_COLORS.text.muted,
+  },
+  inputContainer: {
+    position: 'relative',
+    marginBottom: ARIOME_SPACING.md,
+  },
+  textInput: {
     backgroundColor: ARIOME_COLORS.background.primary,
     borderRadius: ARIOME_BORDERS.radiusMedium,
     padding: ARIOME_SPACING.md,
+    paddingRight: 60,
     color: ARIOME_COLORS.text.primary,
     fontSize: 16,
-    marginBottom: ARIOME_SPACING.md,
+    minHeight: 150,
+    lineHeight: 24,
   },
-  textArea: {
-    height: 120,
-    textAlignVertical: 'top',
-  },
-  moodLabel: {
-    color: ARIOME_COLORS.text.muted,
-    fontSize: 14,
-    marginBottom: ARIOME_SPACING.md,
-  },
-  moodSelector: {
-    marginBottom: ARIOME_SPACING.lg,
-  },
-  moodOption: {
+  voiceButton: {
+    position: 'absolute',
+    right: ARIOME_SPACING.sm,
+    bottom: ARIOME_SPACING.sm,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: ARIOME_COLORS.background.secondary,
     alignItems: 'center',
-    paddingHorizontal: ARIOME_SPACING.md,
-    paddingVertical: ARIOME_SPACING.md,
-    borderRadius: ARIOME_BORDERS.radiusMedium,
-    backgroundColor: ARIOME_COLORS.background.primary,
-    marginRight: ARIOME_SPACING.sm,
+    justifyContent: 'center',
   },
-  moodOptionActive: {
-    backgroundColor: ARIOME_COLORS.consciousness.teal,
+  voiceButtonActive: {
+    backgroundColor: `${ARIOME_COLORS.semantic.error}20`,
   },
-  moodOptionEmoji: {
-    fontSize: 24,
-  },
-  moodOptionText: {
+  recordingText: {
     fontSize: 12,
-    color: ARIOME_COLORS.text.muted,
-    marginTop: 4,
-    textTransform: 'capitalize',
-  },
-  moodOptionTextActive: {
-    color: '#FFF',
+    color: ARIOME_COLORS.semantic.error,
+    textAlign: 'center',
+    marginBottom: ARIOME_SPACING.md,
   },
   saveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: ARIOME_COLORS.consciousness.teal,
     paddingVertical: ARIOME_SPACING.md,
     borderRadius: ARIOME_BORDERS.radiusMedium,
-    alignItems: 'center',
+    marginTop: ARIOME_SPACING.md,
+    gap: ARIOME_SPACING.sm,
   },
   saveButtonDisabled: {
-    opacity: 0.6,
+    opacity: 0.5,
   },
   saveButtonText: {
     color: '#FFF',
