@@ -5,7 +5,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { journalAPI } from '@/services/api';
-import AriomeLogo from '@/components/AriomeLogo';
+import ConsciousHeader from '@/components/ConsciousHeader';
+import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS, ARIOME_MOODS } from '@/constants/ariomeTheme';
 
 export default function JournalScreen() {
   const router = useRouter();
@@ -67,19 +68,13 @@ export default function JournalScreen() {
   };
 
   const getMoodEmoji = (mood: string) => {
-    const moods: any = {
-      happy: '😊',
-      peaceful: '😌',
-      grateful: '🙏',
-      sad: '😢',
-      anxious: '😰',
-      calm: '🧘',
-      excited: '🎉',
-      reflective: '🤔',
-      hopeful: '✨',
-      content: '😊',
-    };
-    return moods[mood?.toLowerCase()] || '💭';
+    const moodInfo = ARIOME_MOODS.find(m => m.id === mood?.toLowerCase());
+    return moodInfo ? moodInfo.icon : 'thought-bubble';
+  };
+
+  const getMoodColor = (mood: string) => {
+    const moodInfo = ARIOME_MOODS.find(m => m.id === mood?.toLowerCase());
+    return moodInfo ? moodInfo.color : ARIOME_COLORS.text.muted;
   };
 
   const handleCreateEntry = async () => {
@@ -123,17 +118,11 @@ export default function JournalScreen() {
   if (!user && !token) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/discover')}>
-            <AriomeLogo width={100} height={42} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Journal</Text>
-          <View style={{ width: 44 }} />
-        </View>
+        <ConsciousHeader />
         <View style={styles.emptyState}>
-          <MaterialCommunityIcons name="notebook-outline" size={64} color="#6B7280" />
-          <Text style={styles.emptyText}>Your Personal Journal</Text>
-          <Text style={styles.emptySubtext}>Sign up to start journaling your thoughts and reflections</Text>
+          <MaterialCommunityIcons name="notebook-outline" size={64} color={ARIOME_COLORS.text.subtle} />
+          <Text style={styles.emptyText}>Your Inner Journal</Text>
+          <Text style={styles.emptySubtext}>Sign up to start journaling your reflections and growth</Text>
           <TouchableOpacity 
             style={styles.signupButton}
             onPress={() => router.push('/auth')}
@@ -147,19 +136,17 @@ export default function JournalScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push('/(tabs)/discover')}>
-          <AriomeLogo width={100} height={42} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Journal</Text>
-        <TouchableOpacity 
-          style={styles.createButton}
-          onPress={() => setShowCreateModal(true)}
-        >
-          <MaterialCommunityIcons name="plus" size={24} color="#FFF" />
-        </TouchableOpacity>
-      </View>
+      {/* Header with Create Button */}
+      <ConsciousHeader 
+        rightComponent={
+          <TouchableOpacity 
+            style={styles.createButton}
+            onPress={() => setShowCreateModal(true)}
+          >
+            <MaterialCommunityIcons name="plus" size={24} color="#FFF" />
+          </TouchableOpacity>
+        }
+      />
 
       {/* Explorer notice */}
       {user?.role === 'explorer' && (
