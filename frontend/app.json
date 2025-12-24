@@ -61,9 +61,9 @@
     },
     "extra": {
       "router": {
-        "origin": "https://meditate-hub-3.preview.emergentagent.com"
+        "origin": "https://logohomelink.preview.emergentagent.com"
       },
-      "EXPO_PUBLIC_API_URL": "https://meditate-hub-3.preview.emergentagent.com/api"
+      "EXPO_PUBLIC_API_URL": "https://logohomelink.preview.emergentagent.com/api"
     }
   }
 }

@@ -36,7 +36,7 @@ export default function CirclesScreen() {
       // Try public endpoint as fallback
       try {
         const response = await fetch(
-          `https://meditate-hub-3.preview.emergentagent.com/api/circles/public${selectedIntention ? `?intention=${selectedIntention}` : ''}`
+          `https://logohomelink.preview.emergentagent.com/api/circles/public${selectedIntention ? `?intention=${selectedIntention}` : ''}`
         );
         const publicData = await response.json();
         setCircles(publicData || []);

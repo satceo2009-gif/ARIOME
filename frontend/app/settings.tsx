@@ -8,7 +8,7 @@ import AriomeLogo from '@/components/AriomeLogo';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://meditate-hub-3.preview.emergentagent.com/api';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://logohomelink.preview.emergentagent.com/api';
 
 export default function SettingsScreen() {
   const router = useRouter();
