@@ -534,11 +534,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Review Request Testing Complete - All 4 flows verified"
-    - "Frontend UI Testing (if needed)"
-  stuck_tasks: []
+    - "AriOme UI Revamp Testing Complete - All major flows verified"
+    - "Global Logo Clickability Issue - Needs Fix"
+  stuck_tasks: 
+    - "Global Logo Clickability"
   test_all: false
-  test_priority: "review_request_complete"
+  test_priority: "ui_revamp_complete"
 
 agent_communication:
     - agent: "testing"
