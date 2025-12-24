@@ -215,7 +215,11 @@ export default function JournalScreen() {
               entries.map((entry) => (
                 <TouchableOpacity key={entry.id} style={styles.entryCard}>
                   <View style={styles.entryHeader}>
-                    <Text style={styles.entryMood}>{getMoodEmoji(entry.mood)}</Text>
+                    <MaterialCommunityIcons 
+                      name={getMoodEmoji(entry.mood) as any} 
+                      size={24} 
+                      color={getMoodColor(entry.mood)} 
+                    />
                     <Text style={styles.entryDate}>{formatDate(entry.created_at)}</Text>
                   </View>
                   <Text style={styles.entryTitle}>{entry.title}</Text>
@@ -249,7 +253,11 @@ export default function JournalScreen() {
               reflections.map((reflection) => (
                 <View key={reflection.id} style={styles.entryCard}>
                   <View style={styles.entryHeader}>
-                    <Text style={styles.entryMood}>{getMoodEmoji(reflection.mood)}</Text>
+                    <MaterialCommunityIcons 
+                      name={getMoodEmoji(reflection.mood) as any} 
+                      size={24} 
+                      color={getMoodColor(reflection.mood)} 
+                    />
                     <Text style={styles.entryDate}>{formatDate(reflection.created_at)}</Text>
                   </View>
                   {reflection.before_reflection && (
