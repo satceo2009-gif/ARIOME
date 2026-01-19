@@ -102,6 +102,7 @@ export default function ReflectScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
+      <ConsciousHeader showSettings />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
