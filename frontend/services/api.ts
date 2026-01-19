@@ -136,6 +136,36 @@ export const resonanceAPI = {
   },
 };
 
+// Circles API
+export const circlesAPI = {
+  getAll: async (intention?: string) => {
+    const params = intention ? { intention } : {};
+    const response = await api.get('/circles', { params });
+    return response.data;
+  },
+  
+  getPublic: async (intention?: string) => {
+    const params = intention ? { intention } : {};
+    const response = await api.get('/circles/public', { params });
+    return response.data;
+  },
+  
+  create: async (data: { name: string; description: string; intention: string; is_private: boolean }) => {
+    const response = await api.post('/circles', data);
+    return response.data;
+  },
+  
+  join: async (circleId: string) => {
+    const response = await api.post(`/circles/${circleId}/join`);
+    return response.data;
+  },
+  
+  leave: async (circleId: string) => {
+    const response = await api.post(`/circles/${circleId}/leave`);
+    return response.data;
+  },
+};
+
 // Transcription API
 export const transcribeAPI = {
   transcribe: async (audioFile: Blob) => {
