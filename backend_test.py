@@ -271,17 +271,19 @@ class AriOmeAPITester:
         """Test 6: Circle Join without auth - POST /api/circles/circle_healing01/join (should fail)"""
         print("\n🔍 Test 6: Circle Join API (without auth - should fail)...")
         try:
-            async with self.session.post(f"{API_BASE}/circles/circle_healing01/join") as response:
-                if response.status == 401:
-                    self.test_results['circle_join_no_auth_success'] = True
-                    print("✅ Circle join without auth properly rejected (401 Unauthorized)")
-                    return True
-                else:
-                    error_text = await response.text()
-                    error_msg = f"Circle join without auth should return 401, got {response.status}: {error_text}"
-                    self.test_results['api_errors'].append(error_msg)
-                    print(f"❌ {error_msg}")
-                    return False
+            # Create a new session without any cookies or headers to ensure no auth
+            async with aiohttp.ClientSession() as clean_session:
+                async with clean_session.post(f"{API_BASE}/circles/circle_healing01/join") as response:
+                    if response.status == 401:
+                        self.test_results['circle_join_no_auth_success'] = True
+                        print("✅ Circle join without auth properly rejected (401 Unauthorized)")
+                        return True
+                    else:
+                        error_text = await response.text()
+                        error_msg = f"Circle join without auth should return 401, got {response.status}: {error_text}"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
         except Exception as e:
             error_msg = f"Circle join without auth API request failed: {e}"
             self.test_results['critical_failures'].append(error_msg)
