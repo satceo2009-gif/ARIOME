@@ -112,6 +112,7 @@ export default function WisdomScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
+      <ConsciousHeader showSettings />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
