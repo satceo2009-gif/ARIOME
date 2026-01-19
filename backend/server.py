@@ -769,10 +769,7 @@ async def create_circle(circle_data: CircleCreate, request: Request):
     """Create a new circle"""
     user = await require_user(request)
     
-    # Check if user can create circles (subscriber, creator, admin)
-    if user.get("role") not in ["subscriber", "creator", "admin"]:
-        raise HTTPException(status_code=403, detail="Only subscribers can create circles")
-    
+    # All authenticated users can create circles
     circle_id = f"circle_{uuid4().hex[:12]}"
     
     circle = {
