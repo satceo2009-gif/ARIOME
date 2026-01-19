@@ -107,7 +107,6 @@ export default function WisdomScreen() {
               />
             </TouchableOpacity>
           </View>
-          </TouchableOpacity>
 
           <ScrollView contentContainerStyle={styles.selectedContent}>
             <View style={styles.quoteContainer}>
