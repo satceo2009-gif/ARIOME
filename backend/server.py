@@ -837,6 +837,293 @@ async def transcribe_audio(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
 
+# ==================== CREATOR DASHBOARD ENDPOINTS ====================
+
+class ContentCreate(BaseModel):
+    type: str  # wisdom, practice
+    title: str
+    body: str
+    author: Optional[str] = None
+    category: Optional[str] = None
+    duration: Optional[int] = None
+    intent_tags: List[str] = []
+    media_url: Optional[str] = None
+    media_type: Optional[str] = "text"
+
+@app.get("/api/creator/stats")
+async def get_creator_stats(request: Request):
+    """Get creator's content statistics"""
+    user = await require_user(request)
+    
+    if user.get("role") not in ["creator", "admin"]:
+        raise HTTPException(status_code=403, detail="Creator access required")
+    
+    # Get content counts
+    wisdom_count = await db.wisdom.count_documents({"creator_id": user["user_id"]})
+    practice_count = await db.practices.count_documents({"creator_id": user["user_id"]})
+    
+    # Get total resonances
+    pipeline = [
+        {"$match": {"creator_id": user["user_id"]}},
+        {"$group": {"_id": None, "total": {"$sum": "$resonance_count"}}}
+    ]
+    wisdom_resonances = await db.wisdom.aggregate(pipeline).to_list(1)
+    practice_resonances = await db.practices.aggregate(pipeline).to_list(1)
+    
+    total_resonances = (
+        (wisdom_resonances[0]["total"] if wisdom_resonances else 0) +
+        (practice_resonances[0]["total"] if practice_resonances else 0)
+    )
+    
+    return {
+        "wisdom_count": wisdom_count,
+        "practice_count": practice_count,
+        "total_content": wisdom_count + practice_count,
+        "total_resonances": total_resonances
+    }
+
+@app.get("/api/creator/content")
+async def get_creator_content(request: Request, content_type: str = None):
+    """Get creator's content"""
+    user = await require_user(request)
+    
+    if user.get("role") not in ["creator", "admin"]:
+        raise HTTPException(status_code=403, detail="Creator access required")
+    
+    result = {"wisdom": [], "practices": []}
+    
+    if not content_type or content_type == "wisdom":
+        result["wisdom"] = await db.wisdom.find(
+            {"creator_id": user["user_id"]}, {"_id": 0}
+        ).sort("created_at", -1).to_list(100)
+    
+    if not content_type or content_type == "practice":
+        result["practices"] = await db.practices.find(
+            {"creator_id": user["user_id"]}, {"_id": 0}
+        ).sort("created_at", -1).to_list(100)
+    
+    return result
+
+@app.post("/api/creator/content")
+async def create_content(content: ContentCreate, request: Request):
+    """Create new content"""
+    user = await require_user(request)
+    
+    if user.get("role") not in ["creator", "admin"]:
+        raise HTTPException(status_code=403, detail="Creator access required")
+    
+    content_id = f"{content.type}_{uuid4().hex[:8]}"
+    
+    doc = {
+        "id": content_id,
+        "title": content.title,
+        "body": content.body,
+        "creator_id": user["user_id"],
+        "creator_name": user.get("name", "Unknown"),
+        "intent_tags": content.intent_tags,
+        "media_type": content.media_type,
+        "media_url": content.media_url,
+        "resonance_count": 0,
+        "status": "pending",  # pending, approved, rejected
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if content.type == "wisdom":
+        doc["author"] = content.author
+        await db.wisdom.insert_one(doc)
+    elif content.type == "practice":
+        doc["category"] = content.category
+        doc["duration"] = content.duration
+        await db.practices.insert_one(doc)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid content type")
+    
+    doc.pop("_id", None)
+    return {"message": "Content created", "content": doc}
+
+@app.put("/api/creator/content/{content_id}")
+async def update_content(content_id: str, request: Request):
+    """Update content"""
+    user = await require_user(request)
+    body = await request.json()
+    
+    if user.get("role") not in ["creator", "admin"]:
+        raise HTTPException(status_code=403, detail="Creator access required")
+    
+    # Find content
+    wisdom = await db.wisdom.find_one({"id": content_id, "creator_id": user["user_id"]})
+    practice = await db.practices.find_one({"id": content_id, "creator_id": user["user_id"]})
+    
+    if not wisdom and not practice:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    update_fields = {}
+    allowed_fields = ["title", "body", "author", "category", "duration", "intent_tags", "media_url"]
+    for field in allowed_fields:
+        if field in body:
+            update_fields[field] = body[field]
+    
+    if wisdom:
+        await db.wisdom.update_one({"id": content_id}, {"$set": update_fields})
+    else:
+        await db.practices.update_one({"id": content_id}, {"$set": update_fields})
+    
+    return {"message": "Content updated"}
+
+@app.delete("/api/creator/content/{content_id}")
+async def delete_content(content_id: str, request: Request):
+    """Delete content"""
+    user = await require_user(request)
+    
+    if user.get("role") not in ["creator", "admin"]:
+        raise HTTPException(status_code=403, detail="Creator access required")
+    
+    result = await db.wisdom.delete_one({"id": content_id, "creator_id": user["user_id"]})
+    if result.deleted_count == 0:
+        result = await db.practices.delete_one({"id": content_id, "creator_id": user["user_id"]})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    return {"message": "Content deleted"}
+
+# ==================== ADMIN PANEL ENDPOINTS ====================
+
+@app.get("/api/admin/users")
+async def get_all_users(request: Request, role: str = None, page: int = 1, limit: int = 50):
+    """Get all users (admin only)"""
+    user = await require_user(request)
+    
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    query = {}
+    if role:
+        query["role"] = role
+    
+    skip = (page - 1) * limit
+    users = await db.users.find(query, {"_id": 0, "password_hash": 0}).skip(skip).limit(limit).to_list(limit)
+    total = await db.users.count_documents(query)
+    
+    return {"users": users, "total": total, "page": page, "limit": limit}
+
+@app.put("/api/admin/users/{user_id}/role")
+async def update_user_role(user_id: str, request: Request):
+    """Update user role (admin only)"""
+    admin = await require_user(request)
+    body = await request.json()
+    
+    if admin.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    new_role = body.get("role")
+    if new_role not in ["user", "creator", "admin"]:
+        raise HTTPException(status_code=400, detail="Invalid role")
+    
+    result = await db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {"role": new_role}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": f"User role updated to {new_role}"}
+
+@app.get("/api/admin/content/pending")
+async def get_pending_content(request: Request):
+    """Get pending content for review (admin only)"""
+    user = await require_user(request)
+    
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    pending_wisdom = await db.wisdom.find({"status": "pending"}, {"_id": 0}).to_list(100)
+    pending_practices = await db.practices.find({"status": "pending"}, {"_id": 0}).to_list(100)
+    
+    return {"wisdom": pending_wisdom, "practices": pending_practices}
+
+@app.put("/api/admin/content/{content_id}/approve")
+async def approve_content(content_id: str, request: Request):
+    """Approve content (admin only)"""
+    user = await require_user(request)
+    
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    result = await db.wisdom.update_one({"id": content_id}, {"$set": {"status": "approved"}})
+    if result.matched_count == 0:
+        result = await db.practices.update_one({"id": content_id}, {"$set": {"status": "approved"}})
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    return {"message": "Content approved"}
+
+@app.put("/api/admin/content/{content_id}/reject")
+async def reject_content(content_id: str, request: Request):
+    """Reject content (admin only)"""
+    user = await require_user(request)
+    body = await request.json()
+    
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    reason = body.get("reason", "Content does not meet guidelines")
+    
+    result = await db.wisdom.update_one(
+        {"id": content_id},
+        {"$set": {"status": "rejected", "rejection_reason": reason}}
+    )
+    if result.matched_count == 0:
+        result = await db.practices.update_one(
+            {"id": content_id},
+            {"$set": {"status": "rejected", "rejection_reason": reason}}
+        )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    return {"message": "Content rejected"}
+
+@app.get("/api/admin/stats")
+async def get_admin_stats(request: Request):
+    """Get platform statistics (admin only)"""
+    user = await require_user(request)
+    
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    total_users = await db.users.count_documents({})
+    total_reflections = await db.reflections.count_documents({})
+    total_wisdom = await db.wisdom.count_documents({})
+    total_practices = await db.practices.count_documents({})
+    total_circles = await db.circles.count_documents({})
+    
+    # Users by role
+    role_pipeline = [
+        {"$group": {"_id": "$role", "count": {"$sum": 1}}}
+    ]
+    users_by_role = await db.users.aggregate(role_pipeline).to_list(10)
+    
+    # Recent activity (last 7 days)
+    week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    new_users = await db.users.count_documents({"created_at": {"$gte": week_ago}})
+    new_reflections = await db.reflections.count_documents({"created_at": {"$gte": week_ago}})
+    
+    return {
+        "total_users": total_users,
+        "total_reflections": total_reflections,
+        "total_wisdom": total_wisdom,
+        "total_practices": total_practices,
+        "total_circles": total_circles,
+        "users_by_role": {r["_id"]: r["count"] for r in users_by_role},
+        "weekly_stats": {
+            "new_users": new_users,
+            "new_reflections": new_reflections
+        }
+    }
+
 # ==================== SEED DATA ENDPOINT ====================
 
 @app.post("/api/admin/seed")
