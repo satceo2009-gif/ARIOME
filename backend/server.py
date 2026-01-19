@@ -697,6 +697,165 @@ async def seed_database():
         }
     }
 
+# ==================== CIRCLES ENDPOINTS ====================
+
+class CircleCreate(BaseModel):
+    name: str
+    description: str
+    intention: str
+    is_private: bool = False
+
+class CircleResponse(BaseModel):
+    id: str
+    name: str
+    description: str
+    intention: str
+    creator_id: str
+    creator_name: str
+    member_count: int
+    post_count: int
+    is_private: bool
+    created_at: str
+    is_member: bool = False
+
+@app.get("/api/circles")
+async def get_circles(request: Request, intention: str = None):
+    """Get all circles, optionally filtered by intention"""
+    user = await get_current_user(request)
+    
+    query = {}
+    if intention:
+        query["intention"] = intention
+    
+    circles = await db.circles.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    
+    # Add is_member flag if user is logged in
+    if user:
+        user_circles = await db.circle_members.find(
+            {"user_id": user["user_id"]}, {"_id": 0, "circle_id": 1}
+        ).to_list(100)
+        user_circle_ids = {m["circle_id"] for m in user_circles}
+        
+        for circle in circles:
+            circle["is_member"] = circle["id"] in user_circle_ids
+    
+    return circles
+
+@app.get("/api/circles/public")
+async def get_public_circles(intention: str = None):
+    """Get public circles for unauthenticated users"""
+    query = {"is_private": False}
+    if intention:
+        query["intention"] = intention
+    
+    circles = await db.circles.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return circles
+
+@app.post("/api/circles")
+async def create_circle(circle_data: CircleCreate, request: Request):
+    """Create a new circle"""
+    user = await require_user(request)
+    
+    # Check if user can create circles (subscriber, creator, admin)
+    if user.get("role") not in ["subscriber", "creator", "admin"]:
+        raise HTTPException(status_code=403, detail="Only subscribers can create circles")
+    
+    circle_id = f"circle_{uuid4().hex[:12]}"
+    
+    circle = {
+        "id": circle_id,
+        "name": circle_data.name,
+        "description": circle_data.description,
+        "intention": circle_data.intention,
+        "creator_id": user["user_id"],
+        "creator_name": user.get("name", "Anonymous"),
+        "member_count": 1,  # Creator is first member
+        "post_count": 0,
+        "is_private": circle_data.is_private,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.circles.insert_one(circle)
+    circle.pop("_id", None)
+    
+    # Add creator as member
+    await db.circle_members.insert_one({
+        "circle_id": circle_id,
+        "user_id": user["user_id"],
+        "role": "creator",
+        "joined_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return circle
+
+@app.post("/api/circles/{circle_id}/join")
+async def join_circle(circle_id: str, request: Request):
+    """Join a circle"""
+    user = await require_user(request)
+    
+    # Check if user can join circles
+    if user.get("role") not in ["subscriber", "creator", "admin"]:
+        raise HTTPException(status_code=403, detail="Only subscribers can join circles")
+    
+    # Check if circle exists
+    circle = await db.circles.find_one({"id": circle_id}, {"_id": 0})
+    if not circle:
+        raise HTTPException(status_code=404, detail="Circle not found")
+    
+    # Check if already member
+    existing = await db.circle_members.find_one({
+        "circle_id": circle_id,
+        "user_id": user["user_id"]
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Already a member of this circle")
+    
+    # Add member
+    await db.circle_members.insert_one({
+        "circle_id": circle_id,
+        "user_id": user["user_id"],
+        "role": "member",
+        "joined_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Update member count
+    await db.circles.update_one(
+        {"id": circle_id},
+        {"$inc": {"member_count": 1}}
+    )
+    
+    return {"message": "Joined circle successfully"}
+
+@app.post("/api/circles/{circle_id}/leave")
+async def leave_circle(circle_id: str, request: Request):
+    """Leave a circle"""
+    user = await require_user(request)
+    
+    # Check if member
+    member = await db.circle_members.find_one({
+        "circle_id": circle_id,
+        "user_id": user["user_id"]
+    })
+    if not member:
+        raise HTTPException(status_code=400, detail="Not a member of this circle")
+    
+    # Can't leave if creator
+    if member.get("role") == "creator":
+        raise HTTPException(status_code=400, detail="Circle creator cannot leave. Delete the circle instead.")
+    
+    # Remove member
+    await db.circle_members.delete_one({
+        "circle_id": circle_id,
+        "user_id": user["user_id"]
+    })
+    
+    # Update member count
+    await db.circles.update_one(
+        {"id": circle_id},
+        {"$inc": {"member_count": -1}}
+    )
+    
+    return {"message": "Left circle successfully"}
+
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint"""
