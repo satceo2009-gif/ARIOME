@@ -106,13 +106,7 @@ export default function HelpScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Help Center</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <ConsciousHeader showBack />
 
       <ScrollView style={styles.content}>
         {/* Welcome Section */}
