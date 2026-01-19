@@ -3,25 +3,19 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
+import ConsciousHeader from '@/components/ConsciousHeader';
+import AriomeLogo from '@/components/AriomeLogo';
 
 export default function AboutScreen() {
   const router = useRouter();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.title}>About ARIOME</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <ConsciousHeader showBack />
 
       <ScrollView style={styles.content}>
         <View style={styles.logoContainer}>
-          <MaterialCommunityIcons name="yoga" size={80} color="#14B8A6" />
-          <Text style={styles.appName}>ARIOME</Text>
-          <Text style={styles.tagline}>by CNESS</Text>
+          <AriomeLogo width={200} height={84} />
           <Text style={styles.version}>Version 1.0.0</Text>
         </View>
 
