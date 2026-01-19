@@ -281,6 +281,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: ARIOME_COLORS.text.primary,
+    flex: 1,
+  },
+  cardBookmark: {
+    padding: 4,
   },
   wisdomBody: {
     fontSize: 15,
