@@ -21,10 +21,10 @@ export default function CirclesScreen() {
   const [creating, setCreating] = useState(false);
   const [joiningId, setJoiningId] = useState<string | null>(null);
 
-  // Role-based permissions
+  // Role-based permissions - all authenticated users can join circles
   const userRole = user?.role || 'explorer';
-  const canCreateCircle = ['subscriber', 'creator', 'admin'].includes(userRole);
-  const canJoinCircle = ['subscriber', 'creator', 'admin'].includes(userRole);
+  const canCreateCircle = !!user; // Any authenticated user can create circles
+  const canJoinCircle = !!user;   // Any authenticated user can join circles
 
   const loadCircles = useCallback(async () => {
     try {
