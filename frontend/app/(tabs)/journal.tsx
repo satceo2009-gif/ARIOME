@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { contentAPI, reflectionAPI, transcribeAPI } from '@/services/api';
+import ConsciousHeader from '@/components/ConsciousHeader';
 import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/theme';
 
 interface Mood {
