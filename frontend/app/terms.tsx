@@ -186,6 +186,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFF',
   },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: '300',
+    color: '#FFF',
+    marginBottom: 8,
+  },
   content: {
     flex: 1,
     paddingHorizontal: 20,
