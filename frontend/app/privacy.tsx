@@ -2,21 +2,17 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-nati
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import ConsciousHeader from '@/components/ConsciousHeader';
 
 export default function PrivacyPolicyScreen() {
   const router = useRouter();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Privacy Policy</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <ConsciousHeader showBack />
 
       <ScrollView style={styles.content}>
+        <Text style={styles.pageTitle}>Privacy Policy</Text>
         <Text style={styles.lastUpdated}>Last Updated: January 1, 2025</Text>
 
         <View style={styles.section}>
