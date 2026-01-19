@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/contexts/AuthContext';
+import ConsciousHeader from '@/components/ConsciousHeader';
 
 export default function ProfileScreen() {
   const router = useRouter();
