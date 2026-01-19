@@ -11,7 +11,7 @@ import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/ariom
 
 export default function CirclesScreen() {
   const router = useRouter();
-  const { token, user } = useAuth();
+  const { user } = useAuth();
   const [circles, setCircles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -22,7 +22,6 @@ export default function CirclesScreen() {
   const [joiningId, setJoiningId] = useState<string | null>(null);
 
   // Role-based permissions - all authenticated users can join circles
-  const userRole = user?.role || 'explorer';
   const canCreateCircle = !!user; // Any authenticated user can create circles
   const canJoinCircle = !!user;   // Any authenticated user can join circles
 
