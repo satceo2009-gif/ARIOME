@@ -101,6 +101,7 @@ export default function PracticesScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
+      <ConsciousHeader showSettings />
       {/* Category Filter */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
         {CATEGORIES.map((cat) => (
