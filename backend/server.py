@@ -579,6 +579,231 @@ async def add_resonance(resonance: ResonanceCreate, request: Request):
     
     return {"message": "Resonance added", "resonated": True}
 
+# ==================== BOOKMARKS ENDPOINTS ====================
+
+class BookmarkRequest(BaseModel):
+    content_id: str
+    content_type: str  # wisdom, practice
+
+@app.get("/api/bookmarks")
+async def get_bookmarks(request: Request, content_type: str = None):
+    """Get user's bookmarks"""
+    user = await require_user(request)
+    
+    query = {"user_id": user["user_id"]}
+    if content_type:
+        query["content_type"] = content_type
+    
+    bookmarks = await db.bookmarks.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    
+    # Fetch actual content for each bookmark
+    result = []
+    for bookmark in bookmarks:
+        content = None
+        if bookmark["content_type"] == "wisdom":
+            content = await db.wisdom.find_one({"id": bookmark["content_id"]}, {"_id": 0})
+        elif bookmark["content_type"] == "practice":
+            content = await db.practices.find_one({"id": bookmark["content_id"]}, {"_id": 0})
+        
+        if content:
+            result.append({**bookmark, "content": content})
+    
+    return result
+
+@app.post("/api/bookmarks")
+async def add_bookmark(bookmark: BookmarkRequest, request: Request):
+    """Add a bookmark"""
+    user = await require_user(request)
+    
+    # Check if already bookmarked
+    existing = await db.bookmarks.find_one({
+        "user_id": user["user_id"],
+        "content_id": bookmark.content_id
+    })
+    
+    if existing:
+        return {"message": "Already bookmarked", "bookmarked": True}
+    
+    await db.bookmarks.insert_one({
+        "id": f"bm_{uuid4().hex[:12]}",
+        "user_id": user["user_id"],
+        "content_id": bookmark.content_id,
+        "content_type": bookmark.content_type,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": "Bookmark added", "bookmarked": True}
+
+@app.delete("/api/bookmarks/{content_id}")
+async def remove_bookmark(content_id: str, request: Request):
+    """Remove a bookmark"""
+    user = await require_user(request)
+    
+    result = await db.bookmarks.delete_one({
+        "user_id": user["user_id"],
+        "content_id": content_id
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Bookmark not found")
+    
+    return {"message": "Bookmark removed", "bookmarked": False}
+
+@app.get("/api/bookmarks/check/{content_id}")
+async def check_bookmark(content_id: str, request: Request):
+    """Check if content is bookmarked"""
+    user = await get_current_user(request)
+    if not user:
+        return {"bookmarked": False}
+    
+    bookmark = await db.bookmarks.find_one({
+        "user_id": user["user_id"],
+        "content_id": content_id
+    })
+    
+    return {"bookmarked": bookmark is not None}
+
+# ==================== JOURNAL TAGS & SEARCH ====================
+
+@app.get("/api/reflections/search")
+async def search_reflections(request: Request, q: str = None, tag: str = None, mood: str = None):
+    """Search user's reflections"""
+    user = await require_user(request)
+    
+    query = {"user_id": user["user_id"]}
+    
+    if q:
+        query["content"] = {"$regex": q, "$options": "i"}
+    if tag:
+        query["tags"] = tag
+    if mood:
+        query["$or"] = [{"mood_before": mood}, {"mood_after": mood}]
+    
+    reflections = await db.reflections.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return reflections
+
+@app.get("/api/reflections/tags")
+async def get_user_tags(request: Request):
+    """Get all unique tags used by user"""
+    user = await require_user(request)
+    
+    pipeline = [
+        {"$match": {"user_id": user["user_id"], "tags": {"$exists": True, "$ne": []}}},
+        {"$unwind": "$tags"},
+        {"$group": {"_id": "$tags", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}}
+    ]
+    
+    result = await db.reflections.aggregate(pipeline).to_list(50)
+    return [{"tag": r["_id"], "count": r["count"]} for r in result]
+
+@app.put("/api/reflections/{reflection_id}/tags")
+async def update_reflection_tags(reflection_id: str, request: Request):
+    """Update tags for a reflection"""
+    user = await require_user(request)
+    body = await request.json()
+    tags = body.get("tags", [])
+    
+    result = await db.reflections.update_one(
+        {"id": reflection_id, "user_id": user["user_id"]},
+        {"$set": {"tags": tags}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Reflection not found")
+    
+    return {"message": "Tags updated", "tags": tags}
+
+# ==================== WEEKLY INSIGHTS ====================
+
+@app.get("/api/insights/weekly")
+async def get_weekly_insights(request: Request):
+    """Get weekly mood trends and insights"""
+    user = await require_user(request)
+    
+    # Get reflections from last 7 days
+    week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    
+    reflections = await db.reflections.find({
+        "user_id": user["user_id"],
+        "created_at": {"$gte": week_ago}
+    }, {"_id": 0}).to_list(100)
+    
+    # Calculate mood trends
+    mood_counts = {}
+    for r in reflections:
+        if r.get("mood_before"):
+            mood_counts[r["mood_before"]] = mood_counts.get(r["mood_before"], 0) + 1
+        if r.get("mood_after"):
+            mood_counts[r["mood_after"]] = mood_counts.get(r["mood_after"], 0) + 1
+    
+    # Sort by count
+    top_moods = sorted(mood_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+    
+    # Get streak
+    streak = await calculate_streak(user["user_id"])
+    
+    return {
+        "total_reflections": len(reflections),
+        "top_moods": [{"mood": m[0], "count": m[1]} for m in top_moods],
+        "streak": streak,
+        "insights": generate_insights(reflections, mood_counts)
+    }
+
+async def calculate_streak(user_id: str) -> int:
+    """Calculate consecutive days of reflection"""
+    reflections = await db.reflections.find(
+        {"user_id": user_id},
+        {"_id": 0, "created_at": 1}
+    ).sort("created_at", -1).to_list(365)
+    
+    if not reflections:
+        return 0
+    
+    streak = 1
+    today = datetime.now(timezone.utc).date()
+    
+    # Check if user reflected today
+    last_date = datetime.fromisoformat(reflections[0]["created_at"].replace("Z", "+00:00")).date()
+    if (today - last_date).days > 1:
+        return 0
+    
+    for i in range(1, len(reflections)):
+        curr_date = datetime.fromisoformat(reflections[i]["created_at"].replace("Z", "+00:00")).date()
+        prev_date = datetime.fromisoformat(reflections[i-1]["created_at"].replace("Z", "+00:00")).date()
+        
+        if (prev_date - curr_date).days == 1:
+            streak += 1
+        elif (prev_date - curr_date).days > 1:
+            break
+    
+    return streak
+
+def generate_insights(reflections: list, mood_counts: dict) -> list:
+    """Generate personalized insights"""
+    insights = []
+    
+    if len(reflections) >= 7:
+        insights.append("Great consistency this week! You've reflected regularly.")
+    elif len(reflections) >= 3:
+        insights.append("You're building a good reflection habit. Keep it up!")
+    elif len(reflections) > 0:
+        insights.append("Consider reflecting more often to deepen your self-awareness.")
+    
+    # Mood-based insights
+    positive_moods = ["peaceful", "grateful", "hopeful", "joyful", "content"]
+    negative_moods = ["anxious", "sad"]
+    
+    positive_count = sum(mood_counts.get(m, 0) for m in positive_moods)
+    negative_count = sum(mood_counts.get(m, 0) for m in negative_moods)
+    
+    if positive_count > negative_count * 2:
+        insights.append("Your mood has been predominantly positive. Wonderful!")
+    elif negative_count > positive_count:
+        insights.append("Consider exploring practices for emotional balance.")
+    
+    return insights
+
 # ==================== SPEECH-TO-TEXT ENDPOINT ====================
 
 @app.post("/api/transcribe", response_model=TranscribeResponse)
