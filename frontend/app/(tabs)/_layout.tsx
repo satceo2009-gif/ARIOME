@@ -11,26 +11,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: ARIOME_COLORS.background.deep,
-          elevation: 0,
-          shadowOpacity: 0,
-          borderBottomWidth: 1,
-          borderBottomColor: 'rgba(255,255,255,0.05)',
-        },
-        headerTitle: () => (
-          <TouchableOpacity
-            style={styles.headerTitle}
-            onPress={() => router.push('/')}
-            activeOpacity={0.7}
-            accessibilityLabel="AriOme Home"
-            accessibilityRole="button"
-          >
-            <AriomeLogo width={110} height={45} />
-          </TouchableOpacity>
-        ),
-        headerTintColor: ARIOME_COLORS.consciousness.teal,
+        headerShown: false, // We use ConsciousHeader instead
         tabBarStyle: {
           backgroundColor: ARIOME_COLORS.background.secondary,
           borderTopWidth: 0,
@@ -80,6 +61,46 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="notebook-outline" size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="circles"
+        options={{
+          title: 'Circles',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account-group-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      {/* Hidden tabs - accessible via navigation but not shown in tab bar */}
+      <Tabs.Screen
+        name="profile"
+        options={{
+          href: null, // Hide from tab bar, access via settings icon
+        }}
+      />
+      <Tabs.Screen
+        name="discover"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="for-you"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="library"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="self-ariome"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
