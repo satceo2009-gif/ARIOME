@@ -49,12 +49,9 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      <ConsciousHeader showSettings />
+      
       <ScrollView style={styles.scrollView}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Profile</Text>
-        </View>
-
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <Image 
