@@ -1,30 +1,24 @@
 #!/usr/bin/env python3
 """
-ARIOME Backend API Testing Suite
-Tests authentication, profile, journal, circles, and other backend APIs
-Based on review request requirements
+AriOme Backend API Testing Suite
+Tests authentication and circles API endpoints as specified in review request
 """
 
 import asyncio
 import aiohttp
 import json
-import re
 import os
-from typing import List, Dict, Any
-from urllib.parse import urlparse, parse_qs
-from collections import Counter
+from typing import Dict, Any
 
-# Get backend URL from environment
-BACKEND_URL = os.getenv('EXPO_PUBLIC_BACKEND_URL', 'https://reflection-first.preview.emergentagent.com')
-API_BASE = f"{BACKEND_URL}/api"
+# API Base URL from review request
+API_BASE = "https://reflection-first.preview.emergentagent.com/api"
 
-# Test credentials
-TEST_EMAIL = "subscriber@ariome-test.com"
-TEST_PASSWORD = "test123"
-ADMIN_EMAIL = "admin@ariome-test.com"
-ADMIN_PASSWORD = "test123"
-CREATOR_EMAIL = "testcreator@example.com"
-CREATOR_PASSWORD = "test123"
+# Test credentials from review request
+TEST_EMAIL = "test@ariome.com"
+TEST_PASSWORD = "test1234"
+NEW_USER_EMAIL = "newuser123@ariome.com"
+NEW_USER_PASSWORD = "test1234"
+NEW_USER_NAME = "New User"
 
 class ARIOMEAPITester:
     def __init__(self):
