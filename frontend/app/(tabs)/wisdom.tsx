@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { contentAPI, resonanceAPI } from '@/services/api';
+import { contentAPI, resonanceAPI, bookmarksAPI } from '@/services/api';
+import { useAuth } from '@/contexts/AuthContext';
 import ConsciousHeader from '@/components/ConsciousHeader';
 import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/theme';
 
@@ -17,14 +18,17 @@ interface WisdomItem {
 }
 
 export default function WisdomScreen() {
+  const { user } = useAuth();
   const [wisdom, setWisdom] = useState<WisdomItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<WisdomItem | null>(null);
   const [resonated, setResonated] = useState<Set<string>>(new Set());
+  const [bookmarked, setBookmarked] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadWisdom();
-  }, []);
+    if (user) loadBookmarks();
+  }, [user]);
 
   const loadWisdom = async () => {
     try {
@@ -34,6 +38,15 @@ export default function WisdomScreen() {
       console.error('Error loading wisdom:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadBookmarks = async () => {
+    try {
+      const data = await bookmarksAPI.getAll('wisdom');
+      setBookmarked(new Set(data.map((b: any) => b.content_id)));
+    } catch (error) {
+      console.error('Error loading bookmarks:', error);
     }
   };
 
@@ -51,13 +64,49 @@ export default function WisdomScreen() {
     }
   };
 
+  const handleBookmark = async (item: WisdomItem) => {
+    if (!user) {
+      Alert.alert('Sign In Required', 'Please sign in to bookmark wisdom.');
+      return;
+    }
+
+    try {
+      if (bookmarked.has(item.id)) {
+        await bookmarksAPI.remove(item.id);
+        setBookmarked(prev => {
+          const next = new Set(prev);
+          next.delete(item.id);
+          return next;
+        });
+      } else {
+        await bookmarksAPI.add(item.id, 'wisdom');
+        setBookmarked(prev => new Set([...prev, item.id]));
+      }
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+    }
+  };
+
   // Selected Wisdom View (Reflect-after-consume)
   if (selectedItem) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom']}>
         <View style={styles.selectedContainer}>
-          <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedItem(null)}>
-            <MaterialCommunityIcons name="close" size={24} color={ARIOME_COLORS.text.primary} />
+          <View style={styles.selectedHeader}>
+            <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedItem(null)}>
+              <MaterialCommunityIcons name="close" size={24} color={ARIOME_COLORS.text.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.bookmarkButton} 
+              onPress={() => handleBookmark(selectedItem)}
+            >
+              <MaterialCommunityIcons 
+                name={bookmarked.has(selectedItem.id) ? "bookmark" : "bookmark-outline"} 
+                size={24} 
+                color={bookmarked.has(selectedItem.id) ? ARIOME_COLORS.accent.amber : ARIOME_COLORS.text.primary} 
+              />
+            </TouchableOpacity>
+          </View>
           </TouchableOpacity>
 
           <ScrollView contentContainerStyle={styles.selectedContent}>
