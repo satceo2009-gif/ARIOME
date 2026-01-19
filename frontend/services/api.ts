@@ -166,6 +166,60 @@ export const circlesAPI = {
   },
 };
 
+// Bookmarks API
+export const bookmarksAPI = {
+  getAll: async (contentType?: string) => {
+    const params = contentType ? { content_type: contentType } : {};
+    const response = await api.get('/bookmarks', { params });
+    return response.data;
+  },
+  
+  add: async (contentId: string, contentType: string) => {
+    const response = await api.post('/bookmarks', { content_id: contentId, content_type: contentType });
+    return response.data;
+  },
+  
+  remove: async (contentId: string) => {
+    const response = await api.delete(`/bookmarks/${contentId}`);
+    return response.data;
+  },
+  
+  check: async (contentId: string) => {
+    const response = await api.get(`/bookmarks/check/${contentId}`);
+    return response.data;
+  },
+};
+
+// Insights API
+export const insightsAPI = {
+  getWeekly: async () => {
+    const response = await api.get('/insights/weekly');
+    return response.data;
+  },
+};
+
+// Enhanced Reflection API with search and tags
+export const reflectionSearchAPI = {
+  search: async (query?: string, tag?: string, mood?: string) => {
+    const params: any = {};
+    if (query) params.q = query;
+    if (tag) params.tag = tag;
+    if (mood) params.mood = mood;
+    const response = await api.get('/reflections/search', { params });
+    return response.data;
+  },
+  
+  getTags: async () => {
+    const response = await api.get('/reflections/tags');
+    return response.data;
+  },
+  
+  updateTags: async (reflectionId: string, tags: string[]) => {
+    const response = await api.put(`/reflections/${reflectionId}/tags`, { tags });
+    return response.data;
+  },
+};
+
 // Transcription API
 export const transcribeAPI = {
   transcribe: async (audioFile: Blob) => {
