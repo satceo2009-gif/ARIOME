@@ -805,10 +805,7 @@ async def join_circle(circle_id: str, request: Request):
     """Join a circle"""
     user = await require_user(request)
     
-    # Check if user can join circles
-    if user.get("role") not in ["subscriber", "creator", "admin"]:
-        raise HTTPException(status_code=403, detail="Only subscribers can join circles")
-    
+    # All authenticated users can join circles
     # Check if circle exists
     circle = await db.circles.find_one({"id": circle_id}, {"_id": 0})
     if not circle:
