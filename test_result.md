@@ -1,29 +1,17 @@
 # AriOme Development Progress
 
-## Phase 1: Core UI/UX Improvements - IN PROGRESS
+## Phase 1: Core UI/UX Improvements ✅ COMPLETE
+1. ✅ **Logo Consistency** - AriOme logo on ALL screens
+2. ✅ **Navigation Simplified** - 5 tabs: Reflect, Practices, Wisdom, Journal, Circles
+3. ✅ **ConsciousHeader** - Consistent header with logo + settings/back buttons
 
-### ✅ Completed
-1. **Logo Consistency** - AriOme logo now appears on ALL screens:
-   - Reflect, Practices, Wisdom, Journal, Circles (main tabs)
-   - Settings, Profile (sub-pages)
-   - Help, About, Privacy, Terms (info pages)
-   - Uses ConsciousHeader component with logo + settings/back buttons
+## Phase 2: Feature Enhancements ✅ COMPLETE
+1. ✅ **Wisdom Library Bookmarking** - Add/remove bookmarks, bookmark icon on cards
+2. ✅ **Journal Search & Tags** - API endpoints for search, tags management
+3. ✅ **Weekly Insights API** - Mood trends, streaks, personalized insights
+4. ✅ **Reflection Search** - Search by text, tag, or mood
 
-2. **Navigation Simplified** - Bottom tab bar now shows 5 tabs:
-   - Reflect, Practices, Wisdom, Journal, Circles
-   - Other screens (profile, discover, library) accessible via navigation
-
-### 🔄 In Progress
-3. Mood check-in improvements
-4. Progress bar for consistency
-5. Weekly summaries/insights
-
-## Phase 2: Feature Enhancements - PENDING
-- Wisdom Library bookmarking
-- Journal search & tags
-- Practice player screen improvements
-
-## Phase 3: User Roles & Permissions - PENDING
+## Phase 3: User Roles & Permissions - IN PROGRESS
 - Explorer/Guest mode limits
 - Creator dashboard
 - Admin panel
@@ -39,5 +27,12 @@
 - Live sessions & events
 - Moderation tools
 
-## Incorporate User Feedback
-- Logo should be on ALL pages ✅ DONE
+## API Endpoints Added
+- GET /api/bookmarks - Get user bookmarks
+- POST /api/bookmarks - Add bookmark
+- DELETE /api/bookmarks/{id} - Remove bookmark
+- GET /api/bookmarks/check/{id} - Check if bookmarked
+- GET /api/reflections/search - Search reflections
+- GET /api/reflections/tags - Get user tags
+- PUT /api/reflections/{id}/tags - Update tags
+- GET /api/insights/weekly - Get weekly insights
