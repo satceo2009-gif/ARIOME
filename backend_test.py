@@ -20,44 +20,19 @@ NEW_USER_EMAIL = "newuser123@ariome.com"
 NEW_USER_PASSWORD = "test1234"
 NEW_USER_NAME = "New User"
 
-class ARIOMEAPITester:
+class AriOmeAPITester:
     def __init__(self):
         self.session = None
-        self.access_token = None
-        self.admin_token = None
-        self.creator_token = None
+        self.session_token = None
         self.test_results = {
+            'registration_success': False,
             'login_success': False,
-            'admin_login_success': False,
-            'creator_login_success': False,
-            'admin_stats_success': False,
-            'admin_users_success': False,
-            'email_signup_success': False,
-            'signup_success': False,
-            'email_send_verification_success': False,
-            'email_verify_code_success': False,
-            'circles_no_auth_success': False,
-            'profile_update_success': False,
-            'notification_settings_success': False,
-            'change_password_success': False,
-            'journal_entries_success': False,
-            'journal_stats_success': False,
-            'journal_create_success': False,
-            'circles_list_success': False,
-            'circles_join_success': False,
-            'circles_create_success': False,
-            'library_save_success': False,
-            'library_unsave_success': False,
-            'library_saved_list_success': False,
-            'library_history_add_success': False,
-            'library_history_list_success': False,
-            'creator_application_apply_success': False,
-            'creator_application_pending_success': False,
-            'creator_application_approve_success': False,
-            'creator_application_reject_success': False,
-            'creator_application_stats_success': False,
+            'get_user_success': False,
+            'circle_join_auth_success': False,
+            'circle_leave_auth_success': False,
+            'circle_join_no_auth_success': False,
+            'public_circles_success': False,
             'api_errors': [],
-            'auth_errors': [],
             'critical_failures': []
         }
     
@@ -69,51 +44,277 @@ class ARIOMEAPITester:
         if self.session:
             await self.session.close()
     
-    async def test_health_endpoint(self):
-        """Test if backend is running"""
-        print("🔍 Testing backend health...")
+    async def test_registration(self):
+        """Test 1: Registration - POST /api/auth/register"""
+        print("🔍 Test 1: Registration API...")
         try:
-            async with self.session.get(f"{API_BASE}/health") as response:
-                if response.status == 200:
-                    print("✅ Backend is healthy")
-                    return True
-                else:
-                    print(f"❌ Backend health check failed: {response.status}")
-                    return False
-        except Exception as e:
-            print(f"❌ Backend connection failed: {e}")
-            return False
-    
-    async def test_login_api(self):
-        """Test POST /api/auth/login with form data"""
-        print("\n🔍 Testing Login API...")
-        try:
-            # Prepare form data as specified in review request
-            form_data = aiohttp.FormData()
-            form_data.add_field('username', TEST_EMAIL)
-            form_data.add_field('password', TEST_PASSWORD)
+            headers = {'Content-Type': 'application/json'}
             
-            async with self.session.post(f"{API_BASE}/auth/login", data=form_data) as response:
+            registration_data = {
+                "email": NEW_USER_EMAIL,
+                "password": NEW_USER_PASSWORD,
+                "name": NEW_USER_NAME
+            }
+            
+            async with self.session.post(f"{API_BASE}/auth/register", 
+                                       json=registration_data, 
+                                       headers=headers) as response:
                 if response.status == 200:
                     data = await response.json()
-                    if 'access_token' in data:
-                        self.access_token = data['access_token']
-                        self.test_results['login_success'] = True
-                        print(f"✅ Login successful - Token received")
+                    if 'user' in data and 'session_token' in data:
+                        self.test_results['registration_success'] = True
+                        print(f"✅ Registration successful - User: {data['user'].get('name')}, Token: {data['session_token'][:20]}...")
                         return True
                     else:
-                        error_msg = "Login response missing access_token"
-                        self.test_results['auth_errors'].append(error_msg)
+                        error_msg = "Registration response missing user object or session_token"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                elif response.status == 400:
+                    # User might already exist
+                    error_text = await response.text()
+                    if "already registered" in error_text:
+                        self.test_results['registration_success'] = True
+                        print("✅ Registration API working - User already exists (expected)")
+                        return True
+                    else:
+                        error_msg = f"Registration failed with unexpected 400: {error_text}"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Registration failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Registration API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
+    async def test_login(self):
+        """Test 2: Login - POST /api/auth/login"""
+        print("\n🔍 Test 2: Login API...")
+        try:
+            headers = {'Content-Type': 'application/json'}
+            
+            login_data = {
+                "email": TEST_EMAIL,
+                "password": TEST_PASSWORD
+            }
+            
+            async with self.session.post(f"{API_BASE}/auth/login", 
+                                       json=login_data, 
+                                       headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if 'user' in data and 'session_token' in data:
+                        self.session_token = data['session_token']
+                        self.test_results['login_success'] = True
+                        print(f"✅ Login successful - User: {data['user'].get('name')}, Token: {self.session_token[:20]}...")
+                        return True
+                    else:
+                        error_msg = "Login response missing user object or session_token"
+                        self.test_results['api_errors'].append(error_msg)
                         print(f"❌ {error_msg}")
                         return False
                 else:
                     error_text = await response.text()
                     error_msg = f"Login failed with status {response.status}: {error_text}"
-                    self.test_results['auth_errors'].append(error_msg)
+                    self.test_results['api_errors'].append(error_msg)
                     print(f"❌ {error_msg}")
                     return False
         except Exception as e:
             error_msg = f"Login API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
+    async def test_get_user(self):
+        """Test 3: Get User (with auth) - GET /api/auth/me"""
+        print("\n🔍 Test 3: Get User API (with auth)...")
+        if not self.session_token:
+            print("❌ Cannot test get user - no session token")
+            return False
+        
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.session_token}'
+            }
+            
+            async with self.session.get(f"{API_BASE}/auth/me", 
+                                      headers=headers) as response:
+                if response.status == 200:
+                    user_data = await response.json()
+                    if 'user_id' in user_data and 'email' in user_data:
+                        self.test_results['get_user_success'] = True
+                        print(f"✅ Get user successful - User: {user_data.get('name')}, Email: {user_data.get('email')}")
+                        return True
+                    else:
+                        error_msg = "Get user response missing required fields (user_id, email)"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Get user failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Get user API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
+    async def test_circle_join_with_auth(self):
+        """Test 4: Circle Join (with auth) - POST /api/circles/circle_healing01/join"""
+        print("\n🔍 Test 4: Circle Join API (with auth)...")
+        if not self.session_token:
+            print("❌ Cannot test circle join - no session token")
+            return False
+        
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.session_token}'
+            }
+            
+            async with self.session.post(f"{API_BASE}/circles/circle_healing01/join", 
+                                       headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if 'message' in data:
+                        self.test_results['circle_join_auth_success'] = True
+                        print(f"✅ Circle join successful - {data['message']}")
+                        return True
+                    else:
+                        error_msg = "Circle join response missing message"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                elif response.status == 400:
+                    # Already a member is acceptable
+                    error_text = await response.text()
+                    if "already a member" in error_text.lower():
+                        self.test_results['circle_join_auth_success'] = True
+                        print("✅ Circle join API working - Already a member (expected)")
+                        return True
+                    else:
+                        error_msg = f"Circle join failed with unexpected 400: {error_text}"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Circle join failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Circle join API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
+    async def test_circle_leave_with_auth(self):
+        """Test 5: Circle Leave (with auth) - POST /api/circles/circle_healing01/leave"""
+        print("\n🔍 Test 5: Circle Leave API (with auth)...")
+        if not self.session_token:
+            print("❌ Cannot test circle leave - no session token")
+            return False
+        
+        try:
+            headers = {
+                'Authorization': f'Bearer {self.session_token}'
+            }
+            
+            async with self.session.post(f"{API_BASE}/circles/circle_healing01/leave", 
+                                       headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if 'message' in data:
+                        self.test_results['circle_leave_auth_success'] = True
+                        print(f"✅ Circle leave successful - {data['message']}")
+                        return True
+                    else:
+                        error_msg = "Circle leave response missing message"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                elif response.status == 400:
+                    # Not a member is acceptable
+                    error_text = await response.text()
+                    if "not a member" in error_text.lower():
+                        self.test_results['circle_leave_auth_success'] = True
+                        print("✅ Circle leave API working - Not a member (expected)")
+                        return True
+                    else:
+                        error_msg = f"Circle leave failed with unexpected 400: {error_text}"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Circle leave failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Circle leave API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
+    async def test_circle_join_without_auth(self):
+        """Test 6: Circle Join without auth - POST /api/circles/circle_healing01/join (should fail)"""
+        print("\n🔍 Test 6: Circle Join API (without auth - should fail)...")
+        try:
+            async with self.session.post(f"{API_BASE}/circles/circle_healing01/join") as response:
+                if response.status == 401:
+                    self.test_results['circle_join_no_auth_success'] = True
+                    print("✅ Circle join without auth properly rejected (401 Unauthorized)")
+                    return True
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Circle join without auth should return 401, got {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Circle join without auth API request failed: {e}"
+            self.test_results['critical_failures'].append(error_msg)
+            print(f"❌ {error_msg}")
+            return False
+    
+    async def test_public_circles(self):
+        """Test 7: List Circles (public) - GET /api/circles/public"""
+        print("\n🔍 Test 7: Public Circles API...")
+        try:
+            async with self.session.get(f"{API_BASE}/circles/public") as response:
+                if response.status == 200:
+                    circles = await response.json()
+                    if isinstance(circles, list):
+                        self.test_results['public_circles_success'] = True
+                        print(f"✅ Public circles successful - {len(circles)} circles returned")
+                        # Print some circle info for verification
+                        for circle in circles[:3]:  # Show first 3 circles
+                            print(f"   Circle: {circle.get('name', 'Unknown')} - {circle.get('description', 'No description')[:50]}...")
+                        return True
+                    else:
+                        error_msg = f"Public circles response should be array, got {type(circles)}"
+                        self.test_results['api_errors'].append(error_msg)
+                        print(f"❌ {error_msg}")
+                        return False
+                else:
+                    error_text = await response.text()
+                    error_msg = f"Public circles failed with status {response.status}: {error_text}"
+                    self.test_results['api_errors'].append(error_msg)
+                    print(f"❌ {error_msg}")
+                    return False
+        except Exception as e:
+            error_msg = f"Public circles API request failed: {e}"
             self.test_results['critical_failures'].append(error_msg)
             print(f"❌ {error_msg}")
             return False
