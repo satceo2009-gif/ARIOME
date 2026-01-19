@@ -333,7 +333,21 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: ARIOME_SPACING.lg,
   },
+  selectedHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: ARIOME_SPACING.lg,
+  },
   closeButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: ARIOME_COLORS.background.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bookmarkButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
