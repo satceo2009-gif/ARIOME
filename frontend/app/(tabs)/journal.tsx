@@ -196,6 +196,7 @@ export default function JournalScreen() {
   if (!user) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom']}>
+        <ConsciousHeader showSettings />
         <View style={styles.emptyState}>
           <MaterialCommunityIcons name="notebook-outline" size={64} color={ARIOME_COLORS.text.subtle} />
           <Text style={styles.emptyTitle}>Your Inner Journal</Text>
@@ -210,6 +211,7 @@ export default function JournalScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
+      <ConsciousHeader showSettings />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
