@@ -673,18 +673,30 @@ async def seed_database():
         {"id": "wisdom_6", "title": "Inner Peace", "body": "Do not let the behavior of others destroy your inner peace.", "author": "Dalai Lama", "intent_tags": ["acceptance", "presence"], "language": "en", "duration": None, "media_url": None, "media_type": "text", "resonance_count": 0},
     ]
     
+    # Circles (sample community circles)
+    circles = [
+        {"id": "circle_healing01", "name": "Healing Hearts", "description": "A safe space for those on their healing journey. Share experiences, find support, and grow together.", "intention": "healing", "creator_id": "system", "creator_name": "AriOme", "member_count": 42, "post_count": 128, "is_private": False, "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "circle_mindful01", "name": "Mindful Mornings", "description": "Start your day with intention. Daily mindfulness practices and morning reflections.", "intention": "mindfulness", "creator_id": "system", "creator_name": "AriOme", "member_count": 67, "post_count": 256, "is_private": False, "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "circle_growth01", "name": "Growth Mindset", "description": "Embrace change and personal evolution. Share your growth journey and inspire others.", "intention": "growth", "creator_id": "system", "creator_name": "AriOme", "member_count": 89, "post_count": 312, "is_private": False, "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "circle_gratitude01", "name": "Gratitude Circle", "description": "Daily gratitude practices and appreciation sharing. What are you grateful for today?", "intention": "gratitude", "creator_id": "system", "creator_name": "AriOme", "member_count": 54, "post_count": 445, "is_private": False, "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "circle_joy01", "name": "Joy Seekers", "description": "Celebrate life's moments, big and small. A community dedicated to finding and sharing joy.", "intention": "joy", "creator_id": "system", "creator_name": "AriOme", "member_count": 38, "post_count": 167, "is_private": False, "created_at": datetime.now(timezone.utc).isoformat()},
+        {"id": "circle_resilience01", "name": "Resilience Warriors", "description": "Building strength together. Share stories of overcoming challenges and supporting each other.", "intention": "resilience", "creator_id": "system", "creator_name": "AriOme", "member_count": 31, "post_count": 94, "is_private": False, "created_at": datetime.now(timezone.utc).isoformat()},
+    ]
+    
     # Clear and insert
     await db.moods.delete_many({})
     await db.intentions.delete_many({})
     await db.prompts.delete_many({})
     await db.practices.delete_many({})
     await db.wisdom.delete_many({})
+    await db.circles.delete_many({})
     
     await db.moods.insert_many(moods)
     await db.intentions.insert_many(intentions)
     await db.prompts.insert_many(prompts)
     await db.practices.insert_many(practices)
     await db.wisdom.insert_many(wisdom)
+    await db.circles.insert_many(circles)
     
     return {
         "message": "Database seeded successfully",
@@ -693,7 +705,8 @@ async def seed_database():
             "intentions": len(intentions),
             "prompts": len(prompts),
             "practices": len(practices),
-            "wisdom": len(wisdom)
+            "wisdom": len(wisdom),
+            "circles": len(circles)
         }
     }
 
