@@ -185,6 +185,19 @@ export default function WisdomScreen() {
                 <View style={styles.wisdomCardHeader}>
                   <MaterialCommunityIcons name="book-open-page-variant-outline" size={20} color={ARIOME_COLORS.consciousness.teal} />
                   <Text style={styles.wisdomTitle}>{item.title}</Text>
+                  <TouchableOpacity 
+                    style={styles.cardBookmark}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handleBookmark(item);
+                    }}
+                  >
+                    <MaterialCommunityIcons 
+                      name={bookmarked.has(item.id) ? "bookmark" : "bookmark-outline"} 
+                      size={20} 
+                      color={bookmarked.has(item.id) ? ARIOME_COLORS.accent.amber : ARIOME_COLORS.text.muted} 
+                    />
+                  </TouchableOpacity>
                 </View>
                 
                 <Text style={styles.wisdomBody} numberOfLines={3}>
