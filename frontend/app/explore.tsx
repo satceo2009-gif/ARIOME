@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, Dimensions, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, Dimensions, ActivityIndicator, Modal, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,7 +8,37 @@ import { useAuth } from '@/contexts/AuthContext';
 import ConsciousHeader from '@/components/ConsciousHeader';
 import api from '@/services/api';
 import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/theme';
-import { WebView } from 'react-native-webview';
+
+// Platform-specific video player component
+const VideoPlayer = ({ uri, style }: { uri: string; style?: any }) => {
+  if (Platform.OS === 'web') {
+    // Use iframe for web
+    return (
+      <iframe
+        src={uri + '?autoplay=1&modestbranding=1'}
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          border: 'none',
+          backgroundColor: '#000',
+          ...style 
+        }}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    );
+  }
+  // Use WebView for native
+  const WebView = require('react-native-webview').WebView;
+  return (
+    <WebView
+      source={{ uri: uri + '?autoplay=1' }}
+      style={style}
+      allowsInlineMediaPlayback
+      mediaPlaybackRequiresUserAction={false}
+    />
+  );
+};
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH * 0.75;
