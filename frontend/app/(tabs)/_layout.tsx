@@ -35,6 +35,7 @@ export default function TabLayout() {
         name="explore"
         options={{
           title: 'Explore',
+          href: '/explore',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="compass-outline" size={size} color={color} />
           ),
