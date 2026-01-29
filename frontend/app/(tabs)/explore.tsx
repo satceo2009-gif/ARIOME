@@ -1,5 +1,5 @@
-import { Redirect } from 'expo-router';
+import ExploreScreen from '../explore';
 
 export default function ExploreTab() {
-  return <Redirect href="/explore" />;
+  return <ExploreScreen />;
 }
