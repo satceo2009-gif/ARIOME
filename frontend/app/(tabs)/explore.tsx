@@ -50,11 +50,7 @@ export default function ExploreScreen() {
 
   const isSubscriber = user?.role === 'subscriber' || user?.role === 'creator' || user?.role === 'admin';
 
-  useEffect(() => {
-    loadContent();
-  }, [selectedMood]);
-
-  const loadContent = async () => {
+  const loadContent = useCallback(async () => {
     setLoading(true);
     try {
       const params = selectedMood !== 'all' ? { mood: selectedMood } : {};
@@ -69,7 +65,11 @@ export default function ExploreScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedMood]);
+
+  useEffect(() => {
+    loadContent();
+  }, [loadContent]);
 
   const handlePlayContent = (content: ContentItem) => {
     setSelectedContent(content);
