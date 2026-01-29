@@ -30,9 +30,18 @@ export default function TabLayout() {
       <Tabs.Screen
         name="reflect"
         options={{
-          title: 'Reflect',
+          title: 'Home',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="thought-bubble-outline" size={size} color={color} />
+            <MaterialCommunityIcons name="home-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="explore"
+        options={{
+          title: 'Explore',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="compass-outline" size={size} color={color} />
           ),
         }}
       />
@@ -46,8 +55,33 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="wisdom"
+        name="journal"
         options={{
+          title: 'Journal',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="notebook-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="circles"
+        options={{
+          title: 'Circles',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account-group-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      {/* Hidden tabs */}
+      <Tabs.Screen name="wisdom" options={{ href: null }} />
+      <Tabs.Screen name="profile" options={{ href: null }} />
+      <Tabs.Screen name="discover" options={{ href: null }} />
+      <Tabs.Screen name="for-you" options={{ href: null }} />
+      <Tabs.Screen name="library" options={{ href: null }} />
+      <Tabs.Screen name="self-ariome" options={{ href: null }} />
+    </Tabs>
+  );
+}
           title: 'Wisdom',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="book-open-page-variant-outline" size={size} color={color} />
