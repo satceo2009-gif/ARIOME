@@ -299,7 +299,7 @@ export default function CirclesScreen() {
       />
 
       {/* Explorer notice */}
-      {userRole === 'explorer' && (
+      {!user && (
         <View style={styles.explorerNotice}>
           <MaterialCommunityIcons name="information" size={18} color="#F59E0B" />
           <Text style={styles.explorerNoticeText}>
