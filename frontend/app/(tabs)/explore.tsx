@@ -1,22 +1,20 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ARIOME_COLORS } from '@/constants/theme';
 
 export default function ExploreTab() {
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>Explore</Text>
         <Text style={styles.subtitle}>Discover content for your journey</Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: ARIOME_COLORS.background.deep,
+    backgroundColor: '#0A0A0F',
   },
   content: {
     flex: 1,
@@ -27,11 +25,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '600',
-    color: ARIOME_COLORS.text.primary,
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: ARIOME_COLORS.text.muted,
+    color: '#9CA3AF',
   },
 });
