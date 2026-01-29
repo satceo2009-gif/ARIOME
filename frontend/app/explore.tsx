@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, Dimensions, ActivityIndicator, Modal, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, Dimensions, ActivityIndicator, Modal, Platform, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,33 +8,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import ConsciousHeader from '@/components/ConsciousHeader';
 import api from '@/services/api';
 import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/theme';
-
-// Video player component - shows thumbnail with play overlay
-// Clicking opens the video in a modal with iframe (web) or native player (mobile)
-const VideoPlayer = ({ uri }: { uri: string }) => {
-  // For web, we use an iframe rendered as HTML string
-  if (Platform.OS === 'web') {
-    return (
-      <View style={{ flex: 1, width: '100%', height: '100%', backgroundColor: '#000' }}>
-        <View
-          // @ts-ignore - web only property
-          dangerouslySetInnerHTML={{
-            __html: `<iframe src="${uri}?autoplay=1&modestbranding=1&rel=0" style="width:100%;height:100%;border:none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
-          }}
-          style={{ width: '100%', height: '100%' } as any}
-        />
-      </View>
-    );
-  }
-  
-  // For native, show placeholder
-  return (
-    <View style={{ flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }}>
-      <MaterialCommunityIcons name="play-circle-outline" size={60} color="#FFF" />
-      <Text style={{ color: '#FFF', marginTop: 10 }}>Open in browser</Text>
-    </View>
-  );
-};
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH * 0.75;
