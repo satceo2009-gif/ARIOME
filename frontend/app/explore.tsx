@@ -308,7 +308,7 @@ export default function ExploreScreen() {
             <>
               {selectedContent.media_type === 'video' ? (
                 <View style={styles.videoContainer}>
-                  <VideoPlayer uri={selectedContent.media_url} style={styles.webview} />
+                  <VideoPlayer uri={selectedContent.media_url} />
                 </View>
               ) : (
                 <View style={styles.audioContainer}>
