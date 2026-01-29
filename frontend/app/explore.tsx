@@ -280,24 +280,20 @@ export default function ExploreScreen() {
             <>
               {selectedContent.media_type === 'video' ? (
                 <View style={styles.videoContainer}>
-                  {Platform.OS === 'web' ? (
-                    // For web, use an iframe
-                    <iframe
-                      src={selectedContent.media_url + '?autoplay=1&modestbranding=1&rel=0'}
-                      style={{ width: '100%', height: '100%', border: 'none' }}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
+                  <TouchableOpacity 
+                    style={{ flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }}
+                    onPress={() => {
+                      const videoUrl = selectedContent.media_url.replace('/embed/', '/watch?v=');
+                      Linking.openURL(videoUrl);
+                    }}
+                  >
+                    <Image 
+                      source={{ uri: selectedContent.thumbnail }} 
+                      style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0.5 }} 
                     />
-                  ) : (
-                    // For native, show a button to open in browser
-                    <TouchableOpacity 
-                      style={{ flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }}
-                      onPress={() => Linking.openURL(selectedContent.media_url.replace('/embed/', '/watch?v='))}
-                    >
-                      <MaterialCommunityIcons name="play-circle-outline" size={60} color="#FFF" />
-                      <Text style={{ color: '#FFF', marginTop: 10 }}>Tap to open in browser</Text>
-                    </TouchableOpacity>
-                  )}
+                    <MaterialCommunityIcons name="play-circle" size={80} color="#FFF" />
+                    <Text style={{ color: '#FFF', marginTop: 10, fontSize: 16, fontWeight: '500' }}>Tap to Watch on YouTube</Text>
+                  </TouchableOpacity>
                 </View>
               ) : (
                 <View style={styles.audioContainer}>
