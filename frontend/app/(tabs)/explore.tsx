@@ -37,7 +37,7 @@ const MOODS = [
   { id: 'anxious', name: 'Anxious', icon: 'weather-cloudy', color: '#FB923C' },
 ];
 
-export default function ExploreScreen() {
+export default function ExploreTab() {
   const router = useRouter();
   const { user } = useAuth();
   const [selectedMood, setSelectedMood] = useState('all');
@@ -46,50 +46,43 @@ export default function ExploreScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
   const [showPlayer, setShowPlayer] = useState(false);
-  const [previewTimeLeft, setPreviewTimeLeft] = useState(0);
 
   const isSubscriber = user?.role === 'subscriber' || user?.role === 'creator' || user?.role === 'admin';
 
-  const loadContent = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = selectedMood !== 'all' ? { mood: selectedMood } : {};
-      const [wisdomRes, practicesRes] = await Promise.all([
-        api.get('/wisdom', { params }),
-        api.get('/practices', { params }),
-      ]);
-      setWisdom(wisdomRes.data);
-      setPractices(practicesRes.data);
-    } catch (error) {
-      console.error('Error loading content:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedMood]);
-
   useEffect(() => {
-    loadContent();
-  }, [loadContent]);
+    const fetchContent = async () => {
+      setLoading(true);
+      try {
+        const params = selectedMood !== 'all' ? { mood: selectedMood } : {};
+        const [wisdomRes, practicesRes] = await Promise.all([
+          api.get('/wisdom', { params }),
+          api.get('/practices', { params }),
+        ]);
+        setWisdom(wisdomRes.data || []);
+        setPractices(practicesRes.data || []);
+      } catch (error) {
+        console.error('Error loading content:', error);
+        setWisdom([]);
+        setPractices([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchContent();
+  }, [selectedMood]);
 
   const handlePlayContent = (content: ContentItem) => {
     setSelectedContent(content);
-    if (content.is_premium && !isSubscriber) {
-      setPreviewTimeLeft(content.preview_duration);
-    }
     setShowPlayer(true);
   };
 
   const formatDuration = (seconds: number) => {
-    if (seconds >= 3600) {
-      const hrs = Math.floor(seconds / 3600);
-      const mins = Math.floor((seconds % 3600) / 60);
-      return `${hrs}h ${mins}m`;
-    }
+    if (!seconds) return '0 min';
     const mins = Math.floor(seconds / 60);
     return `${mins} min`;
   };
 
-  const renderContentCard = (item: ContentItem, index: number) => {
+  const renderContentCard = (item: ContentItem) => {
     const moodColor = MOODS.find(m => m.id === item.mood)?.color || ARIOME_COLORS.consciousness.teal;
     
     return (
@@ -99,15 +92,12 @@ export default function ExploreScreen() {
         onPress={() => handlePlayContent(item)}
         activeOpacity={0.9}
       >
-        {/* Thumbnail with gradient overlay */}
         <View style={styles.thumbnailContainer}>
           <Image source={{ uri: item.thumbnail }} style={styles.thumbnail} />
           <LinearGradient
             colors={['transparent', 'rgba(0,0,0,0.8)']}
             style={styles.thumbnailGradient}
           />
-          
-          {/* Play button */}
           <View style={styles.playButton}>
             <MaterialCommunityIcons 
               name={item.media_type === 'video' ? 'play' : 'music'} 
@@ -115,13 +105,9 @@ export default function ExploreScreen() {
               color="#FFF" 
             />
           </View>
-          
-          {/* Duration badge */}
           <View style={styles.durationBadge}>
             <Text style={styles.durationText}>{formatDuration(item.duration)}</Text>
           </View>
-          
-          {/* Premium badge */}
           {item.is_premium && (
             <View style={styles.premiumBadge}>
               <MaterialCommunityIcons name="crown" size={12} color="#FFD700" />
@@ -129,20 +115,16 @@ export default function ExploreScreen() {
             </View>
           )}
         </View>
-        
-        {/* Content info */}
         <View style={styles.cardContent}>
           <View style={[styles.moodTag, { backgroundColor: moodColor + '30' }]}>
             <Text style={[styles.moodTagText, { color: moodColor }]}>{item.mood}</Text>
           </View>
-          
           <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
           <Text style={styles.cardBody} numberOfLines={2}>{item.body}</Text>
-          
           <View style={styles.cardFooter}>
             <View style={styles.resonanceInfo}>
               <MaterialCommunityIcons name="heart" size={14} color={ARIOME_COLORS.accent.rose} />
-              <Text style={styles.resonanceText}>{item.resonance_count}</Text>
+              <Text style={styles.resonanceText}>{item.resonance_count || 0}</Text>
             </View>
             {item.author && (
               <Text style={styles.authorText}>by {item.author}</Text>
@@ -158,7 +140,6 @@ export default function ExploreScreen() {
       <ConsciousHeader showSettings />
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Hero Section */}
         <LinearGradient
           colors={[ARIOME_COLORS.consciousness.tealDark, ARIOME_COLORS.background.deep]}
           style={styles.heroSection}
@@ -169,7 +150,6 @@ export default function ExploreScreen() {
           </Text>
         </LinearGradient>
 
-        {/* Mood Filter */}
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false} 
@@ -206,7 +186,6 @@ export default function ExploreScreen() {
           </View>
         ) : (
           <>
-            {/* Wisdom Section */}
             {wisdom.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
@@ -218,12 +197,11 @@ export default function ExploreScreen() {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.horizontalScroll}
                 >
-                  {wisdom.map((item, index) => renderContentCard(item, index))}
+                  {wisdom.map((item) => renderContentCard(item))}
                 </ScrollView>
               </View>
             )}
 
-            {/* Practices Section */}
             {practices.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
@@ -235,17 +213,13 @@ export default function ExploreScreen() {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.horizontalScroll}
                 >
-                  {practices.map((item, index) => renderContentCard(item, index))}
+                  {practices.map((item) => renderContentCard(item))}
                 </ScrollView>
               </View>
             )}
 
-            {/* Subscribe CTA for non-subscribers */}
             {!isSubscriber && (
-              <TouchableOpacity 
-                style={styles.subscribeCTA}
-                onPress={() => router.push('/subscription')}
-              >
+              <TouchableOpacity style={styles.subscribeCTA}>
                 <LinearGradient
                   colors={ARIOME_COLORS.gradients.premium as any}
                   start={{ x: 0, y: 0 }}
@@ -265,7 +239,6 @@ export default function ExploreScreen() {
         )}
       </ScrollView>
 
-      {/* Content Player Modal */}
       <Modal visible={showPlayer} animationType="slide" transparent>
         <View style={styles.playerModal}>
           <View style={styles.playerHeader}>
@@ -278,40 +251,25 @@ export default function ExploreScreen() {
 
           {selectedContent && (
             <>
-              {selectedContent.media_type === 'video' ? (
-                <View style={styles.videoContainer}>
-                  <TouchableOpacity 
-                    style={{ flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }}
-                    onPress={() => {
-                      const videoUrl = selectedContent.media_url.replace('/embed/', '/watch?v=');
-                      Linking.openURL(videoUrl);
-                    }}
-                  >
-                    <Image 
-                      source={{ uri: selectedContent.thumbnail }} 
-                      style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0.5 }} 
-                    />
-                    <MaterialCommunityIcons name="play-circle" size={80} color="#FFF" />
-                    <Text style={{ color: '#FFF', marginTop: 10, fontSize: 16, fontWeight: '500' }}>Tap to Watch on YouTube</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={styles.audioContainer}>
-                  <Image source={{ uri: selectedContent.thumbnail }} style={styles.audioThumbnail} />
-                  <LinearGradient
-                    colors={['transparent', ARIOME_COLORS.background.deep]}
-                    style={styles.audioGradient}
+              <View style={styles.videoContainer}>
+                <TouchableOpacity 
+                  style={{ flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }}
+                  onPress={() => {
+                    const videoUrl = selectedContent.media_url.replace('/embed/', '/watch?v=');
+                    Linking.openURL(videoUrl);
+                  }}
+                >
+                  <Image 
+                    source={{ uri: selectedContent.thumbnail }} 
+                    style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0.5 }} 
                   />
-                  {/* Audio player would go here - using native audio APIs */}
-                  <View style={styles.audioControls}>
-                    <TouchableOpacity style={styles.audioPlayButton}>
-                      <MaterialCommunityIcons name="play" size={40} color="#FFF" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
+                  <MaterialCommunityIcons name="play-circle" size={80} color="#FFF" />
+                  <Text style={{ color: '#FFF', marginTop: 10, fontSize: 16, fontWeight: '500' }}>
+                    Tap to Watch on YouTube
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-              {/* Preview Warning for non-subscribers */}
               {selectedContent.is_premium && !isSubscriber && (
                 <View style={styles.previewWarning}>
                   <MaterialCommunityIcons name="clock-outline" size={16} color={ARIOME_COLORS.accent.amber} />
@@ -565,41 +523,6 @@ const styles = StyleSheet.create({
   videoContainer: {
     height: 250,
     backgroundColor: '#000',
-  },
-  webview: {
-    flex: 1,
-  },
-  audioContainer: {
-    height: 300,
-    position: 'relative',
-  },
-  audioThumbnail: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  audioGradient: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 150,
-  },
-  audioControls: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    paddingBottom: ARIOME_SPACING.xl,
-  },
-  audioPlayButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: ARIOME_COLORS.consciousness.teal,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   previewWarning: {
     flexDirection: 'row',
