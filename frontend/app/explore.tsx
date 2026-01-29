@@ -311,12 +311,7 @@ export default function ExploreScreen() {
             <>
               {selectedContent.media_type === 'video' ? (
                 <View style={styles.videoContainer}>
-                  <WebView
-                    source={{ uri: selectedContent.media_url + '?autoplay=1' }}
-                    style={styles.webview}
-                    allowsInlineMediaPlayback
-                    mediaPlaybackRequiresUserAction={false}
-                  />
+                  <VideoPlayer uri={selectedContent.media_url} style={styles.webview} />
                 </View>
               ) : (
                 <View style={styles.audioContainer}>
