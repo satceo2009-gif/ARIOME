@@ -9,34 +9,31 @@ import ConsciousHeader from '@/components/ConsciousHeader';
 import api from '@/services/api';
 import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/theme';
 
-// Platform-specific video player component
-const VideoPlayer = ({ uri, style }: { uri: string; style?: any }) => {
-  if (Platform.OS === 'web') {
-    // Use iframe for web
-    return (
-      <iframe
-        src={uri + '?autoplay=1&modestbranding=1'}
-        style={{ 
-          width: '100%', 
-          height: '100%', 
-          border: 'none',
-          backgroundColor: '#000',
-          ...style 
-        }}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-      />
-    );
-  }
-  // Use WebView for native
-  const WebView = require('react-native-webview').WebView;
+// Video player for web using iframe (WebView not supported on web)
+const VideoPlayer = ({ uri }: { uri: string }) => {
+  // For web, always use iframe since WebView doesn't work
   return (
-    <WebView
-      source={{ uri: uri + '?autoplay=1' }}
-      style={style}
-      allowsInlineMediaPlayback
-      mediaPlaybackRequiresUserAction={false}
-    />
+    <View style={{ flex: 1, width: '100%', height: '100%' }}>
+      {Platform.OS === 'web' ? (
+        <iframe
+          src={uri + '?autoplay=1&modestbranding=1&rel=0'}
+          style={{ 
+            width: '100%', 
+            height: '100%', 
+            border: 'none',
+            backgroundColor: '#000'
+          }}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      ) : (
+        // For native, show a placeholder - WebView would need native setup
+        <View style={{ flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }}>
+          <MaterialCommunityIcons name="play-circle-outline" size={60} color="#FFF" />
+          <Text style={{ color: '#FFF', marginTop: 10 }}>Video Player</Text>
+        </View>
+      )}
+    </View>
   );
 };
 
