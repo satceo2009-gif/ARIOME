@@ -9,7 +9,7 @@ import Constants from 'expo-constants';
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || 
                 process.env.EXPO_PUBLIC_API_URL || 
-                'https://reflection-first.preview.emergentagent.com/api';
+                'https://peaceful-living-5.preview.emergentagent.com/api';
 
 export default function AdminDashboard() {
   const router = useRouter();

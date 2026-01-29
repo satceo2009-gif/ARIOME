@@ -36,7 +36,7 @@ export default function CirclesScreen() {
       // Try public endpoint as fallback
       try {
         const response = await fetch(
-          `https://reflection-first.preview.emergentagent.com/api/circles/public${selectedIntention ? `?intention=${selectedIntention}` : ''}`
+          `https://peaceful-living-5.preview.emergentagent.com/api/circles/public${selectedIntention ? `?intention=${selectedIntention}` : ''}`
         );
         const publicData = await response.json();
         setCircles(publicData || []);

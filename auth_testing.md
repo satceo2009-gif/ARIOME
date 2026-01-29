@@ -30,11 +30,11 @@ print('User ID: ' + userId);
 ## Step 2: Test Backend API
 ```bash
 # Test auth endpoint
-curl -X GET "https://reflection-first.preview.emergentagent.com/api/auth/me" \
+curl -X GET "https://peaceful-living-5.preview.emergentagent.com/api/auth/me" \
   -H "Authorization: Bearer YOUR_SESSION_TOKEN"
 
 # Test circle joining
-curl -X POST "https://reflection-first.preview.emergentagent.com/api/circles/circle_healing01/join" \
+curl -X POST "https://peaceful-living-5.preview.emergentagent.com/api/circles/circle_healing01/join" \
   -H "Authorization: Bearer YOUR_SESSION_TOKEN"
 ```
 
@@ -50,7 +50,7 @@ await page.context.add_cookies([{
     "secure": true,
     "sameSite": "None"
 }]);
-await page.goto("https://reflection-first.preview.emergentagent.com/reflect");
+await page.goto("https://peaceful-living-5.preview.emergentagent.com/reflect");
 ```
 
 ## Test Credentials
