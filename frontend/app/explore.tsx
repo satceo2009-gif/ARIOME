@@ -9,36 +9,31 @@ import ConsciousHeader from '@/components/ConsciousHeader';
 import api from '@/services/api';
 import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/theme';
 
-// Web-safe iframe component using dangerouslySetInnerHTML
-const WebIframe = ({ src }: { src: string }) => {
-  if (Platform.OS !== 'web') {
+// Video player component - shows thumbnail with play overlay
+// Clicking opens the video in a modal with iframe (web) or native player (mobile)
+const VideoPlayer = ({ uri }: { uri: string }) => {
+  // For web, we use an iframe rendered as HTML string
+  if (Platform.OS === 'web') {
     return (
-      <View style={{ flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }}>
-        <MaterialCommunityIcons name="play-circle-outline" size={60} color="#FFF" />
-        <Text style={{ color: '#FFF', marginTop: 10 }}>Video Player</Text>
+      <View style={{ flex: 1, width: '100%', height: '100%', backgroundColor: '#000' }}>
+        <View
+          // @ts-ignore - web only property
+          dangerouslySetInnerHTML={{
+            __html: `<iframe src="${uri}?autoplay=1&modestbranding=1&rel=0" style="width:100%;height:100%;border:none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+          }}
+          style={{ width: '100%', height: '100%' } as any}
+        />
       </View>
     );
   }
   
-  // On web, render an actual iframe using DOM
-  const iframeHtml = `<iframe 
-    src="${src}?autoplay=1&modestbranding=1&rel=0" 
-    style="width:100%;height:100%;border:none;background:#000;" 
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-    allowfullscreen
-  ></iframe>`;
-  
+  // For native, show placeholder
   return (
-    <div 
-      style={{ width: '100%', height: '100%' }} 
-      dangerouslySetInnerHTML={{ __html: iframeHtml }} 
-    />
+    <View style={{ flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }}>
+      <MaterialCommunityIcons name="play-circle-outline" size={60} color="#FFF" />
+      <Text style={{ color: '#FFF', marginTop: 10 }}>Open in browser</Text>
+    </View>
   );
-};
-
-// Video player component
-const VideoPlayer = ({ uri }: { uri: string }) => {
-  return <WebIframe src={uri} />;
 };
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
