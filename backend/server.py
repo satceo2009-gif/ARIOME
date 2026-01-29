@@ -433,26 +433,30 @@ async def get_daily_prompt(request: Request):
     
     return {"id": "default", "title": "Morning Intention", "body": "What quality do you want to bring into your day today?", "intent_tags": ["presence"], "language": "en", "duration": "2 min"}
 
-@app.get("/api/practices", response_model=List[PracticeResponse])
-async def get_practices(category: str = None, intent: str = None, language: str = "en"):
+@app.get("/api/practices")
+async def get_practices(category: str = None, intent: str = None, mood: str = None, language: str = "en"):
     """Get practices and rituals"""
-    query = {"language": language}
+    query = {}
     if category:
         query["category"] = category
     if intent:
         query["intent_tags"] = intent
+    if mood:
+        query["mood"] = mood
     
     practices = await db.practices.find(query, {"_id": 0}).to_list(100)
     return practices
 
-@app.get("/api/wisdom", response_model=List[WisdomResponse])
-async def get_wisdom(intent: str = None, media_type: str = None, language: str = "en"):
+@app.get("/api/wisdom")
+async def get_wisdom(intent: str = None, media_type: str = None, mood: str = None, language: str = "en"):
     """Get wisdom library content"""
-    query = {"language": language}
+    query = {}
     if intent:
         query["intent_tags"] = intent
     if media_type:
         query["media_type"] = media_type
+    if mood:
+        query["mood"] = mood
     
     wisdom = await db.wisdom.find(query, {"_id": 0}).sort("resonance_count", -1).to_list(100)
     return wisdom
