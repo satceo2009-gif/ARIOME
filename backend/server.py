@@ -394,6 +394,61 @@ async def update_profile(request: Request, intentions: List[str] = None, languag
     updated_user = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0})
     return {k: v for k, v in updated_user.items() if k != "password_hash"}
 
+@app.get("/api/auth/export-data")
+async def export_user_data(request: Request):
+    """Export all user data (GDPR compliance)"""
+    user = await require_user(request)
+    
+    # Collect all user data
+    reflections = await db.reflections.find(
+        {"user_id": user["user_id"]}, {"_id": 0}
+    ).to_list(1000)
+    
+    bookmarks = await db.bookmarks.find(
+        {"user_id": user["user_id"]}, {"_id": 0}
+    ).to_list(1000)
+    
+    circle_memberships = await db.circle_members.find(
+        {"user_id": user["user_id"]}, {"_id": 0}
+    ).to_list(100)
+    
+    resonances = await db.resonance.find(
+        {"user_id": user["user_id"]}, {"_id": 0}
+    ).to_list(1000)
+    
+    user_data = await db.users.find_one(
+        {"user_id": user["user_id"]}, {"_id": 0, "password_hash": 0}
+    )
+    
+    export_data = {
+        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "user_profile": user_data,
+        "reflections": reflections,
+        "bookmarks": bookmarks,
+        "circle_memberships": circle_memberships,
+        "resonances": resonances,
+        "total_reflections": len(reflections),
+        "total_bookmarks": len(bookmarks)
+    }
+    
+    return export_data
+
+@app.delete("/api/auth/account")
+async def delete_user_account(request: Request):
+    """Permanently delete user account and all data"""
+    user = await require_user(request)
+    user_id = user["user_id"]
+    
+    # Delete all user data
+    await db.reflections.delete_many({"user_id": user_id})
+    await db.bookmarks.delete_many({"user_id": user_id})
+    await db.circle_members.delete_many({"user_id": user_id})
+    await db.resonance.delete_many({"user_id": user_id})
+    await db.user_sessions.delete_many({"user_id": user_id})
+    await db.users.delete_one({"user_id": user_id})
+    
+    return {"message": "Account and all data permanently deleted"}
+
 # ==================== CONTENT ENDPOINTS ====================
 
 @app.get("/api/prompts", response_model=List[PromptResponse])
