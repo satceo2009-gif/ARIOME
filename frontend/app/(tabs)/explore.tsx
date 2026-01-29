@@ -280,20 +280,13 @@ export default function ExploreScreen() {
             <>
               {selectedContent.media_type === 'video' ? (
                 <View style={styles.videoContainer}>
-                  <TouchableOpacity 
-                    style={{ flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }}
-                    onPress={() => {
-                      const videoUrl = selectedContent.media_url.replace('/embed/', '/watch?v=');
-                      Linking.openURL(videoUrl);
-                    }}
-                  >
-                    <Image 
-                      source={{ uri: selectedContent.thumbnail }} 
-                      style={{ position: 'absolute', width: '100%', height: '100%', opacity: 0.5 }} 
-                    />
-                    <MaterialCommunityIcons name="play-circle" size={80} color="#FFF" />
-                    <Text style={{ color: '#FFF', marginTop: 10, fontSize: 16, fontWeight: '500' }}>Tap to Watch on YouTube</Text>
-                  </TouchableOpacity>
+                  {/* Embedded YouTube iframe for in-app playback */}
+                  <iframe
+                    src={`${selectedContent.media_url}?autoplay=1&modestbranding=1&rel=0`}
+                    style={{ width: '100%', height: '100%', border: 'none' }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
                 </View>
               ) : (
                 <View style={styles.audioContainer}>
@@ -302,11 +295,14 @@ export default function ExploreScreen() {
                     colors={['transparent', ARIOME_COLORS.background.deep]}
                     style={styles.audioGradient}
                   />
-                  {/* Audio player would go here - using native audio APIs */}
+                  {/* Audio player with HTML5 audio element */}
                   <View style={styles.audioControls}>
-                    <TouchableOpacity style={styles.audioPlayButton}>
-                      <MaterialCommunityIcons name="play" size={40} color="#FFF" />
-                    </TouchableOpacity>
+                    <audio 
+                      src={selectedContent.media_url} 
+                      controls 
+                      autoPlay
+                      style={{ width: '90%', marginTop: 20 }}
+                    />
                   </View>
                 </View>
               )}
