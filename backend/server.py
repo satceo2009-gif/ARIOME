@@ -863,6 +863,163 @@ def generate_insights(reflections: list, mood_counts: dict) -> list:
     
     return insights
 
+# ==================== CIRCLE POSTS ENDPOINTS ====================
+
+class CirclePostCreate(BaseModel):
+    content: str
+    mood: Optional[str] = None
+
+@app.get("/api/circles/{circle_id}")
+async def get_circle_detail(circle_id: str, request: Request):
+    """Get circle details with recent posts"""
+    circle = await db.circles.find_one({"id": circle_id}, {"_id": 0})
+    if not circle:
+        raise HTTPException(status_code=404, detail="Circle not found")
+    
+    # Check if user is member
+    user = await get_current_user(request)
+    is_member = False
+    if user:
+        membership = await db.circle_members.find_one({
+            "circle_id": circle_id,
+            "user_id": user["user_id"]
+        })
+        is_member = membership is not None
+    
+    # Get recent posts
+    posts = await db.circle_posts.find(
+        {"circle_id": circle_id}, {"_id": 0}
+    ).sort("created_at", -1).limit(50).to_list(50)
+    
+    # Add author info to posts
+    for post in posts:
+        author = await db.users.find_one(
+            {"user_id": post["author_id"]},
+            {"_id": 0, "name": 1, "picture": 1}
+        )
+        post["author_name"] = author.get("name", "Anonymous") if author else "Anonymous"
+        post["author_picture"] = author.get("picture") if author else None
+    
+    return {
+        **circle,
+        "is_member": is_member,
+        "posts": posts
+    }
+
+@app.get("/api/circles/{circle_id}/posts")
+async def get_circle_posts(circle_id: str, page: int = 1, limit: int = 20):
+    """Get paginated circle posts"""
+    skip = (page - 1) * limit
+    
+    posts = await db.circle_posts.find(
+        {"circle_id": circle_id}, {"_id": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Add author info
+    for post in posts:
+        author = await db.users.find_one(
+            {"user_id": post["author_id"]},
+            {"_id": 0, "name": 1, "picture": 1}
+        )
+        post["author_name"] = author.get("name", "Anonymous") if author else "Anonymous"
+        post["author_picture"] = author.get("picture") if author else None
+    
+    total = await db.circle_posts.count_documents({"circle_id": circle_id})
+    
+    return {"posts": posts, "total": total, "page": page}
+
+@app.post("/api/circles/{circle_id}/posts")
+async def create_circle_post(circle_id: str, post_data: CirclePostCreate, request: Request):
+    """Create a new post in a circle"""
+    user = await require_user(request)
+    
+    # Verify membership
+    membership = await db.circle_members.find_one({
+        "circle_id": circle_id,
+        "user_id": user["user_id"]
+    })
+    if not membership:
+        raise HTTPException(status_code=403, detail="Must be a member to post")
+    
+    post_id = f"post_{uuid4().hex[:12]}"
+    
+    post = {
+        "id": post_id,
+        "circle_id": circle_id,
+        "author_id": user["user_id"],
+        "content": post_data.content,
+        "mood": post_data.mood,
+        "likes": 0,
+        "liked_by": [],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.circle_posts.insert_one(post)
+    post.pop("_id", None)
+    
+    # Update circle post count
+    await db.circles.update_one(
+        {"id": circle_id},
+        {"$inc": {"post_count": 1}}
+    )
+    
+    return post
+
+@app.post("/api/circles/{circle_id}/posts/{post_id}/like")
+async def like_circle_post(circle_id: str, post_id: str, request: Request):
+    """Like or unlike a circle post"""
+    user = await require_user(request)
+    
+    post = await db.circle_posts.find_one({"id": post_id})
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    liked_by = post.get("liked_by", [])
+    
+    if user["user_id"] in liked_by:
+        # Unlike
+        await db.circle_posts.update_one(
+            {"id": post_id},
+            {
+                "$pull": {"liked_by": user["user_id"]},
+                "$inc": {"likes": -1}
+            }
+        )
+        return {"liked": False}
+    else:
+        # Like
+        await db.circle_posts.update_one(
+            {"id": post_id},
+            {
+                "$push": {"liked_by": user["user_id"]},
+                "$inc": {"likes": 1}
+            }
+        )
+        return {"liked": True}
+
+@app.delete("/api/circles/{circle_id}/posts/{post_id}")
+async def delete_circle_post(circle_id: str, post_id: str, request: Request):
+    """Delete a circle post (author or admin only)"""
+    user = await require_user(request)
+    
+    post = await db.circle_posts.find_one({"id": post_id})
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    # Check authorization
+    if post["author_id"] != user["user_id"] and user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to delete this post")
+    
+    await db.circle_posts.delete_one({"id": post_id})
+    
+    # Update circle post count
+    await db.circles.update_one(
+        {"id": circle_id},
+        {"$inc": {"post_count": -1}}
+    )
+    
+    return {"message": "Post deleted"}
+
 # ==================== SPEECH-TO-TEXT ENDPOINT ====================
 
 @app.post("/api/transcribe", response_model=TranscribeResponse)
