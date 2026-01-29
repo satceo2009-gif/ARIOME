@@ -1,42 +1,67 @@
 /**
  * AriOme Design System - Conscious Living Ecosystem
  * A calm, spacious, reflection-first design language
+ * Modern + Zen + Premium
  */
 
 export const ARIOME_COLORS = {
-  // Background palette - deep, calming
+  // Background palette - deep, calming with subtle warmth
   background: {
     deep: '#0A0A0F',
     primary: '#0F0F14',
     secondary: '#1A1A24',
     elevated: '#1F2937',
     sacred: '#141420',
+    card: '#12121A',
+    overlay: 'rgba(10, 10, 15, 0.95)',
   },
   
-  // Consciousness accent
+  // Consciousness accent - Premium teal
   consciousness: {
     teal: '#14B8A6',
     tealLight: '#2DD4BF',
     tealDark: '#0D9488',
     tealMuted: 'rgba(20, 184, 166, 0.15)',
+    tealGlow: 'rgba(20, 184, 166, 0.3)',
   },
   
-  // Soft accent palette
+  // Soft accent palette - Mood colors
   accent: {
     lavender: '#A78BFA',
+    purple: '#8B5CF6',
     rose: '#F472B6',
+    pink: '#EC4899',
     amber: '#FBBF24',
+    orange: '#F97316',
     sage: '#86EFAC',
+    green: '#10B981',
     sky: '#7DD3FC',
+    blue: '#3B82F6',
+    gold: '#D4AF37',
+  },
+  
+  // Mood-specific colors
+  mood: {
+    peaceful: { primary: '#86EFAC', secondary: '#10B981', gradient: ['#10B981', '#059669'] },
+    grateful: { primary: '#FBBF24', secondary: '#F59E0B', gradient: ['#F59E0B', '#D97706'] },
+    hopeful: { primary: '#7DD3FC', secondary: '#0EA5E9', gradient: ['#0EA5E9', '#0284C7'] },
+    reflective: { primary: '#A78BFA', secondary: '#8B5CF6', gradient: ['#8B5CF6', '#7C3AED'] },
+    joyful: { primary: '#F472B6', secondary: '#EC4899', gradient: ['#EC4899', '#DB2777'] },
+    anxious: { primary: '#FB923C', secondary: '#F97316', gradient: ['#F97316', '#EA580C'] },
+    sad: { primary: '#60A5FA', secondary: '#3B82F6', gradient: ['#3B82F6', '#2563EB'] },
+    energized: { primary: '#FBBF24', secondary: '#EAB308', gradient: ['#EAB308', '#CA8A04'] },
+    curious: { primary: '#C084FC', secondary: '#A855F7', gradient: ['#A855F7', '#9333EA'] },
+    content: { primary: '#34D399', secondary: '#10B981', gradient: ['#10B981', '#059669'] },
   },
   
   // Text hierarchy
   text: {
     primary: '#FFFFFF',
-    secondary: '#D1D5DB',
+    secondary: '#E5E7EB',
     muted: '#9CA3AF',
     subtle: '#6B7280',
     disabled: '#4B5563',
+    accent: '#14B8A6',
   },
   
   // Semantic colors
@@ -45,6 +70,16 @@ export const ARIOME_COLORS = {
     warning: '#F59E0B',
     error: '#EF4444',
     info: '#3B82F6',
+  },
+  
+  // Premium gradients
+  gradients: {
+    premium: ['#14B8A6', '#8B5CF6'],
+    gold: ['#D4AF37', '#F59E0B'],
+    zen: ['#1A1A24', '#0A0A0F'],
+    calm: ['#0D9488', '#14B8A6'],
+    sunset: ['#F472B6', '#FBBF24'],
+    ocean: ['#0EA5E9', '#14B8A6'],
   },
 };
 
@@ -55,7 +90,7 @@ export const ARIOME_SPACING = {
   lg: 24,
   xl: 32,
   xxl: 48,
-  sacred: 64, // Sacred white space
+  sacred: 64,
 };
 
 export const ARIOME_TYPOGRAPHY = {
@@ -83,6 +118,20 @@ export const ARIOME_SHADOWS = {
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+  },
+  glow: {
+    shadowColor: '#14B8A6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  premium: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
   },
 };
 
