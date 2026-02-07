@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, Dimensions, ActivityIndicator, Modal } from 'react-native';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, Dimensions, ActivityIndicator, Modal, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -10,7 +10,7 @@ import api from '@/services/api';
 import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_WIDTH * 0.75;
+const CARD_WIDTH = SCREEN_WIDTH * 0.72;
 
 interface ContentItem {
   id: string;
@@ -29,12 +29,12 @@ interface ContentItem {
 
 const MOODS = [
   { id: 'all', name: 'All', icon: 'infinity', color: ARIOME_COLORS.consciousness.teal },
-  { id: 'peaceful', name: 'Peaceful', icon: 'leaf', color: '#86EFAC' },
-  { id: 'grateful', name: 'Grateful', icon: 'hand-heart', color: '#FBBF24' },
-  { id: 'hopeful', name: 'Hopeful', icon: 'star-outline', color: '#7DD3FC' },
-  { id: 'joyful', name: 'Joyful', icon: 'emoticon-happy-outline', color: '#F472B6' },
-  { id: 'reflective', name: 'Reflective', icon: 'thought-bubble-outline', color: '#A78BFA' },
-  { id: 'anxious', name: 'Anxious', icon: 'weather-cloudy', color: '#FB923C' },
+  { id: 'peaceful', name: 'Peaceful', icon: 'leaf', color: '#10B981' },
+  { id: 'grateful', name: 'Grateful', icon: 'hand-heart', color: '#F59E0B' },
+  { id: 'hopeful', name: 'Hopeful', icon: 'star-outline', color: '#0EA5E9' },
+  { id: 'joyful', name: 'Joyful', icon: 'emoticon-happy-outline', color: '#EC4899' },
+  { id: 'reflective', name: 'Reflective', icon: 'thought-bubble-outline', color: '#8B5CF6' },
+  { id: 'anxious', name: 'Anxious', icon: 'weather-cloudy', color: '#F97316' },
 ];
 
 export default function ExploreScreen() {
@@ -46,9 +46,50 @@ export default function ExploreScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
   const [showPlayer, setShowPlayer] = useState(false);
+  
+  // Preview System State
   const [previewTimeLeft, setPreviewTimeLeft] = useState(0);
+  const [previewEnded, setPreviewEnded] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const previewTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const isSubscriber = user?.role === 'subscriber' || user?.role === 'creator' || user?.role === 'admin';
+
+  // Pulse animation for subscribe button
+  useEffect(() => {
+    if (previewEnded) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.05, duration: 800, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+        ])
+      ).start();
+    }
+  }, [previewEnded]);
+
+  // Preview countdown timer
+  useEffect(() => {
+    if (showPlayer && selectedContent && selectedContent.is_premium && !isSubscriber && isPlaying && !previewEnded) {
+      previewTimerRef.current = setInterval(() => {
+        setPreviewTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(previewTimerRef.current!);
+            setPreviewEnded(true);
+            setIsPlaying(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (previewTimerRef.current) {
+        clearInterval(previewTimerRef.current);
+      }
+    };
+  }, [showPlayer, selectedContent, isSubscriber, isPlaying, previewEnded]);
 
   const loadContent = useCallback(async () => {
     setLoading(true);
@@ -58,8 +99,8 @@ export default function ExploreScreen() {
         api.get('/wisdom', { params }),
         api.get('/practices', { params }),
       ]);
-      setWisdom(wisdomRes.data);
-      setPractices(practicesRes.data);
+      setWisdom(wisdomRes.data || []);
+      setPractices(practicesRes.data || []);
     } catch (error) {
       console.error('Error loading content:', error);
     } finally {
@@ -73,13 +114,29 @@ export default function ExploreScreen() {
 
   const handlePlayContent = (content: ContentItem) => {
     setSelectedContent(content);
+    setPreviewEnded(false);
+    setIsPlaying(true);
+    
     if (content.is_premium && !isSubscriber) {
-      setPreviewTimeLeft(content.preview_duration);
+      setPreviewTimeLeft(content.preview_duration || 20);
+    } else {
+      setPreviewTimeLeft(0);
     }
     setShowPlayer(true);
   };
 
+  const handleClosePlayer = () => {
+    setShowPlayer(false);
+    setSelectedContent(null);
+    setPreviewEnded(false);
+    setIsPlaying(false);
+    if (previewTimerRef.current) {
+      clearInterval(previewTimerRef.current);
+    }
+  };
+
   const formatDuration = (seconds: number) => {
+    if (!seconds) return '0 min';
     if (seconds >= 3600) {
       const hrs = Math.floor(seconds / 3600);
       const mins = Math.floor((seconds % 3600) / 60);
@@ -87,6 +144,12 @@ export default function ExploreScreen() {
     }
     const mins = Math.floor(seconds / 60);
     return `${mins} min`;
+  };
+
+  const formatPreviewTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return mins > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : `${secs}s`;
   };
 
   const renderContentCard = (item: ContentItem, index: number) => {
@@ -98,51 +161,56 @@ export default function ExploreScreen() {
         style={[styles.contentCard, { width: CARD_WIDTH }]}
         onPress={() => handlePlayContent(item)}
         activeOpacity={0.9}
+        data-testid={`content-card-${item.id}`}
       >
-        {/* Thumbnail with gradient overlay */}
         <View style={styles.thumbnailContainer}>
           <Image source={{ uri: item.thumbnail }} style={styles.thumbnail} />
           <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.8)']}
+            colors={['transparent', 'rgba(0,0,0,0.85)']}
             style={styles.thumbnailGradient}
           />
           
-          {/* Play button */}
+          {/* Play Button */}
           <View style={styles.playButton}>
             <MaterialCommunityIcons 
               name={item.media_type === 'video' ? 'play' : 'music'} 
-              size={24} 
+              size={28} 
               color="#FFF" 
             />
           </View>
           
-          {/* Duration badge */}
+          {/* Duration Badge */}
           <View style={styles.durationBadge}>
+            <MaterialCommunityIcons name="clock-outline" size={12} color="#FFF" />
             <Text style={styles.durationText}>{formatDuration(item.duration)}</Text>
           </View>
           
-          {/* Premium badge */}
+          {/* Premium Badge */}
           {item.is_premium && (
             <View style={styles.premiumBadge}>
               <MaterialCommunityIcons name="crown" size={12} color="#FFD700" />
               <Text style={styles.premiumText}>Premium</Text>
             </View>
           )}
+
+          {/* Preview Badge for non-subscribers */}
+          {item.is_premium && !isSubscriber && (
+            <View style={styles.previewBadge}>
+              <Text style={styles.previewBadgeText}>{item.preview_duration || 20}s preview</Text>
+            </View>
+          )}
         </View>
         
-        {/* Content info */}
         <View style={styles.cardContent}>
-          <View style={[styles.moodTag, { backgroundColor: moodColor + '30' }]}>
+          <View style={[styles.moodTag, { backgroundColor: moodColor + '20' }]}>
             <Text style={[styles.moodTagText, { color: moodColor }]}>{item.mood}</Text>
           </View>
-          
           <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
           <Text style={styles.cardBody} numberOfLines={2}>{item.body}</Text>
-          
           <View style={styles.cardFooter}>
             <View style={styles.resonanceInfo}>
               <MaterialCommunityIcons name="heart" size={14} color={ARIOME_COLORS.accent.rose} />
-              <Text style={styles.resonanceText}>{item.resonance_count}</Text>
+              <Text style={styles.resonanceText}>{item.resonance_count || 0}</Text>
             </View>
             {item.author && (
               <Text style={styles.authorText}>by {item.author}</Text>
@@ -167,6 +235,24 @@ export default function ExploreScreen() {
           <Text style={styles.heroSubtitle}>
             Discover content curated for your emotional journey
           </Text>
+          
+          {/* Content Stats */}
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{wisdom.length + practices.length}</Text>
+              <Text style={styles.statLabel}>Experiences</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>7</Text>
+              <Text style={styles.statLabel}>Moods</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>∞</Text>
+              <Text style={styles.statLabel}>Growth</Text>
+            </View>
+          </View>
         </LinearGradient>
 
         {/* Mood Filter */}
@@ -181,9 +267,10 @@ export default function ExploreScreen() {
               key={mood.id}
               style={[
                 styles.moodChip,
-                selectedMood === mood.id && { backgroundColor: mood.color + '30', borderColor: mood.color }
+                selectedMood === mood.id && { backgroundColor: mood.color + '25', borderColor: mood.color }
               ]}
               onPress={() => setSelectedMood(mood.id)}
+              data-testid={`mood-filter-${mood.id}`}
             >
               <MaterialCommunityIcons 
                 name={mood.icon as any} 
@@ -203,6 +290,7 @@ export default function ExploreScreen() {
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={ARIOME_COLORS.consciousness.teal} />
+            <Text style={styles.loadingText}>Finding your content...</Text>
           </View>
         ) : (
           <>
@@ -210,8 +298,9 @@ export default function ExploreScreen() {
             {wisdom.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <MaterialCommunityIcons name="book-open-page-variant" size={20} color={ARIOME_COLORS.consciousness.teal} />
+                  <MaterialCommunityIcons name="book-open-page-variant" size={22} color={ARIOME_COLORS.consciousness.teal} />
                   <Text style={styles.sectionTitle}>Wisdom & Insights</Text>
+                  <Text style={styles.sectionCount}>{wisdom.length}</Text>
                 </View>
                 <ScrollView 
                   horizontal 
@@ -227,8 +316,9 @@ export default function ExploreScreen() {
             {practices.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <MaterialCommunityIcons name="meditation" size={20} color={ARIOME_COLORS.accent.lavender} />
+                  <MaterialCommunityIcons name="meditation" size={22} color={ARIOME_COLORS.accent.lavender} />
                   <Text style={styles.sectionTitle}>Guided Practices</Text>
+                  <Text style={styles.sectionCount}>{practices.length}</Text>
                 </View>
                 <ScrollView 
                   horizontal 
@@ -245,6 +335,7 @@ export default function ExploreScreen() {
               <TouchableOpacity 
                 style={styles.subscribeCTA}
                 onPress={() => router.push('/subscription')}
+                data-testid="subscribe-cta"
               >
                 <LinearGradient
                   colors={ARIOME_COLORS.gradients.premium as any}
@@ -252,7 +343,7 @@ export default function ExploreScreen() {
                   end={{ x: 1, y: 0 }}
                   style={styles.subscribeCTAGradient}
                 >
-                  <MaterialCommunityIcons name="crown" size={24} color="#FFD700" />
+                  <MaterialCommunityIcons name="crown" size={28} color="#FFD700" />
                   <View style={styles.subscribeCTAText}>
                     <Text style={styles.subscribeCTATitle}>Unlock Full Access</Text>
                     <Text style={styles.subscribeCTASubtitle}>Get unlimited content & features</Text>
@@ -261,6 +352,8 @@ export default function ExploreScreen() {
                 </LinearGradient>
               </TouchableOpacity>
             )}
+
+            <View style={{ height: 40 }} />
           </>
         )}
       </ScrollView>
@@ -268,61 +361,131 @@ export default function ExploreScreen() {
       {/* Content Player Modal */}
       <Modal visible={showPlayer} animationType="slide" transparent>
         <View style={styles.playerModal}>
+          {/* Player Header */}
           <View style={styles.playerHeader}>
-            <TouchableOpacity onPress={() => setShowPlayer(false)}>
+            <TouchableOpacity onPress={handleClosePlayer} data-testid="close-player">
               <MaterialCommunityIcons name="close" size={24} color={ARIOME_COLORS.text.primary} />
             </TouchableOpacity>
             <Text style={styles.playerTitle} numberOfLines={1}>{selectedContent?.title}</Text>
-            <View style={{ width: 24 }} />
+            
+            {/* Preview Timer for non-subscribers */}
+            {selectedContent?.is_premium && !isSubscriber && !previewEnded && (
+              <View style={styles.previewTimer}>
+                <MaterialCommunityIcons name="clock-outline" size={14} color={ARIOME_COLORS.accent.amber} />
+                <Text style={styles.previewTimerText}>{formatPreviewTime(previewTimeLeft)}</Text>
+              </View>
+            )}
+            {(isSubscriber || !selectedContent?.is_premium) && <View style={{ width: 50 }} />}
           </View>
 
           {selectedContent && (
             <>
-              {selectedContent.media_type === 'video' ? (
-                <View style={styles.videoContainer}>
-                  {/* Embedded YouTube iframe for in-app playback */}
-                  <iframe
-                    src={`${selectedContent.media_url}?autoplay=1&modestbranding=1&rel=0`}
-                    style={{ width: '100%', height: '100%', border: 'none' }}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </View>
-              ) : (
-                <View style={styles.audioContainer}>
-                  <Image source={{ uri: selectedContent.thumbnail }} style={styles.audioThumbnail} />
-                  <LinearGradient
-                    colors={['transparent', ARIOME_COLORS.background.deep]}
-                    style={styles.audioGradient}
-                  />
-                  {/* Audio player with HTML5 audio element */}
-                  <View style={styles.audioControls}>
-                    <audio 
-                      src={selectedContent.media_url} 
-                      controls 
-                      autoPlay
-                      style={{ width: '90%', marginTop: 20 }}
+              {/* Video/Audio Player */}
+              <View style={styles.mediaContainer}>
+                {selectedContent.media_type === 'video' ? (
+                  <View style={styles.videoContainer}>
+                    {!previewEnded ? (
+                      <iframe
+                        src={`${selectedContent.media_url}?autoplay=1&modestbranding=1&rel=0`}
+                        style={{ width: '100%', height: '100%', border: 'none' }}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <Image 
+                        source={{ uri: selectedContent.thumbnail }} 
+                        style={{ width: '100%', height: '100%', opacity: 0.3 }} 
+                      />
+                    )}
+                  </View>
+                ) : (
+                  <View style={styles.audioContainer}>
+                    <Image source={{ uri: selectedContent.thumbnail }} style={styles.audioThumbnail} />
+                    <LinearGradient
+                      colors={['transparent', ARIOME_COLORS.background.deep]}
+                      style={styles.audioGradient}
+                    />
+                    {!previewEnded && (
+                      <View style={styles.audioControls}>
+                        <audio 
+                          src={selectedContent.media_url} 
+                          controls 
+                          autoPlay
+                          style={{ width: '90%', marginTop: 20 }}
+                        />
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                {/* Preview Ended Overlay */}
+                {previewEnded && (
+                  <View style={styles.previewEndedOverlay}>
+                    <View style={styles.previewEndedContent}>
+                      <MaterialCommunityIcons name="lock" size={48} color={ARIOME_COLORS.accent.amber} />
+                      <Text style={styles.previewEndedTitle}>Preview Ended</Text>
+                      <Text style={styles.previewEndedText}>
+                        Subscribe to continue watching and unlock all premium content
+                      </Text>
+                      
+                      <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                        <TouchableOpacity 
+                          style={styles.subscribeNowButton}
+                          onPress={() => {
+                            handleClosePlayer();
+                            router.push('/subscription');
+                          }}
+                          data-testid="subscribe-now-btn"
+                        >
+                          <LinearGradient
+                            colors={ARIOME_COLORS.gradients.premium as any}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.subscribeNowGradient}
+                          >
+                            <MaterialCommunityIcons name="crown" size={20} color="#FFD700" />
+                            <Text style={styles.subscribeNowText}>Subscribe Now</Text>
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      </Animated.View>
+
+                      <TouchableOpacity 
+                        onPress={handleClosePlayer}
+                        style={styles.maybeLaterButton}
+                      >
+                        <Text style={styles.maybeLaterText}>Maybe Later</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </View>
+
+              {/* Preview Progress Bar for non-subscribers */}
+              {selectedContent.is_premium && !isSubscriber && !previewEnded && (
+                <View style={styles.previewProgressContainer}>
+                  <View style={styles.previewProgressBar}>
+                    <View 
+                      style={[
+                        styles.previewProgressFill, 
+                        { width: `${(previewTimeLeft / (selectedContent.preview_duration || 20)) * 100}%` }
+                      ]} 
                     />
                   </View>
-                </View>
-              )}
-
-              {/* Preview Warning for non-subscribers */}
-              {selectedContent.is_premium && !isSubscriber && (
-                <View style={styles.previewWarning}>
-                  <MaterialCommunityIcons name="clock-outline" size={16} color={ARIOME_COLORS.accent.amber} />
-                  <Text style={styles.previewWarningText}>
-                    Preview: {selectedContent.preview_duration}s • Subscribe for full access
+                  <Text style={styles.previewProgressText}>
+                    {previewTimeLeft}s remaining • Subscribe for full access
                   </Text>
                 </View>
               )}
 
-              <View style={styles.playerContent}>
-                <Text style={styles.playerDescription}>{selectedContent.body}</Text>
-                {selectedContent.author && (
-                  <Text style={styles.playerAuthor}>— {selectedContent.author}</Text>
-                )}
-              </View>
+              {/* Content Info */}
+              {!previewEnded && (
+                <View style={styles.playerContent}>
+                  <Text style={styles.playerDescription}>{selectedContent.body}</Text>
+                  {selectedContent.author && (
+                    <Text style={styles.playerAuthor}>— {selectedContent.author}</Text>
+                  )}
+                </View>
+              )}
             </>
           )}
         </View>
@@ -342,16 +505,46 @@ const styles = StyleSheet.create({
   heroSection: {
     padding: ARIOME_SPACING.xl,
     paddingTop: ARIOME_SPACING.lg,
+    paddingBottom: ARIOME_SPACING.xl,
   },
   heroTitle: {
     fontSize: 28,
     fontWeight: '300',
     color: ARIOME_COLORS.text.primary,
     marginBottom: ARIOME_SPACING.xs,
+    letterSpacing: 0.5,
   },
   heroSubtitle: {
     fontSize: 16,
     color: ARIOME_COLORS.text.muted,
+    marginBottom: ARIOME_SPACING.lg,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: ARIOME_BORDERS.radiusLarge,
+    padding: ARIOME_SPACING.md,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: ARIOME_COLORS.consciousness.teal,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: ARIOME_COLORS.text.muted,
+    marginTop: 4,
+  },
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   moodFilter: {
     marginVertical: ARIOME_SPACING.md,
@@ -367,7 +560,7 @@ const styles = StyleSheet.create({
     paddingVertical: ARIOME_SPACING.sm,
     borderRadius: ARIOME_BORDERS.radiusRound,
     backgroundColor: ARIOME_COLORS.background.secondary,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: 'transparent',
     gap: ARIOME_SPACING.xs,
     marginRight: ARIOME_SPACING.sm,
@@ -383,6 +576,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: ARIOME_SPACING.sacred,
   },
+  loadingText: {
+    marginTop: ARIOME_SPACING.md,
+    fontSize: 14,
+    color: ARIOME_COLORS.text.muted,
+  },
   section: {
     marginBottom: ARIOME_SPACING.xl,
   },
@@ -397,6 +595,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: ARIOME_COLORS.text.primary,
+    flex: 1,
+  },
+  sectionCount: {
+    fontSize: 14,
+    color: ARIOME_COLORS.text.muted,
+    backgroundColor: ARIOME_COLORS.background.secondary,
+    paddingHorizontal: ARIOME_SPACING.sm,
+    paddingVertical: 2,
+    borderRadius: ARIOME_BORDERS.radiusSmall,
   },
   horizontalScroll: {
     paddingHorizontal: ARIOME_SPACING.lg,
@@ -407,6 +614,8 @@ const styles = StyleSheet.create({
     borderRadius: ARIOME_BORDERS.radiusLarge,
     overflow: 'hidden',
     marginRight: ARIOME_SPACING.md,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   thumbnailContainer: {
     position: 'relative',
@@ -422,29 +631,36 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 80,
+    height: 100,
   },
   playButton: {
     position: 'absolute',
     top: '50%',
     left: '50%',
-    marginTop: -25,
-    marginLeft: -25,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(20, 184, 166, 0.9)',
+    marginTop: -28,
+    marginLeft: -28,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(20, 184, 166, 0.95)',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#14B8A6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
   },
   durationBadge: {
     position: 'absolute',
     bottom: ARIOME_SPACING.sm,
     right: ARIOME_SPACING.sm,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.75)',
     paddingHorizontal: ARIOME_SPACING.sm,
-    paddingVertical: 2,
+    paddingVertical: 4,
     borderRadius: ARIOME_BORDERS.radiusSmall,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   durationText: {
     fontSize: 12,
@@ -457,7 +673,7 @@ const styles = StyleSheet.create({
     right: ARIOME_SPACING.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.8)',
     paddingHorizontal: ARIOME_SPACING.sm,
     paddingVertical: 4,
     borderRadius: ARIOME_BORDERS.radiusSmall,
@@ -466,7 +682,21 @@ const styles = StyleSheet.create({
   premiumText: {
     fontSize: 10,
     color: '#FFD700',
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  previewBadge: {
+    position: 'absolute',
+    top: ARIOME_SPACING.sm,
+    left: ARIOME_SPACING.sm,
+    backgroundColor: ARIOME_COLORS.accent.amber,
+    paddingHorizontal: ARIOME_SPACING.sm,
+    paddingVertical: 4,
+    borderRadius: ARIOME_BORDERS.radiusSmall,
+  },
+  previewBadgeText: {
+    fontSize: 10,
+    color: '#000',
+    fontWeight: '700',
   },
   cardContent: {
     padding: ARIOME_SPACING.md,
@@ -474,7 +704,7 @@ const styles = StyleSheet.create({
   moodTag: {
     alignSelf: 'flex-start',
     paddingHorizontal: ARIOME_SPACING.sm,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: ARIOME_BORDERS.radiusSmall,
     marginBottom: ARIOME_SPACING.sm,
   },
@@ -488,6 +718,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: ARIOME_COLORS.text.primary,
     marginBottom: ARIOME_SPACING.xs,
+    lineHeight: 22,
   },
   cardBody: {
     fontSize: 13,
@@ -530,14 +761,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   subscribeCTATitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
     color: '#FFF',
   },
   subscribeCTASubtitle: {
     fontSize: 13,
     color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
   },
+  // Player Modal Styles
   playerModal: {
     flex: 1,
     backgroundColor: ARIOME_COLORS.background.deep,
@@ -558,15 +791,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginHorizontal: ARIOME_SPACING.md,
   },
+  previewTimer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(251, 191, 36, 0.15)',
+    paddingHorizontal: ARIOME_SPACING.sm,
+    paddingVertical: 4,
+    borderRadius: ARIOME_BORDERS.radiusSmall,
+    gap: 4,
+  },
+  previewTimerText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: ARIOME_COLORS.accent.amber,
+  },
+  mediaContainer: {
+    position: 'relative',
+  },
   videoContainer: {
-    height: 250,
+    height: 280,
     backgroundColor: '#000',
   },
-  webview: {
-    flex: 1,
-  },
   audioContainer: {
-    height: 300,
+    height: 280,
     position: 'relative',
   },
   audioThumbnail: {
@@ -587,28 +834,84 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-    paddingBottom: ARIOME_SPACING.xl,
+    paddingBottom: ARIOME_SPACING.lg,
   },
-  audioPlayButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: ARIOME_COLORS.consciousness.teal,
-    alignItems: 'center',
+  // Preview Ended Overlay
+  previewEndedOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(10, 10, 15, 0.95)',
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  previewWarning: {
+  previewEndedContent: {
+    alignItems: 'center',
+    padding: ARIOME_SPACING.xl,
+  },
+  previewEndedTitle: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: ARIOME_COLORS.text.primary,
+    marginTop: ARIOME_SPACING.md,
+    marginBottom: ARIOME_SPACING.sm,
+  },
+  previewEndedText: {
+    fontSize: 15,
+    color: ARIOME_COLORS.text.muted,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: ARIOME_SPACING.xl,
+    maxWidth: 280,
+  },
+  subscribeNowButton: {
+    borderRadius: ARIOME_BORDERS.radiusRound,
+    overflow: 'hidden',
+    marginBottom: ARIOME_SPACING.md,
+  },
+  subscribeNowGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: ARIOME_COLORS.accent.amber + '20',
-    paddingVertical: ARIOME_SPACING.sm,
-    gap: ARIOME_SPACING.xs,
+    paddingVertical: ARIOME_SPACING.md,
+    paddingHorizontal: ARIOME_SPACING.xl,
+    gap: ARIOME_SPACING.sm,
   },
-  previewWarningText: {
-    fontSize: 13,
+  subscribeNowText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFF',
+  },
+  maybeLaterButton: {
+    padding: ARIOME_SPACING.md,
+  },
+  maybeLaterText: {
+    fontSize: 14,
+    color: ARIOME_COLORS.text.muted,
+  },
+  // Preview Progress Bar
+  previewProgressContainer: {
+    paddingHorizontal: ARIOME_SPACING.lg,
+    paddingVertical: ARIOME_SPACING.md,
+    backgroundColor: 'rgba(251, 191, 36, 0.1)',
+  },
+  previewProgressBar: {
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginBottom: ARIOME_SPACING.sm,
+  },
+  previewProgressFill: {
+    height: '100%',
+    backgroundColor: ARIOME_COLORS.accent.amber,
+    borderRadius: 2,
+  },
+  previewProgressText: {
+    fontSize: 12,
     color: ARIOME_COLORS.accent.amber,
-    fontWeight: '500',
+    textAlign: 'center',
   },
   playerContent: {
     padding: ARIOME_SPACING.lg,
