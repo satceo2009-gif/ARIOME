@@ -697,6 +697,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  viewButton: {
+    backgroundColor: ARIOME_COLORS.consciousness.teal,
+    paddingHorizontal: ARIOME_SPACING.lg,
+    paddingVertical: ARIOME_SPACING.sm,
+    borderRadius: ARIOME_BORDERS.radiusRound,
+  },
+  viewButtonText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
