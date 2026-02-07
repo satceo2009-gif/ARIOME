@@ -234,7 +234,13 @@ export default function CirclesScreen() {
               </View>
             ) : (
               circles.map((circle) => (
-                <View key={circle.id} style={styles.circleCard}>
+                <TouchableOpacity 
+                  key={circle.id} 
+                  style={styles.circleCard}
+                  onPress={() => router.push(`/circle/${circle.id}`)}
+                  activeOpacity={0.8}
+                  data-testid={`circle-card-${circle.id}`}
+                >
                   <View style={styles.circleHeader}>
                     <View style={[styles.circleIcon, { backgroundColor: `${getIntentionColor(circle.intention)}20` }]}>
                       <MaterialCommunityIcons name="account-group" size={32} color={getIntentionColor(circle.intention)} />
@@ -243,6 +249,7 @@ export default function CirclesScreen() {
                       <Text style={styles.circleName}>{circle.name}</Text>
                       <Text style={styles.circleCreator}>by {circle.creator_name}</Text>
                     </View>
+                    <MaterialCommunityIcons name="chevron-right" size={24} color={ARIOME_COLORS.text.muted} />
                   </View>
                   
                   <Text style={styles.circleDescription}>{circle.description}</Text>
@@ -266,15 +273,11 @@ export default function CirclesScreen() {
                       </View>
                     </View>
                     
-                    <TouchableOpacity 
-                      style={[styles.joinButton, styles.viewOnlyButton]}
-                      onPress={() => router.push('/auth')}
-                    >
-                      <MaterialCommunityIcons name="lock" size={14} color="#9CA3AF" />
-                      <Text style={styles.viewOnlyButtonText}>Join</Text>
-                    </TouchableOpacity>
+                    <View style={styles.viewButton}>
+                      <Text style={styles.viewButtonText}>View</Text>
+                    </View>
                   </View>
-                </View>
+                </TouchableOpacity>
               ))
             )}
             <View style={{ height: 20 }} />
