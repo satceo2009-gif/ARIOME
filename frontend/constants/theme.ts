@@ -1,8 +1,69 @@
 /**
  * AriOme Design System - Conscious Living Ecosystem
  * A calm, spacious, reflection-first design language
- * Modern + Zen + Premium
+ * Modern + Zen + Premium with Bi-Modal (Light/Dark) support
  */
+
+// Theme mode type
+export type ThemeMode = 'light' | 'dark';
+
+// Light Mode Colors
+export const LIGHT_COLORS = {
+  background: {
+    deep: '#FDFCF8',
+    primary: '#F9FAFB',
+    secondary: '#F3F4F6',
+    elevated: '#FFFFFF',
+    sacred: '#F5F5F4',
+    card: '#FFFFFF',
+    overlay: 'rgba(253, 252, 248, 0.95)',
+  },
+  text: {
+    primary: '#1C1917',
+    secondary: '#57534E',
+    muted: '#78716C',
+    subtle: '#A8A29E',
+    disabled: '#D6D3D1',
+    accent: '#0D9488',
+  },
+  border: '#E7E5E4',
+  consciousness: {
+    teal: '#0D9488',
+    tealLight: '#14B8A6',
+    tealDark: '#0F766E',
+    tealMuted: 'rgba(13, 148, 136, 0.1)',
+    tealGlow: 'rgba(13, 148, 136, 0.2)',
+  },
+};
+
+// Dark Mode Colors (default)
+export const DARK_COLORS = {
+  background: {
+    deep: '#0A0A0F',
+    primary: '#0F0F14',
+    secondary: '#1A1A24',
+    elevated: '#1F2937',
+    sacred: '#141420',
+    card: '#12121A',
+    overlay: 'rgba(10, 10, 15, 0.95)',
+  },
+  text: {
+    primary: '#F9FAFB',
+    secondary: '#E5E7EB',
+    muted: '#9CA3AF',
+    subtle: '#6B7280',
+    disabled: '#4B5563',
+    accent: '#14B8A6',
+  },
+  border: '#27272A',
+  consciousness: {
+    teal: '#14B8A6',
+    tealLight: '#2DD4BF',
+    tealDark: '#0D9488',
+    tealMuted: 'rgba(20, 184, 166, 0.15)',
+    tealGlow: 'rgba(20, 184, 166, 0.3)',
+  },
+};
 
 export const ARIOME_COLORS = {
   // Background palette - deep, calming with subtle warmth
