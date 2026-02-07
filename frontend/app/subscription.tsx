@@ -62,13 +62,28 @@ export default function SubscriptionScreen() {
     }
 
     setLoading(true);
-    // Simulate subscription process
+    
+    // Mock Stripe Checkout Flow
+    const plan = SUBSCRIPTION_PLANS.find(p => p.id === selectedPlan);
+    
     setTimeout(() => {
       setLoading(false);
       Alert.alert(
-        'Coming Soon!', 
-        'Subscription payments will be available soon. Thank you for your interest!',
-        [{ text: 'OK', onPress: () => router.back() }]
+        '🎉 Mock Checkout', 
+        `This would redirect to Stripe Checkout for:\n\n${plan?.name} Plan\n${plan?.price}${plan?.period}\n\nPayment integration coming soon!`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Simulate Success', 
+            onPress: () => {
+              Alert.alert(
+                'Subscription Activated!',
+                'Your subscription has been activated. Enjoy unlimited access to all premium content!',
+                [{ text: 'Start Exploring', onPress: () => router.replace('/(tabs)/explore') }]
+              );
+            }
+          }
+        ]
       );
     }, 1500);
   };
