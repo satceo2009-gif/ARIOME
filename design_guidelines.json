@@ -1,0 +1,124 @@
+{
+  "brand_identity": {
+    "name": "AriOme",
+    "core_values": ["Conscious Evolution", "Zen Modernity", "Global Connection", "Premium Serenity"],
+    "aesthetic": "Organic Minimalism",
+    "voice": "Calm, Guiding, Essential, Warm"
+  },
+  "design_principles": [
+    "Breathing Room: Use 2x more whitespace than standard apps.",
+    "Bi-Modal Zen: Light mode for clarity (Day), Dark mode for immersion (Night).",
+    "Tactile Depth: Use subtle glassmorphism and soft shadows to create a physical feel.",
+    "Motion as Breath: Animations should be slow, easing in and out like a breath (600ms+)."
+  ],
+  "typography": {
+    "font_family": {
+      "headings": "Playfair Display",
+      "body": "Plus Jakarta Sans",
+      "alt": "Manrope"
+    },
+    "scale": {
+      "h1": { "size": 32, "lineHeight": 40, "weight": "300", "letterSpacing": 0.5 },
+      "h2": { "size": 28, "lineHeight": 36, "weight": "400", "letterSpacing": 0.3 },
+      "h3": { "size": 24, "lineHeight": 32, "weight": "500", "letterSpacing": 0 },
+      "body_lg": { "size": 18, "lineHeight": 28, "weight": "400" },
+      "body": { "size": 16, "lineHeight": 24, "weight": "400" },
+      "caption": { "size": 13, "lineHeight": 18, "weight": "500", "letterSpacing": 0.5 }
+    }
+  },
+  "colors": {
+    "light_mode": {
+      "background": "#FDFCF8",
+      "surface": "#FFFFFF",
+      "surface_highlight": "#F3F4F6",
+      "text_primary": "#1C1917",
+      "text_secondary": "#57534E",
+      "border": "#E7E5E4",
+      "accent_primary": "#0D9488",
+      "accent_soft": "#CCFBF1"
+    },
+    "dark_mode": {
+      "background": "#0A0A0F",
+      "surface": "#12121A",
+      "surface_highlight": "#1A1A24",
+      "text_primary": "#F9FAFB",
+      "text_secondary": "#9CA3AF",
+      "border": "#27272A",
+      "accent_primary": "#14B8A6",
+      "accent_soft": "rgba(20, 184, 166, 0.15)"
+    },
+    "moods": {
+      "peaceful": "#10B981",
+      "grateful": "#F59E0B",
+      "hopeful": "#0EA5E9",
+      "reflective": "#8B5CF6",
+      "joyful": "#EC4899"
+    }
+  },
+  "component_styles": {
+    "buttons": {
+      "primary": {
+        "borderRadius": 999,
+        "paddingVertical": 16,
+        "paddingHorizontal": 32,
+        "shadow": "soft_glow"
+      },
+      "secondary": {
+        "borderRadius": 12,
+        "borderWidth": 1,
+        "borderColor": "border"
+      }
+    },
+    "cards": {
+      "glass": {
+        "backgroundColor": "rgba(255,255,255,0.05)",
+        "backdropFilter": "blur(20px)",
+        "borderColor": "rgba(255,255,255,0.1)",
+        "borderWidth": 1
+      },
+      "solid": {
+        "borderRadius": 24,
+        "padding": 20,
+        "shadow": "elevation_low"
+      }
+    },
+    "navigation": {
+      "tab_bar": {
+        "style": "floating",
+        "height": 70,
+        "borderRadius": 35,
+        "marginHorizontal": 20,
+        "marginBottom": 20,
+        "blur": true
+      }
+    }
+  },
+  "layout_patterns": {
+    "explore_grid": "Bento Grid: Mix of 1x1 (square), 2x1 (wide), and 1x2 (tall) cards.",
+    "journal_list": "Timeline View: Vertical line connecting daily entries with soft dot indicators.",
+    "meditation_player": "Immersive: Full screen background image, minimal controls at bottom, large timer in center."
+  },
+  "assets": {
+    "images": {
+      "hero_zen": "https://images.unsplash.com/photo-1619429116513-7b26718b42f9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHwxfHx6ZW4lMjBuYXR1cmUlMjBsYW5kc2NhcGUlMjBtb3VudGFpbnMlMjB3YXRlcnxlbnwwfHx8fDE3NzA0NjI2ODd8MA&ixlib=rb-4.1.0&q=85",
+      "meditation_water": "https://images.unsplash.com/photo-1619429117024-ba45f7b8fd9d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHw0fHx6ZW4lMjBuYXR1cmUlMjBsYW5kc2NhcGUlMjBtb3VudGFpbnMlMjB3YXRlcnxlbnwwfHx8fDE3NzA0NjI2ODd8MA&ixlib=rb-4.1.0&q=85",
+      "yoga_woman": "https://images.unsplash.com/photo-1604048208144-13ebe6fab471?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA3MDR8MHwxfHNlYXJjaHwyfHxwZXJzb24lMjBtZWRpdGF0aW5nJTIweW9nYSUyMGRpdmVyc2V8ZW58MHx8fHwxNzcwNDYyNjkxfDA&ixlib=rb-4.1.0&q=85",
+      "creator_man": "https://images.unsplash.com/photo-1758599879693-9e06f55a4ded?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA3MDR8MHwxfHNlYXJjaHwxfHxwZXJzb24lMjBtZWRpdGF0aW5nJTIweW9nYSUyMGRpdmVyc2V8ZW58MHx8fHwxNzcwNDYyNjkxfDA&ixlib=rb-4.1.0&q=85"
+    },
+    "icons": "Use Lucide-React-Native or Phosphor Icons (Thin weight) for a premium feel."
+  },
+  "instructions_to_main_agent": [
+    "1. UPDATE THEME: Modify /app/frontend/constants/theme.ts to include the new 'Light Mode' palette and 'Typography' scale.",
+    "2. REFACTOR LAYOUT: Update the main _layout.tsx to support a ThemeProvider that toggles between Light/Dark.",
+    "3. ENHANCE EXPLORE: Rewrite the Explore screen to use a MasonryFlashList or a custom Bento Grid layout instead of a simple list.",
+    "4. GLASSMORPHISM: Implement a reusable <GlassCard> component using expo-blur.",
+    "5. NAVIGATION: Style the Tab Bar to be floating and detached from the bottom edge.",
+    "6. DATA-TESTID: Ensure every interactive element (buttons, inputs, cards) has a unique testID prop."
+  ],
+  "universal_guidelines": [
+    "Avoid generic 'App' centered text.",
+    "Use 24px+ padding for all main containers.",
+    "Never use pure black (#000) or pure white (#FFF) for backgrounds; tint them slightly.",
+    "Ensure touch targets are at least 44x44pt."
+  ]
+}
