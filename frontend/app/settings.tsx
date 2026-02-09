@@ -50,7 +50,6 @@ export default function SettingsScreen() {
         setAnonymousJournal(settings.anonymousJournal ?? false);
         setShareProgress(settings.shareProgress ?? true);
         setShowInCircles(settings.showInCircles ?? true);
-        setDarkMode(settings.darkMode ?? true);
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
