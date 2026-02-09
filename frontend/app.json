@@ -61,9 +61,9 @@
     },
     "extra": {
       "router": {
-        "origin": "https://peaceful-living-5.preview.emergentagent.com"
+        "origin": "https://theme-evolution.preview.emergentagent.com"
       },
-      "EXPO_PUBLIC_API_URL": "https://peaceful-living-5.preview.emergentagent.com/api"
+      "EXPO_PUBLIC_API_URL": "https://theme-evolution.preview.emergentagent.com/api"
     }
   }
 }

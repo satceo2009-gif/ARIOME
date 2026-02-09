@@ -11,7 +11,7 @@ import Constants from 'expo-constants';
 
 const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || 
                 process.env.EXPO_PUBLIC_API_URL || 
-                'https://peaceful-living-5.preview.emergentagent.com/api';
+                'https://theme-evolution.preview.emergentagent.com/api';
 
 export default function EmailVerifyScreen() {
   const router = useRouter();

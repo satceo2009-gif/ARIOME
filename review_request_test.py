@@ -15,7 +15,7 @@ import os
 from typing import Dict, Any
 
 # API Base URL from review request
-API_BASE = "https://peaceful-living-5.preview.emergentagent.com/api"
+API_BASE = "https://theme-evolution.preview.emergentagent.com/api"
 
 # Test credentials from review request
 SUBSCRIBER_EMAIL = "subscriber@ariome-test.com"
