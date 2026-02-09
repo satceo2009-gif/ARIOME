@@ -377,7 +377,13 @@ export default function CirclesScreen() {
             </View>
           ) : (
             circles.map((circle) => (
-              <View key={circle.id} style={styles.circleCard}>
+              <TouchableOpacity 
+                key={circle.id} 
+                style={styles.circleCard}
+                onPress={() => router.push(`/circle/${circle.id}`)}
+                activeOpacity={0.8}
+                data-testid={`circle-card-${circle.id}`}
+              >
                 <View style={styles.circleHeader}>
                   <View style={[styles.circleIcon, { backgroundColor: `${getIntentionColor(circle.intention)}20` }]}>
                     <MaterialCommunityIcons name="account-group" size={32} color={getIntentionColor(circle.intention)} />
@@ -386,6 +392,7 @@ export default function CirclesScreen() {
                     <Text style={styles.circleName}>{circle.name}</Text>
                     <Text style={styles.circleCreator}>by {circle.creator_name}</Text>
                   </View>
+                  <MaterialCommunityIcons name="chevron-right" size={24} color={ARIOME_COLORS.text.muted} />
                 </View>
                 
                 <Text style={styles.circleDescription}>{circle.description}</Text>
@@ -416,7 +423,7 @@ export default function CirclesScreen() {
                   ) : circle.is_member ? (
                     <TouchableOpacity 
                       style={[styles.joinButton, styles.joinedButton]}
-                      onPress={() => handleLeaveCircle(circle.id)}
+                      onPress={(e) => { e.stopPropagation(); handleLeaveCircle(circle.id); }}
                     >
                       <MaterialCommunityIcons name="check" size={16} color="#14B8A6" />
                       <Text style={styles.joinedButtonText}>Joined</Text>
@@ -424,21 +431,21 @@ export default function CirclesScreen() {
                   ) : canJoinCircle ? (
                     <TouchableOpacity 
                       style={styles.joinButton}
-                      onPress={() => handleJoinCircle(circle.id)}
+                      onPress={(e) => { e.stopPropagation(); handleJoinCircle(circle.id); }}
                     >
                       <Text style={styles.joinButtonText}>Join</Text>
                     </TouchableOpacity>
                   ) : (
                     <TouchableOpacity 
                       style={[styles.joinButton, styles.viewOnlyButton]}
-                      onPress={() => handleJoinCircle(circle.id)}
+                      onPress={(e) => { e.stopPropagation(); handleJoinCircle(circle.id); }}
                     >
                       <MaterialCommunityIcons name="lock" size={14} color="#9CA3AF" />
                       <Text style={styles.viewOnlyButtonText}>View</Text>
                     </TouchableOpacity>
                   )}
                 </View>
-              </View>
+              </TouchableOpacity>
             ))
           )}
           <View style={{ height: 20 }} />

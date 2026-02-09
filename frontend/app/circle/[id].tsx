@@ -6,7 +6,20 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/services/api';
-import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/theme';
+import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/ariomeTheme';
+
+// Extend ARIOME_COLORS with missing properties for this component
+const EXTENDED_COLORS = {
+  ...ARIOME_COLORS,
+  background: {
+    ...ARIOME_COLORS.background,
+    card: '#12121A',
+  },
+  text: {
+    ...ARIOME_COLORS.text,
+    subtle: '#6B7280',
+  },
+};
 
 interface Circle {
   id: string;
@@ -51,7 +64,7 @@ export default function CircleDetailScreen() {
   const [posting, setPosting] = useState(false);
   const [isMember, setIsMember] = useState(false);
 
-  const intentionColor = circle ? (INTENTION_COLORS[circle.intention] || ARIOME_COLORS.consciousness.teal) : ARIOME_COLORS.consciousness.teal;
+  const intentionColor = circle ? (INTENTION_COLORS[circle.intention] || EXTENDED_COLORS.consciousness.teal) : EXTENDED_COLORS.consciousness.teal;
 
   const loadCircleData = useCallback(async () => {
     if (!id) return;
