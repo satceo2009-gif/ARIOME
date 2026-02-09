@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import ConsciousHeader from '@/components/ConsciousHeader';
 import api from '@/services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,6 +14,7 @@ import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/theme
 export default function SettingsScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
   
   // Notification settings
   const [pushNotifs, setPushNotifs] = useState(true);
@@ -24,9 +26,6 @@ export default function SettingsScreen() {
   const [anonymousJournal, setAnonymousJournal] = useState(false);
   const [shareProgress, setShareProgress] = useState(true);
   const [showInCircles, setShowInCircles] = useState(true);
-  
-  // Appearance
-  const [darkMode, setDarkMode] = useState(true);
   
   // Modals
   const [showExportModal, setShowExportModal] = useState(false);
