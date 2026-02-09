@@ -77,10 +77,12 @@ export default function CircleDetailScreen() {
       
       // Load posts
       const postsRes = await api.get(`/circles/${id}/posts`);
-      setPosts(postsRes.data || []);
+      setPosts(postsRes.data?.posts || postsRes.data || []);
       
-      // Check if user is a member
-      if (user && circleRes.data.members) {
+      // Check if user is a member - use is_member from API response
+      if (circleRes.data.is_member !== undefined) {
+        setIsMember(circleRes.data.is_member);
+      } else if (user && circleRes.data.members) {
         setIsMember(circleRes.data.members.includes(user.user_id));
       }
     } catch (error) {
