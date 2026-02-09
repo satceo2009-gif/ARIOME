@@ -264,14 +264,23 @@ export default function SettingsScreen() {
           </View>
           
           <View style={styles.card}>
-            <SettingToggle
-              icon="weather-night"
-              label="Dark Mode"
-              description="Easier on the eyes, better for reflection"
-              value={darkMode}
-              onValueChange={setDarkMode}
-              settingKey="darkMode"
-            />
+            <View style={styles.settingItem}>
+              <View style={styles.settingLeft}>
+                <View style={styles.iconContainer}>
+                  <MaterialCommunityIcons name="weather-night" size={22} color={ARIOME_COLORS.consciousness.teal} />
+                </View>
+                <View style={styles.settingText}>
+                  <Text style={styles.settingLabel}>Dark Mode</Text>
+                  <Text style={styles.settingDesc}>Easier on the eyes, better for reflection</Text>
+                </View>
+              </View>
+              <Switch
+                value={isDarkMode}
+                onValueChange={toggleTheme}
+                trackColor={{ false: ARIOME_COLORS.background.elevated, true: ARIOME_COLORS.consciousness.tealMuted }}
+                thumbColor={isDarkMode ? ARIOME_COLORS.consciousness.teal : ARIOME_COLORS.text.muted}
+              />
+            </View>
           </View>
         </View>
 
