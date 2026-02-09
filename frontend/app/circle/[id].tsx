@@ -357,15 +357,15 @@ export default function CircleDetailScreen() {
                       <MaterialCommunityIcons 
                         name={post.liked_by_user ? 'heart' : 'heart-outline'} 
                         size={20} 
-                        color={post.liked_by_user ? ARIOME_COLORS.accent.rose : ARIOME_COLORS.text.muted} 
+                        color={post.liked_by_user ? EXTENDED_COLORS.accent.rose : EXTENDED_COLORS.text.muted} 
                       />
-                      <Text style={[styles.postActionText, post.liked_by_user && { color: ARIOME_COLORS.accent.rose }]}>
+                      <Text style={[styles.postActionText, post.liked_by_user && { color: EXTENDED_COLORS.accent.rose }]}>
                         {post.likes || 0}
                       </Text>
                     </TouchableOpacity>
                     
                     <TouchableOpacity style={styles.postAction}>
-                      <MaterialCommunityIcons name="comment-outline" size={20} color={ARIOME_COLORS.text.muted} />
+                      <MaterialCommunityIcons name="comment-outline" size={20} color={EXTENDED_COLORS.text.muted} />
                       <Text style={styles.postActionText}>Reply</Text>
                     </TouchableOpacity>
                   </View>
