@@ -232,7 +232,7 @@ export default function CircleDetailScreen() {
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Circle Info Card */}
           <LinearGradient
-            colors={[intentionColor + '30', ARIOME_COLORS.background.deep]}
+            colors={[intentionColor + '30', EXTENDED_COLORS.background.deep]}
             style={styles.circleInfo}
           >
             <View style={[styles.intentionBadge, { backgroundColor: intentionColor + '30' }]}>
@@ -246,7 +246,7 @@ export default function CircleDetailScreen() {
             
             <View style={styles.circleStats}>
               <View style={styles.statItem}>
-                <MaterialCommunityIcons name="account-group" size={20} color={ARIOME_COLORS.text.muted} />
+                <MaterialCommunityIcons name="account-group" size={20} color={EXTENDED_COLORS.text.muted} />
                 <Text style={styles.statValue}>{circle.member_count}</Text>
                 <Text style={styles.statLabel}>Members</Text>
               </View>
@@ -300,7 +300,7 @@ export default function CircleDetailScreen() {
                 <TextInput
                   style={styles.postInput}
                   placeholder="What's on your mind?"
-                  placeholderTextColor={ARIOME_COLORS.text.subtle}
+                  placeholderTextColor={EXTENDED_COLORS.text.subtle}
                   multiline
                   value={newPost}
                   onChangeText={setNewPost}
@@ -328,7 +328,7 @@ export default function CircleDetailScreen() {
             
             {posts.length === 0 ? (
               <View style={styles.emptyPosts}>
-                <MaterialCommunityIcons name="message-text-outline" size={48} color={ARIOME_COLORS.text.subtle} />
+                <MaterialCommunityIcons name="message-text-outline" size={48} color={EXTENDED_COLORS.text.subtle} />
                 <Text style={styles.emptyPostsText}>No posts yet</Text>
                 <Text style={styles.emptyPostsSubtext}>Be the first to share!</Text>
               </View>
