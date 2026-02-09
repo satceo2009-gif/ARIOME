@@ -191,7 +191,7 @@ export default function CircleDetailScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={ARIOME_COLORS.consciousness.teal} />
+          <ActivityIndicator size="large" color={EXTENDED_COLORS.consciousness.teal} />
           <Text style={styles.loadingText}>Loading circle...</Text>
         </View>
       </SafeAreaView>
@@ -202,7 +202,7 @@ export default function CircleDetailScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <MaterialCommunityIcons name="alert-circle-outline" size={48} color={ARIOME_COLORS.text.muted} />
+          <MaterialCommunityIcons name="alert-circle-outline" size={48} color={EXTENDED_COLORS.text.muted} />
           <Text style={styles.errorText}>Circle not found</Text>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Text style={styles.backButtonText}>Go Back</Text>
@@ -217,11 +217,11 @@ export default function CircleDetailScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} data-testid="back-btn">
-          <MaterialCommunityIcons name="arrow-left" size={24} color={ARIOME_COLORS.text.primary} />
+          <MaterialCommunityIcons name="arrow-left" size={24} color={EXTENDED_COLORS.text.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{circle.name}</Text>
         <TouchableOpacity data-testid="more-btn">
-          <MaterialCommunityIcons name="dots-vertical" size={24} color={ARIOME_COLORS.text.primary} />
+          <MaterialCommunityIcons name="dots-vertical" size={24} color={EXTENDED_COLORS.text.primary} />
         </TouchableOpacity>
       </View>
 
