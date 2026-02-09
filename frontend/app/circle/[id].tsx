@@ -384,7 +384,7 @@ export default function CircleDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: ARIOME_COLORS.background.deep,
+    backgroundColor: EXTENDED_COLORS.background.deep,
   },
   header: {
     flexDirection: 'row',
@@ -393,12 +393,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: ARIOME_SPACING.lg,
     paddingVertical: ARIOME_SPACING.md,
     borderBottomWidth: 1,
-    borderBottomColor: ARIOME_COLORS.background.secondary,
+    borderBottomColor: EXTENDED_COLORS.background.secondary,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: ARIOME_COLORS.text.primary,
+    color: EXTENDED_COLORS.text.primary,
     flex: 1,
     textAlign: 'center',
     marginHorizontal: ARIOME_SPACING.md,
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: ARIOME_SPACING.md,
-    color: ARIOME_COLORS.text.muted,
+    color: EXTENDED_COLORS.text.muted,
   },
   errorContainer: {
     flex: 1,
@@ -423,12 +423,12 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 18,
-    color: ARIOME_COLORS.text.muted,
+    color: EXTENDED_COLORS.text.muted,
     marginTop: ARIOME_SPACING.md,
     marginBottom: ARIOME_SPACING.xl,
   },
   backButton: {
-    backgroundColor: ARIOME_COLORS.consciousness.teal,
+    backgroundColor: EXTENDED_COLORS.consciousness.teal,
     paddingHorizontal: ARIOME_SPACING.xl,
     paddingVertical: ARIOME_SPACING.md,
     borderRadius: ARIOME_BORDERS.radiusMedium,
@@ -455,13 +455,13 @@ const styles = StyleSheet.create({
   circleName: {
     fontSize: 26,
     fontWeight: '600',
-    color: ARIOME_COLORS.text.primary,
+    color: EXTENDED_COLORS.text.primary,
     marginBottom: ARIOME_SPACING.sm,
     textAlign: 'center',
   },
   circleDescription: {
     fontSize: 15,
-    color: ARIOME_COLORS.text.muted,
+    color: EXTENDED_COLORS.text.muted,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: ARIOME_SPACING.lg,
@@ -481,12 +481,12 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: ARIOME_COLORS.text.primary,
+    color: EXTENDED_COLORS.text.primary,
     marginTop: 4,
   },
   statLabel: {
     fontSize: 11,
-    color: ARIOME_COLORS.text.muted,
+    color: EXTENDED_COLORS.text.muted,
     marginTop: 2,
   },
   statDivider: {
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
   joinButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: ARIOME_COLORS.consciousness.teal,
+    backgroundColor: EXTENDED_COLORS.consciousness.teal,
     paddingHorizontal: ARIOME_SPACING.xl,
     paddingVertical: ARIOME_SPACING.md,
     borderRadius: ARIOME_BORDERS.radiusRound,
@@ -511,26 +511,26 @@ const styles = StyleSheet.create({
   leaveButton: {
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: ARIOME_COLORS.consciousness.teal,
+    borderColor: EXTENDED_COLORS.consciousness.teal,
   },
   leaveButtonText: {
-    color: ARIOME_COLORS.consciousness.teal,
+    color: EXTENDED_COLORS.consciousness.teal,
   },
   createPostSection: {
     padding: ARIOME_SPACING.lg,
     borderBottomWidth: 1,
-    borderBottomColor: ARIOME_COLORS.background.secondary,
+    borderBottomColor: EXTENDED_COLORS.background.secondary,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: ARIOME_COLORS.text.primary,
+    color: EXTENDED_COLORS.text.primary,
     marginBottom: ARIOME_SPACING.md,
   },
   postInputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    backgroundColor: ARIOME_COLORS.background.secondary,
+    backgroundColor: EXTENDED_COLORS.background.secondary,
     borderRadius: ARIOME_BORDERS.radiusMedium,
     padding: ARIOME_SPACING.sm,
   },
@@ -539,12 +539,12 @@ const styles = StyleSheet.create({
     minHeight: 80,
     maxHeight: 150,
     fontSize: 15,
-    color: ARIOME_COLORS.text.primary,
+    color: EXTENDED_COLORS.text.primary,
     padding: ARIOME_SPACING.sm,
     textAlignVertical: 'top',
   },
   postButton: {
-    backgroundColor: ARIOME_COLORS.consciousness.teal,
+    backgroundColor: EXTENDED_COLORS.consciousness.teal,
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -552,27 +552,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   postButtonDisabled: {
-    backgroundColor: ARIOME_COLORS.text.disabled,
+    backgroundColor: EXTENDED_COLORS.text.disabled,
   },
   postsSection: {
     padding: ARIOME_SPACING.lg,
   },
   emptyPosts: {
     alignItems: 'center',
-    paddingVertical: ARIOME_SPACING.sacred,
+    paddingVertical: 64,
   },
   emptyPostsText: {
     fontSize: 18,
-    color: ARIOME_COLORS.text.muted,
+    color: EXTENDED_COLORS.text.muted,
     marginTop: ARIOME_SPACING.md,
   },
   emptyPostsSubtext: {
     fontSize: 14,
-    color: ARIOME_COLORS.text.subtle,
+    color: EXTENDED_COLORS.text.subtle,
     marginTop: ARIOME_SPACING.xs,
   },
   postCard: {
-    backgroundColor: ARIOME_COLORS.background.card,
+    backgroundColor: EXTENDED_COLORS.background.card,
     borderRadius: ARIOME_BORDERS.radiusMedium,
     padding: ARIOME_SPACING.lg,
     marginBottom: ARIOME_SPACING.md,
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: ARIOME_COLORS.consciousness.tealMuted,
+    backgroundColor: EXTENDED_COLORS.consciousness.tealMuted,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: ARIOME_SPACING.md,
@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
   postAvatarText: {
     fontSize: 16,
     fontWeight: '600',
-    color: ARIOME_COLORS.consciousness.teal,
+    color: EXTENDED_COLORS.consciousness.teal,
   },
   postMeta: {
     flex: 1,
@@ -604,16 +604,16 @@ const styles = StyleSheet.create({
   postAuthor: {
     fontSize: 15,
     fontWeight: '600',
-    color: ARIOME_COLORS.text.primary,
+    color: EXTENDED_COLORS.text.primary,
   },
   postTime: {
     fontSize: 12,
-    color: ARIOME_COLORS.text.muted,
+    color: EXTENDED_COLORS.text.muted,
     marginTop: 2,
   },
   postContent: {
     fontSize: 15,
-    color: ARIOME_COLORS.text.secondary,
+    color: EXTENDED_COLORS.text.secondary,
     lineHeight: 22,
   },
   postActions: {
@@ -631,6 +631,6 @@ const styles = StyleSheet.create({
   },
   postActionText: {
     fontSize: 13,
-    color: ARIOME_COLORS.text.muted,
+    color: EXTENDED_COLORS.text.muted,
   },
 });
