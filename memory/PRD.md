@@ -9,7 +9,7 @@ Build a self-evolution and conscious-living mobile ecosystem called AriOme. The 
 3. **Creator** - Can upload content + subscriber features
 4. **Admin** - Full access + user management
 
-## What's Been Implemented (Updated Feb 7, 2026)
+## What's Been Implemented (Updated Feb 9, 2026)
 
 ### P0 - Preview System ✅ COMPLETE
 - 20s preview badge on premium content cards
@@ -19,8 +19,9 @@ Build a self-evolution and conscious-living mobile ecosystem called AriOme. The 
 - Pulsing animation on subscribe button
 - Videos play in-app via iframe
 
-### P1 - Circle Post Feed ✅ COMPLETE
-- `/circle/[id].tsx` detail page
+### P1 - Circle Post Feed ✅ COMPLETE (Bug Fixed Feb 9)
+- `/circle/[id].tsx` detail page - NOW WORKING
+- Navigation from circles list to circle detail - FIXED
 - Circle info (name, description, members, posts)
 - Join/Leave functionality
 - Post creation for members
@@ -47,10 +48,11 @@ Build a self-evolution and conscious-living mobile ecosystem called AriOme. The 
 - Mindful reminders toggle
 - Community updates toggle
 
-### P3 - Appearance ✅ PARTIAL
+### P3 - Appearance ✅ COMPLETE (ThemeContext Integrated Feb 9)
 - Dark mode (default)
-- ThemeContext.tsx created for light/dark switching
-- UI currently dark-mode only
+- ThemeContext.tsx integrated into root layout
+- Settings Dark Mode toggle connected to ThemeContext
+- Light mode colors defined in theme.ts
 
 ### P3 - Subscription/Payment ✅ MOCK
 - Monthly $9.99, Yearly $79.99 plans
@@ -67,6 +69,11 @@ Build a self-evolution and conscious-living mobile ecosystem called AriOme. The 
 - Practices screen
 - Settings page
 
+## Bug Fixes (Feb 9, 2026)
+1. **Circle Navigation Bug** - Fixed: Changed `<View>` to `<TouchableOpacity>` with `router.push()` for authenticated users in circles list
+2. **Circle Detail Page Crash** - Fixed: Posts API returns `{posts: [], total: 0}` object, not array; updated to handle `postsRes.data?.posts || postsRes.data || []`
+3. **is_member Detection** - Fixed: Use API's `is_member` field directly instead of checking `members` array
+
 ## Content Count
 - **Wisdom:** 24 items
 - **Practices:** 22 items
@@ -81,11 +88,13 @@ Build a self-evolution and conscious-living mobile ecosystem called AriOme. The 
 - **Media:** YouTube embeds (iframe), HTML5 audio
 
 ## Key Files
+- `/app/frontend/app/(tabs)/circles.tsx` - Circle list with navigation (FIXED)
+- `/app/frontend/app/circle/[id].tsx` - Circle detail page (FIXED)
 - `/app/frontend/app/(tabs)/explore.tsx` - Explore with P0 preview system
-- `/app/frontend/app/circle/[id].tsx` - Circle detail page
 - `/app/frontend/app/subscription.tsx` - Mock Stripe subscription
 - `/app/frontend/app/settings.tsx` - All settings (notifications, privacy, appearance)
-- `/app/frontend/contexts/ThemeContext.tsx` - Light/Dark mode context
+- `/app/frontend/contexts/ThemeContext.tsx` - Light/Dark mode context (INTEGRATED)
+- `/app/frontend/app/_layout.tsx` - Root layout with ThemeProvider
 - `/app/backend/server.py` - All API endpoints
 
 ## Test Credentials
@@ -95,7 +104,7 @@ Build a self-evolution and conscious-living mobile ecosystem called AriOme. The 
 ## Remaining Backlog
 
 ### High Priority
-- [ ] Wire ThemeContext to all components for actual light mode
+- [ ] Wire ThemeContext to all components for actual light mode visual switching
 - [ ] Polish Admin Dashboard UI
 - [ ] Polish Creator Dashboard UI
 
