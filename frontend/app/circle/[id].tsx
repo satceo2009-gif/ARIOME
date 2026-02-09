@@ -252,13 +252,13 @@ export default function CircleDetailScreen() {
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <MaterialCommunityIcons name="message-text" size={20} color={ARIOME_COLORS.text.muted} />
+                <MaterialCommunityIcons name="message-text" size={20} color={EXTENDED_COLORS.text.muted} />
                 <Text style={styles.statValue}>{circle.post_count}</Text>
                 <Text style={styles.statLabel}>Posts</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
-                <MaterialCommunityIcons name="account" size={20} color={ARIOME_COLORS.text.muted} />
+                <MaterialCommunityIcons name="account" size={20} color={EXTENDED_COLORS.text.muted} />
                 <Text style={styles.statValue}>{circle.creator_name}</Text>
                 <Text style={styles.statLabel}>Created by</Text>
               </View>
@@ -274,7 +274,7 @@ export default function CircleDetailScreen() {
                 <MaterialCommunityIcons 
                   name={isMember ? 'check' : 'plus'} 
                   size={20} 
-                  color={isMember ? ARIOME_COLORS.consciousness.teal : '#FFF'} 
+                  color={isMember ? EXTENDED_COLORS.consciousness.teal : '#FFF'} 
                 />
                 <Text style={[styles.joinButtonText, isMember && styles.leaveButtonText]}>
                   {isMember ? 'Joined' : 'Join Circle'}
