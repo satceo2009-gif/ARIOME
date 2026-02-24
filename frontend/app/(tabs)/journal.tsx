@@ -175,19 +175,33 @@ export default function JournalScreen() {
 
     setSaving(true);
     try {
-      await reflectionAPI.create({
-        content: content.trim(),
-        mood_before: moodBefore || undefined,
-        mood_after: moodAfter || undefined,
-        prompt_id: params.promptId as string || undefined,
-        intent_tags: user?.intentions || [],
-      });
+      if (isEditing && editingReflection) {
+        // Update existing reflection
+        await reflectionAPI.update(editingReflection.id, {
+          content: content.trim(),
+          mood_before: moodBefore || undefined,
+          mood_after: moodAfter || undefined,
+        });
+        Alert.alert('Success', 'Reflection updated successfully!');
+      } else {
+        // Create new reflection
+        await reflectionAPI.create({
+          content: content.trim(),
+          mood_before: moodBefore || undefined,
+          mood_after: moodAfter || undefined,
+          prompt_id: params.promptId as string || undefined,
+          intent_tags: user?.intentions || [],
+        });
+        Alert.alert('Success', 'Reflection saved successfully!');
+      }
       
       // Reset and close
       setContent('');
       setMoodBefore(null);
       setMoodAfter(null);
       setShowModal(false);
+      setIsEditing(false);
+      setEditingReflection(null);
       loadData();
     } catch (error) {
       console.error('Error saving reflection:', error);
@@ -195,6 +209,48 @@ export default function JournalScreen() {
     } finally {
       setSaving(false);
     }
+  };
+  
+  const handleEditReflection = (reflection: Reflection) => {
+    setEditingReflection(reflection);
+    setContent(reflection.content);
+    setMoodBefore(reflection.mood_before || null);
+    setMoodAfter(reflection.mood_after || null);
+    setIsEditing(true);
+    setShowModal(true);
+  };
+  
+  const handleDeleteReflection = async (reflectionId: string) => {
+    Alert.alert(
+      'Delete Reflection',
+      'Are you sure you want to delete this reflection? This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await reflectionAPI.delete(reflectionId);
+              Alert.alert('Success', 'Reflection deleted successfully!');
+              loadData();
+            } catch (error) {
+              console.error('Error deleting reflection:', error);
+              Alert.alert('Error', 'Failed to delete reflection.');
+            }
+          }
+        }
+      ]
+    );
+  };
+  
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setIsEditing(false);
+    setEditingReflection(null);
+    setContent('');
+    setMoodBefore(null);
+    setMoodAfter(null);
   };
 
   if (!user) {
