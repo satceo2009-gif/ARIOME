@@ -10,7 +10,8 @@ import api from '@/services/api';
 import { ARIOME_COLORS, ARIOME_SPACING, ARIOME_BORDERS } from '@/constants/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_WIDTH * 0.72;
+const CARD_WIDTH = Math.min(SCREEN_WIDTH * 0.72, 400); // Max width 400px for desktop
+const CARD_SPACING = 16;
 
 interface ContentItem {
   id: string;
