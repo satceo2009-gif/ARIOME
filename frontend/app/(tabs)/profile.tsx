@@ -88,7 +88,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <TouchableOpacity style={styles.logoutButton} onPress={() => setShowLogoutModal(true)} data-testid="logout-btn">
           <MaterialCommunityIcons name="logout" size={20} color="#EF4444" />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
@@ -97,6 +97,34 @@ export default function ProfileScreen() {
           <Text style={styles.footerText}>ARIOME v1.0.0</Text>
         </View>
       </ScrollView>
+
+      {/* Logout Confirmation Modal */}
+      <Modal visible={showLogoutModal} transparent animationType="fade" onRequestClose={() => setShowLogoutModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <MaterialCommunityIcons name="logout" size={48} color="#EF4444" style={{ marginBottom: 16 }} />
+            <Text style={styles.modalTitle}>Logout</Text>
+            <Text style={styles.modalText}>Are you sure you want to logout?</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={styles.cancelButton} 
+                onPress={() => setShowLogoutModal(false)}
+                data-testid="cancel-logout-btn"
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.confirmLogoutButton} 
+                onPress={handleLogout}
+                disabled={loggingOut}
+                data-testid="confirm-logout-btn"
+              >
+                <Text style={styles.confirmLogoutText}>{loggingOut ? 'Logging out...' : 'Logout'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
