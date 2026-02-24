@@ -155,6 +155,17 @@ export default function ExploreScreen() {
   const renderContentCard = (item: ContentItem, index: number) => {
     const moodColor = MOODS.find(m => m.id === item.mood)?.color || ARIOME_COLORS.consciousness.teal;
     
+    const handleLike = async (e: any) => {
+      e.stopPropagation();
+      try {
+        await api.post('/resonance', { content_id: item.id, content_type: 'wisdom' });
+        // Refresh content to show updated count
+        loadContent();
+      } catch (error) {
+        console.log('Already resonated or error');
+      }
+    };
+    
     return (
       <TouchableOpacity
         key={item.id}
@@ -170,10 +181,10 @@ export default function ExploreScreen() {
             style={styles.thumbnailGradient}
           />
           
-          {/* Play Button */}
+          {/* Play Button - consistent icon based on media type */}
           <View style={styles.playButton}>
             <MaterialCommunityIcons 
-              name={item.media_type === 'video' ? 'play' : 'music'} 
+              name={item.media_type === 'audio' ? 'music' : 'play'} 
               size={28} 
               color="#FFF" 
             />
@@ -208,10 +219,14 @@ export default function ExploreScreen() {
           <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
           <Text style={styles.cardBody} numberOfLines={2}>{item.body}</Text>
           <View style={styles.cardFooter}>
-            <View style={styles.resonanceInfo}>
-              <MaterialCommunityIcons name="heart" size={14} color={ARIOME_COLORS.accent.rose} />
+            <TouchableOpacity 
+              style={styles.resonanceInfo} 
+              onPress={handleLike}
+              data-testid={`like-btn-${item.id}`}
+            >
+              <MaterialCommunityIcons name="heart-outline" size={18} color={ARIOME_COLORS.accent.rose} />
               <Text style={styles.resonanceText}>{item.resonance_count || 0}</Text>
-            </View>
+            </TouchableOpacity>
             {item.author && (
               <Text style={styles.authorText}>by {item.author}</Text>
             )}
