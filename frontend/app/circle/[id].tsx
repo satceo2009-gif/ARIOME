@@ -78,6 +78,14 @@ export default function CircleDetailScreen() {
   const [comments, setComments] = useState<Record<string, Comment[]>>({});
   const [newComment, setNewComment] = useState('');
 
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+    } else {
+      router.replace('/circles');
+    }
+  };
+
   const intentionColor = circle ? (INTENTION_COLORS[circle.intention] || EXTENDED_COLORS.consciousness.teal) : EXTENDED_COLORS.consciousness.teal;
 
   const loadCircleData = useCallback(async () => {
