@@ -40,6 +40,15 @@ interface Post {
   created_at: string;
   likes: number;
   liked_by_user?: boolean;
+  comment_count?: number;
+}
+
+interface Comment {
+  id: string;
+  user_id: string;
+  user_name: string;
+  content: string;
+  created_at: string;
 }
 
 const INTENTION_COLORS: Record<string, string> = {
