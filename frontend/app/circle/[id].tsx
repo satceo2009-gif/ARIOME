@@ -72,6 +72,11 @@ export default function CircleDetailScreen() {
   const [newPost, setNewPost] = useState('');
   const [posting, setPosting] = useState(false);
   const [isMember, setIsMember] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<string | null>(null);
+  const [showComments, setShowComments] = useState<string | null>(null);
+  const [comments, setComments] = useState<Record<string, Comment[]>>({});
+  const [newComment, setNewComment] = useState('');
 
   const intentionColor = circle ? (INTENTION_COLORS[circle.intention] || EXTENDED_COLORS.consciousness.teal) : EXTENDED_COLORS.consciousness.teal;
 
