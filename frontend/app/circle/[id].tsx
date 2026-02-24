@@ -293,7 +293,7 @@ export default function CircleDetailScreen() {
         <View style={styles.errorContainer}>
           <MaterialCommunityIcons name="alert-circle-outline" size={48} color={EXTENDED_COLORS.text.muted} />
           <Text style={styles.errorText}>Circle not found</Text>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
             <Text style={styles.backButtonText}>Go Back</Text>
           </TouchableOpacity>
         </View>
