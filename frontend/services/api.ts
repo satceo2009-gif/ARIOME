@@ -59,8 +59,14 @@ export const authAPI = {
   },
   
   logout: async () => {
-    await api.post('/auth/logout');
-    await AsyncStorage.removeItem('session_token');
+    try {
+      await api.post('/auth/logout');
+    } catch (error) {
+      // Ignore logout API errors, still clear local storage
+      console.log('Logout API error (ignored):', error);
+    } finally {
+      await AsyncStorage.removeItem('session_token');
+    }
   },
   
   updateProfile: async (data: { intentions?: string[], language?: string }) => {
