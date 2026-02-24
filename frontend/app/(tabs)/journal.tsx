@@ -566,8 +566,21 @@ const styles = StyleSheet.create({
   reflectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: ARIOME_SPACING.xs,
+  },
+  moodContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: ARIOME_SPACING.sm,
-    marginBottom: ARIOME_SPACING.sm,
+  },
+  reflectionActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: ARIOME_SPACING.xs,
+  },
+  actionButton: {
+    padding: ARIOME_SPACING.xs,
   },
   moodBadge: {
     width: 28,
@@ -579,7 +592,7 @@ const styles = StyleSheet.create({
   reflectionDate: {
     fontSize: 12,
     color: ARIOME_COLORS.text.muted,
-    marginLeft: 'auto',
+    marginBottom: ARIOME_SPACING.sm,
   },
   reflectionContent: {
     fontSize: 15,
