@@ -180,16 +180,77 @@ export default function CircleDetailScreen() {
   const handleLikePost = async (postId: string) => {
     if (!user) return;
     
-    setPosts(posts.map(post => {
-      if (post.id === postId) {
-        return {
-          ...post,
-          likes: post.liked_by_user ? post.likes - 1 : post.likes + 1,
-          liked_by_user: !post.liked_by_user,
-        };
+    try {
+      await api.post(`/circles/${id}/posts/${postId}/like`);
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            likes: post.liked_by_user ? post.likes - 1 : post.likes + 1,
+            liked_by_user: !post.liked_by_user,
+          };
+        }
+        return post;
+      }));
+    } catch (error) {
+      console.error('Error liking post:', error);
+    }
+  };
+
+  const loadComments = async (postId: string) => {
+    try {
+      const res = await api.get(`/circles/${id}/posts/${postId}/comments`);
+      setComments(prev => ({ ...prev, [postId]: res.data.comments || [] }));
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    }
+  };
+
+  const handleToggleComments = async (postId: string) => {
+    if (showComments === postId) {
+      setShowComments(null);
+    } else {
+      setShowComments(postId);
+      if (!comments[postId]) {
+        await loadComments(postId);
       }
-      return post;
-    }));
+    }
+  };
+
+  const handleAddComment = async (postId: string) => {
+    if (!newComment.trim() || !user) return;
+    
+    try {
+      const res = await api.post(`/circles/${id}/posts/${postId}/comments`, {
+        content: newComment.trim()
+      });
+      setComments(prev => ({
+        ...prev,
+        [postId]: [...(prev[postId] || []), res.data]
+      }));
+      setNewComment('');
+      // Update comment count
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          return { ...post, comment_count: (post.comment_count || 0) + 1 };
+        }
+        return post;
+      }));
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      Alert.alert('Error', 'Failed to add comment');
+    }
+  };
+
+  const handleMenuOption = (option: string) => {
+    setShowMenu(false);
+    if (option === 'share') {
+      Alert.alert('Share', 'Share feature coming soon!');
+    } else if (option === 'report') {
+      Alert.alert('Report', 'This circle has been reported. We will review it.');
+    } else if (option === 'leave') {
+      handleLeave();
+    }
   };
 
   const formatDate = (dateStr: string) => {
