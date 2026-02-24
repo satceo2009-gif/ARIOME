@@ -305,7 +305,7 @@ export default function CircleDetailScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} data-testid="back-btn">
+        <TouchableOpacity onPress={handleBack} data-testid="back-btn">
           <MaterialCommunityIcons name="arrow-left" size={24} color={EXTENDED_COLORS.text.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{circle.name}</Text>
