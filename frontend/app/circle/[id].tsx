@@ -301,10 +301,32 @@ export default function CircleDetailScreen() {
           <MaterialCommunityIcons name="arrow-left" size={24} color={EXTENDED_COLORS.text.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{circle.name}</Text>
-        <TouchableOpacity data-testid="more-btn">
+        <TouchableOpacity onPress={() => setShowMenu(true)} data-testid="more-btn">
           <MaterialCommunityIcons name="dots-vertical" size={24} color={EXTENDED_COLORS.text.primary} />
         </TouchableOpacity>
       </View>
+
+      {/* 3-Dot Menu Modal */}
+      <Modal visible={showMenu} transparent animationType="fade" onRequestClose={() => setShowMenu(false)}>
+        <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={() => setShowMenu(false)}>
+          <View style={styles.menuContainer}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuOption('share')}>
+              <MaterialCommunityIcons name="share-variant" size={20} color={EXTENDED_COLORS.text.primary} />
+              <Text style={styles.menuItemText}>Share Circle</Text>
+            </TouchableOpacity>
+            {isMember && (
+              <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuOption('leave')}>
+                <MaterialCommunityIcons name="exit-to-app" size={20} color={EXTENDED_COLORS.accent.rose} />
+                <Text style={[styles.menuItemText, { color: EXTENDED_COLORS.accent.rose }]}>Leave Circle</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuOption('report')}>
+              <MaterialCommunityIcons name="flag-outline" size={20} color={EXTENDED_COLORS.text.muted} />
+              <Text style={styles.menuItemText}>Report</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       <KeyboardAvoidingView 
         style={{ flex: 1 }} 
