@@ -39,6 +39,10 @@ export default function JournalScreen() {
   const [moodAfter, setMoodAfter] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   
+  // Edit mode state
+  const [editingReflection, setEditingReflection] = useState<Reflection | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
