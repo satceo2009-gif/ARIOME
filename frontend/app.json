@@ -4,17 +4,20 @@
     "slug": "ariome",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/ariome-logo-dark.svg",
+    "icon": "./assets/images/icon.png",
     "scheme": "ariome",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/images/ariome-logo-dark.svg",
+      "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0A0A0F"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ariome.app"
+      "bundleIdentifier": "com.ariome.app",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "ARIOME needs microphone access for voice journaling"
+      }
     },
     "android": {
       "package": "com.ariome.app",
@@ -25,9 +28,7 @@
       },
       "permissions": [
         "INTERNET",
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "RECORD_AUDIO"
       ]
     },
     "web": {
