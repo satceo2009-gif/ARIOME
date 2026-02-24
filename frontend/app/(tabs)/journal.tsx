@@ -351,14 +351,14 @@ export default function JournalScreen() {
         )}
       </ScrollView>
 
-      {/* Create Reflection Modal */}
+      {/* Create/Edit Reflection Modal */}
       <Modal visible={showModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             {/* Modal Header */}
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>New Reflection</Text>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
+              <Text style={styles.modalTitle}>{isEditing ? 'Edit Reflection' : 'New Reflection'}</Text>
+              <TouchableOpacity onPress={handleCloseModal}>
                 <MaterialCommunityIcons name="close" size={24} color={ARIOME_COLORS.text.muted} />
               </TouchableOpacity>
             </View>
