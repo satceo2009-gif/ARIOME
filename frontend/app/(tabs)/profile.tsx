@@ -1,4 +1,5 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,30 +9,22 @@ import ConsciousHeader from '@/components/ConsciousHeader';
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Logout', 
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await logout();
-              // Force navigation to auth screen
-              router.replace('/auth');
-            } catch (error) {
-              console.error('Logout error:', error);
-              // Still navigate even if logout API fails
-              router.replace('/auth');
-            }
-          }
-        },
-      ]
-    );
+    setLoggingOut(true);
+    try {
+      await logout();
+      setShowLogoutModal(false);
+      router.replace('/auth');
+    } catch (error) {
+      console.error('Logout error:', error);
+      setShowLogoutModal(false);
+      router.replace('/auth');
+    } finally {
+      setLoggingOut(false);
+    }
   };
 
   const getRoleBadge = (role: string) => {
