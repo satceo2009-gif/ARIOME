@@ -992,6 +992,8 @@ async def create_circle_post(circle_id: str, post_data: CirclePostCreate, reques
     post = {
         "id": post_id,
         "circle_id": circle_id,
+        "user_id": user["user_id"],
+        "user_name": user.get("name", "Anonymous"),
         "author_id": user["user_id"],
         "content": post_data.content,
         "mood": post_data.mood,
