@@ -132,6 +132,20 @@ export const reflectionAPI = {
     const response = await api.get('/reflections/stats');
     return response.data;
   },
+  
+  update: async (reflectionId: string, data: {
+    content?: string;
+    mood_before?: string;
+    mood_after?: string;
+  }) => {
+    const response = await api.put(`/reflections/${reflectionId}`, data);
+    return response.data;
+  },
+  
+  delete: async (reflectionId: string) => {
+    const response = await api.delete(`/reflections/${reflectionId}`);
+    return response.data;
+  },
 };
 
 // Resonance API
