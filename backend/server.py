@@ -563,6 +563,52 @@ async def get_reflections(request: Request, limit: int = 50, skip: int = 0):
     ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     return reflections
 
+@app.put("/api/reflections/{reflection_id}")
+async def update_reflection(reflection_id: str, request: Request):
+    """Update a reflection"""
+    user = await require_user(request)
+    body = await request.json()
+    
+    # Find the reflection
+    reflection = await db.reflections.find_one({
+        "id": reflection_id,
+        "user_id": user["user_id"]
+    })
+    
+    if not reflection:
+        raise HTTPException(status_code=404, detail="Reflection not found")
+    
+    # Update fields
+    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    if "content" in body:
+        update_data["content"] = body["content"]
+    if "mood_before" in body:
+        update_data["mood_before"] = body["mood_before"]
+    if "mood_after" in body:
+        update_data["mood_after"] = body["mood_after"]
+    
+    await db.reflections.update_one(
+        {"id": reflection_id, "user_id": user["user_id"]},
+        {"$set": update_data}
+    )
+    
+    return {"status": "success", "message": "Reflection updated"}
+
+@app.delete("/api/reflections/{reflection_id}")
+async def delete_reflection(reflection_id: str, request: Request):
+    """Delete a reflection"""
+    user = await require_user(request)
+    
+    result = await db.reflections.delete_one({
+        "id": reflection_id,
+        "user_id": user["user_id"]
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Reflection not found")
+    
+    return {"status": "success", "message": "Reflection deleted"}
+
 @app.get("/api/reflections/stats")
 async def get_reflection_stats(request: Request):
     """Get reflection statistics for user"""
