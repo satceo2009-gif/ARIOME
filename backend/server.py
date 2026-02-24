@@ -1068,6 +1068,53 @@ async def delete_circle_post(circle_id: str, post_id: str, request: Request):
     
     return {"message": "Post deleted"}
 
+# ==================== COMMENTS ENDPOINTS ====================
+
+class CommentCreate(BaseModel):
+    content: str
+
+@app.get("/api/circles/{circle_id}/posts/{post_id}/comments")
+async def get_post_comments(circle_id: str, post_id: str):
+    """Get comments for a post"""
+    comments = await db.post_comments.find(
+        {"post_id": post_id},
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(100)
+    return {"comments": comments, "total": len(comments)}
+
+@app.post("/api/circles/{circle_id}/posts/{post_id}/comments")
+async def create_comment(circle_id: str, post_id: str, comment_data: CommentCreate, request: Request):
+    """Add a comment to a post"""
+    user = await require_user(request)
+    
+    # Verify post exists
+    post = await db.circle_posts.find_one({"id": post_id})
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    comment_id = f"comment_{uuid4().hex[:12]}"
+    
+    comment = {
+        "id": comment_id,
+        "post_id": post_id,
+        "circle_id": circle_id,
+        "user_id": user["user_id"],
+        "user_name": user.get("name", "Anonymous"),
+        "content": comment_data.content,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.post_comments.insert_one(comment)
+    comment.pop("_id", None)
+    
+    # Update comment count on post
+    await db.circle_posts.update_one(
+        {"id": post_id},
+        {"$inc": {"comment_count": 1}}
+    )
+    
+    return comment
+
 # ==================== SPEECH-TO-TEXT ENDPOINT ====================
 
 @app.post("/api/transcribe", response_model=TranscribeResponse)
