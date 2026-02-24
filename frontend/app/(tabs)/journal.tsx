@@ -303,29 +303,47 @@ export default function JournalScreen() {
             {reflections.map((reflection) => (
               <View key={reflection.id} style={styles.reflectionCard}>
                 <View style={styles.reflectionHeader}>
-                  {reflection.mood_before && (
-                    <View style={[styles.moodBadge, { backgroundColor: `${getMoodInfo(reflection.mood_before)?.color}20` }]}>
-                      <MaterialCommunityIcons
-                        name={getMoodInfo(reflection.mood_before)?.icon as any}
-                        size={16}
-                        color={getMoodInfo(reflection.mood_before)?.color}
-                      />
-                    </View>
-                  )}
-                  {reflection.mood_after && reflection.mood_before !== reflection.mood_after && (
-                    <>
-                      <MaterialCommunityIcons name="arrow-right" size={14} color={ARIOME_COLORS.text.subtle} />
-                      <View style={[styles.moodBadge, { backgroundColor: `${getMoodInfo(reflection.mood_after)?.color}20` }]}>
+                  <View style={styles.moodContainer}>
+                    {reflection.mood_before && (
+                      <View style={[styles.moodBadge, { backgroundColor: `${getMoodInfo(reflection.mood_before)?.color}20` }]}>
                         <MaterialCommunityIcons
-                          name={getMoodInfo(reflection.mood_after)?.icon as any}
+                          name={getMoodInfo(reflection.mood_before)?.icon as any}
                           size={16}
-                          color={getMoodInfo(reflection.mood_after)?.color}
+                          color={getMoodInfo(reflection.mood_before)?.color}
                         />
                       </View>
-                    </>
-                  )}
-                  <Text style={styles.reflectionDate}>{formatDate(reflection.created_at)}</Text>
+                    )}
+                    {reflection.mood_after && reflection.mood_before !== reflection.mood_after && (
+                      <>
+                        <MaterialCommunityIcons name="arrow-right" size={14} color={ARIOME_COLORS.text.subtle} />
+                        <View style={[styles.moodBadge, { backgroundColor: `${getMoodInfo(reflection.mood_after)?.color}20` }]}>
+                          <MaterialCommunityIcons
+                            name={getMoodInfo(reflection.mood_after)?.icon as any}
+                            size={16}
+                            color={getMoodInfo(reflection.mood_after)?.color}
+                          />
+                        </View>
+                      </>
+                    )}
+                  </View>
+                  <View style={styles.reflectionActions}>
+                    <TouchableOpacity 
+                      style={styles.actionButton}
+                      onPress={() => handleEditReflection(reflection)}
+                      data-testid={`edit-reflection-${reflection.id}`}
+                    >
+                      <MaterialCommunityIcons name="pencil" size={18} color={ARIOME_COLORS.consciousness.teal} />
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={styles.actionButton}
+                      onPress={() => handleDeleteReflection(reflection.id)}
+                      data-testid={`delete-reflection-${reflection.id}`}
+                    >
+                      <MaterialCommunityIcons name="trash-can-outline" size={18} color={ARIOME_COLORS.semantic.error} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
+                <Text style={styles.reflectionDate}>{formatDate(reflection.created_at)}</Text>
                 <Text style={styles.reflectionContent}>{reflection.content}</Text>
               </View>
             ))}
