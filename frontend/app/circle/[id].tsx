@@ -119,13 +119,15 @@ export default function CircleDetailScreen() {
 
   const handleLeave = async () => {
     try {
-      await api.delete(`/circles/${id}/join`);
+      await api.post(`/circles/${id}/leave`);
       setIsMember(false);
       if (circle) {
         setCircle({ ...circle, member_count: Math.max(0, circle.member_count - 1) });
       }
+      Alert.alert('Success', 'You have left the circle');
     } catch (error) {
       console.error('Error leaving circle:', error);
+      Alert.alert('Error', 'Failed to leave circle');
     }
   };
 
@@ -151,9 +153,11 @@ export default function CircleDetailScreen() {
       if (circle) {
         setCircle({ ...circle, post_count: circle.post_count + 1 });
       }
-    } catch (error) {
+      Alert.alert('Success', 'Post created successfully!');
+    } catch (error: any) {
       console.error('Error creating post:', error);
-      Alert.alert('Error', 'Failed to create post. Please try again.');
+      const errorMsg = error.response?.data?.detail || 'Failed to create post. Please try again.';
+      Alert.alert('Error', errorMsg);
     } finally {
       setPosting(false);
     }
