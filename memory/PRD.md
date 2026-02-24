@@ -69,10 +69,22 @@ Build a self-evolution and conscious-living mobile ecosystem called AriOme. The 
 - Practices screen
 - Settings page
 
-## Bug Fixes (Feb 9, 2026)
+## Bug Fixes (Feb 24, 2026)
+
+### Session 1 (Feb 9)
 1. **Circle Navigation Bug** - Fixed: Changed `<View>` to `<TouchableOpacity>` with `router.push()` for authenticated users in circles list
-2. **Circle Detail Page Crash** - Fixed: Posts API returns `{posts: [], total: 0}` object, not array; updated to handle `postsRes.data?.posts || postsRes.data || []`
+2. **Circle Detail Page Crash** - Fixed: Posts API returns `{posts: [], total: 0}` object, not array; updated to handle both formats
 3. **is_member Detection** - Fixed: Use API's `is_member` field directly instead of checking `members` array
+
+### Session 2 (Feb 24) - Complete Bug Sheet Fixes
+1. **Signout not working** - ✅ Fixed: Custom modal instead of Alert.alert, properly clears session
+2. **Comments option missing** - ✅ Added: Full comments API and UI (GET/POST comments)
+3. **Can't post in community** - ✅ Fixed: Added user_name to post creation, proper error handling
+4. **3-dot menu not functioning** - ✅ Fixed: Modal menu with Share, Leave, Report options
+5. **Back button issues** - ✅ Fixed: Fallback to /circles if no browser history
+6. **Like button on explore** - ✅ Fixed: Clickable heart icon with resonance API
+7. **Edit reflection** - ✅ Added: Edit/delete buttons on journal entries
+8. **Responsive design** - ✅ Fixed: Max card width 400px for desktop
 
 ## Content Count
 - **Wisdom:** 24 items
