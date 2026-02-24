@@ -467,11 +467,49 @@ export default function CircleDetailScreen() {
                       </Text>
                     </TouchableOpacity>
                     
-                    <TouchableOpacity style={styles.postAction}>
+                    <TouchableOpacity 
+                      style={styles.postAction}
+                      onPress={() => handleToggleComments(post.id)}
+                    >
                       <MaterialCommunityIcons name="comment-outline" size={20} color={EXTENDED_COLORS.text.muted} />
-                      <Text style={styles.postActionText}>Reply</Text>
+                      <Text style={styles.postActionText}>{post.comment_count || 0}</Text>
                     </TouchableOpacity>
                   </View>
+
+                  {/* Comments Section */}
+                  {showComments === post.id && (
+                    <View style={styles.commentsSection}>
+                      {comments[post.id]?.map((comment) => (
+                        <View key={comment.id} style={styles.commentItem}>
+                          <View style={styles.commentAvatar}>
+                            <Text style={styles.commentAvatarText}>{comment.user_name?.charAt(0) || '?'}</Text>
+                          </View>
+                          <View style={styles.commentContent}>
+                            <Text style={styles.commentAuthor}>{comment.user_name}</Text>
+                            <Text style={styles.commentText}>{comment.content}</Text>
+                          </View>
+                        </View>
+                      ))}
+                      
+                      {user && (
+                        <View style={styles.addCommentRow}>
+                          <TextInput
+                            style={styles.commentInput}
+                            placeholder="Write a comment..."
+                            placeholderTextColor={EXTENDED_COLORS.text.subtle}
+                            value={newComment}
+                            onChangeText={setNewComment}
+                          />
+                          <TouchableOpacity 
+                            style={styles.sendCommentBtn}
+                            onPress={() => handleAddComment(post.id)}
+                          >
+                            <MaterialCommunityIcons name="send" size={18} color="#FFF" />
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </View>
+                  )}
                 </View>
               ))
             )}
